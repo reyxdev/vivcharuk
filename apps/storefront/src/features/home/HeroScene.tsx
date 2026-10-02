@@ -52,7 +52,7 @@ function ScrollCue() {
   return (
     <button type="button" aria-label="Гортати далі" tabIndex={gone ? -1 : 0}
       onClick={(e) => { const s = e.currentTarget.closest('section'); if (s) scrollToY(s.getBoundingClientRect().bottom + window.scrollY - 64); }}
-      className={`mt-1 grid place-items-center rounded-full px-3 py-1 transition-opacity duration-300 sm:mt-3 ${gone ? 'pointer-events-none opacity-0' : ''}`}>
+      className={`mt-1 grid place-items-center rounded-full px-3 py-1 transition-opacity duration-300 will-change-transform sm:mt-3 ${gone ? 'vk-cue-off pointer-events-none opacity-0' : ''}`}>
       {/* A cream halo under the red thread keeps it readable over the dark firs. */}
       <svg width="18" height="64" viewBox="0 0 18 64" aria-hidden="true">
         <path className="vk-cue-thread" d="M9 2C13 12 5 19 9 30S13 51 9 62" pathLength={1} fill="none" stroke="#FAF6EE" strokeOpacity=".9" strokeWidth="6" strokeLinecap="round" />
@@ -184,10 +184,14 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
     void Promise.all([art, import('./flockEngine')]).then(([, { startFlock }]) => {
       if (!cancelled) { stop = startFlock(root, layer, groundHost); alignPathEdge(root); }
     });
+    // Round 23 perf: once the hero is off screen its endless CSS loops (chimney smoke, the scroll
+    // thread) pause, so they cost no frames while the rest of the page is read.
+    const seen = new IntersectionObserver(([e]) => { if (e) root.toggleAttribute('data-hero-off', !e.isIntersecting); });
+    seen.observe(root);
     const onResize = () => alignPathEdge(root);
     void art.then(() => alignPathEdge(root));
     window.addEventListener('resize', onResize);
-    return () => { cancelled = true; stop?.(); window.removeEventListener('resize', onResize); };
+    return () => { cancelled = true; stop?.(); seen.disconnect(); window.removeEventListener('resize', onResize); };
   }, []);
 
   return (
@@ -195,7 +199,9 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
       {/* The still picture is its own compositor layer, painted once; the flock moves in the layer above it. */}
       {/* On the client the markup is '' and hydration keeps the server's art untouched (no second copy shipped). */}
       <div ref={stillRef} className="absolute inset-0 overflow-hidden will-change-transform [contain:strict]" dangerouslySetInnerHTML={{ __html: heroServerMarkup }} suppressHydrationWarning />
-      <div ref={groundRef} className="pointer-events-none absolute inset-0 overflow-hidden [contain:strict]" />
+      {/* Round 23 perf: the ground (hut, shepherd, smoke) and the flock below are their own compositor
+          layers, so a sheep step or a puff of smoke repaints only that layer, never the whole page. */}
+      <div ref={groundRef} className="pointer-events-none absolute inset-0 overflow-hidden will-change-transform [contain:strict]" />
       <div className="absolute inset-x-0 top-16 flex flex-col items-center gap-3 px-4 text-center sm:top-24 lg:top-[19%] lg:gap-4">
         {/* Round 11 #04 / A2: a wool thread weaves through the name — over one letter, under the
             next — drawing itself left to right. The <h1> itself is never hidden (SEO, LCP). */}
@@ -209,7 +215,7 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
         </div>
         <ScrollCue />
       </div>
-      <div ref={layerRef} className="pointer-events-none absolute inset-0 z-(--z-dropdown)" />
+      <div ref={layerRef} className="pointer-events-none absolute inset-0 z-(--z-dropdown) will-change-transform" />
       <SoundToggle />
     </section>
   );

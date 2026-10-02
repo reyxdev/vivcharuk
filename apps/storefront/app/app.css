@@ -161,4 +161,7 @@ html.lenis, html.lenis body { height: auto; }
   85% { stroke-dashoffset: 0; opacity: 0; }
   100% { stroke-dashoffset: 1; opacity: 0; }
 }
+/* Hidden once the page moves, or the hero off screen: no frames are spent on them. */
+[data-hero-off] .vk-smoke circle, [data-hero-off] .vk-cue-thread { animation-play-state: paused; }
+.vk-cue-off .vk-cue-thread { animation: none; }
 @media (prefers-reduced-motion: reduce) { .vk-cue-thread { animation: none; stroke-dashoffset: 0; } }
