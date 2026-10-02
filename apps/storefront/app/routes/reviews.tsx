@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLoaderData, useSearchParams } from 'react-router';
-import type { Locale } from '@vivcharyk/schemas';
+import type { Locale, ProductDetail } from '@vivcharyk/schemas';
 import { BUSINESS, isPlaceholder } from '@vivcharyk/schemas';
 import type { Route } from './+types/reviews';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
+import { mediaUrl } from '@/lib/media';
 
 interface ReviewItem {
   id: string; author: string; rating: number; title: string | null; body: string; date: string; source: 'SITE' | 'PROM';
@@ -18,14 +19,25 @@ interface ReviewsResponse {
 
 const PER_PAGE = 12;
 
+/** The product a «Залиште відгук» letter asks about (`?product=<slug>`). */
+interface AboutProduct { slug: string; name: string; photo: { publicId: string; alt: string } | null }
+
 export async function loader({ params, request }: Route.LoaderArgs) {
   const locale = params.locale as Locale;
   const url = new URL(request.url);
   const source = ['site', 'prom'].includes(url.searchParams.get('source') ?? '') ? url.searchParams.get('source')! : 'all';
   const page = Math.min(5, Math.max(1, Number(url.searchParams.get('page')) || 1));
+  const slug = url.searchParams.get('product')?.trim().slice(0, 120);
   // «Показати ще» widens the window instead of paging, so earlier cards stay on screen.
-  const { data } = await apiGet<ReviewsResponse>('/reviews', locale, { source, perPage: String(PER_PAGE * page) });
-  return { locale, source, pageN: page, summary: data.summary, items: data.items, info: data.page };
+  const [{ data }, about] = await Promise.all([
+    apiGet<ReviewsResponse>('/reviews', locale, { source, perPage: String(PER_PAGE * page) }),
+    slug ? apiGet<ProductDetail>(`/products/${encodeURIComponent(slug)}`, locale).then(({ data: p }): AboutProduct => ({ slug: p.slug, name: p.name, photo: p.media ? { publicId: p.media.publicId, alt: p.media.alt } : null })).catch(() => null) : null,
+  ]);
+  return {
+    locale, source, pageN: page, summary: data.summary, items: data.items, info: data.page, about,
+    // The review-request link is a personal entry point, not a page of its own for search engines.
+    ...(slug ? { seo: { robots: 'noindex,follow' } } : {}),
+  };
 }
 
 export function meta() {
@@ -64,11 +76,18 @@ function Card({ r, locale }: { r: ReviewItem; locale: Locale }) {
   );
 }
 
-function ReviewForm() {
+function ReviewForm({ about }: { about: AboutProduct | null }) {
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [rating, setRating] = useState(0);
   const [err, setErr] = useState('');
   const input = 'w-full rounded-lg border border-border-control bg-bg-input px-3 py-2.5 text-body text-text-primary';
+  const heading = useRef<HTMLHeadingElement>(null);
+  // Arriving from the review-request letter: straight to the form, focus on its heading.
+  useEffect(() => {
+    if (!about) return;
+    document.getElementById('napysaty')?.scrollIntoView({ block: 'start' });
+    heading.current?.focus({ preventScroll: true });
+  }, [about?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -77,16 +96,30 @@ function ReviewForm() {
     setState('sending'); setErr('');
     const res = await fetch('/api/v1/reviews', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: f.get('name'), email: f.get('email'), body: f.get('body'), rating, website: f.get('website') || undefined }),
+      body: JSON.stringify({ name: f.get('name'), email: f.get('email'), body: f.get('body'), rating, productSlug: about?.slug, website: f.get('website') || undefined }),
     }).catch(() => null);
     if (res && res.status === 202) setState('sent');
-    else { setState('error'); setErr(res?.status === 429 ? 'Забагато спроб. Спробуйте пізніше.' : 'Перевірте поля: ім’я, email і текст щонайменше з 10 символів.'); }
+    else if (res?.status === 422 && about && ((await res.json().catch(() => null)) as { error?: { fieldErrors?: Array<{ path: string }> } } | null)?.error?.fieldErrors?.some((x) => x.path === 'productSlug')) {
+      setState('error'); setErr('Цей товар уже не продається на сайті — напишіть відгук про магазин.');
+    } else { setState('error'); setErr(res?.status === 429 ? 'Забагато спроб. Спробуйте пізніше.' : 'Перевірте поля: ім’я, email і текст щонайменше з 10 символів.'); }
   };
 
-  if (state === 'sent') return <p role="status" className="rounded-xl border border-success bg-bg-surface p-5 text-body text-text-primary">Дякуємо! Відгук з’явиться на сайті після перевірки.</p>;
+  if (state === 'sent') return <p id="napysaty" role="status" className="scroll-mt-24 rounded-xl border border-success bg-bg-surface p-5 text-body text-text-primary">Дякуємо! Відгук з’явиться на сайті після перевірки.</p>;
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5" noValidate>
-      <h2 className="text-h3 text-text-primary">Залишити відгук</h2>
+    <form id="napysaty" onSubmit={submit} className="flex scroll-mt-24 flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5" noValidate>
+      <h2 ref={heading} tabIndex={-1} className="text-h3 text-text-primary outline-none">Залишити відгук</h2>
+      {about && (
+        <div className="flex items-center gap-3 rounded-lg bg-bg-alt p-3">
+          {about.photo
+            ? <img src={mediaUrl(about.photo.publicId, 480)} alt="" width={56} height={56} className="size-14 shrink-0 rounded-md object-cover" />
+            : <span className="size-14 shrink-0 rounded-md bg-bg-surface" aria-hidden="true" />}
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-body-sm text-text-muted">Відгук про:</span>
+            <span className="text-body font-semibold text-text-primary">{about.name}</span>
+            <Link to="?" preventScrollReset className="self-start text-caption text-text-muted underline">Написати про магазин загалом</Link>
+          </span>
+        </div>
+      )}
       <fieldset className="flex items-center gap-1">
         <legend className="mb-1 text-body-sm text-text-muted">Оцінка</legend>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -105,7 +138,7 @@ function ReviewForm() {
 }
 
 export default function Reviews() {
-  const { locale, source, pageN: page, summary, items, info } = useLoaderData<typeof loader>();
+  const { locale, source, pageN: page, summary, items, info, about } = useLoaderData<typeof loader>();
   const [params] = useSearchParams();
   const max = Math.max(1, ...summary.distribution.map((d) => d.count));
   const google = !isPlaceholder(BUSINESS.googleProfileUrl);
@@ -162,7 +195,7 @@ export default function Reviews() {
           {info.hasMore && page < 5 && <Link to={more()} preventScrollReset className="mt-2 inline-block rounded-lg border border-border-control px-6 py-3 text-body font-semibold text-text-primary">Показати ще</Link>}
         </div>
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-          <ReviewForm />
+          <ReviewForm key={about?.slug ?? ''} about={about} />
         </aside>
       </div>
 

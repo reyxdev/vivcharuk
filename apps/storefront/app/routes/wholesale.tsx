@@ -1,6 +1,7 @@
 import { Link, useLoaderData, useRouteLoaderData } from 'react-router';
 import type { Locale, VolumeTier } from '@vivcharyk/schemas';
 import { BUSINESS, contactLinks } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import type { Route } from './+types/wholesale';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
@@ -23,11 +24,12 @@ const box = 'flex flex-col gap-4 rounded-xl border border-border-hairline bg-bg-
 // Round 10 part 7 / §P7a: no enquiry form and no price list. The calls to action are the phone,
 // the messengers and the catalogue; the volume discount is applied by the cart itself.
 export default function Wholesale() {
+  const biz = useBusiness();
   const { locale, tiers } = useLoaderData<typeof loader>();
   const layout = useRouteLoaderData<typeof layoutLoader>('routes/locale-layout');
   const first = layout?.categories[0];
   const catalogHref = first ? path.category(locale, first.slug) : path.home(locale);
-  const owner = BUSINESS.contactPeople[0];
+  const owner = biz.contactPeople[0];
   const tel = contactLinks(owner.phone)?.tel;
 
   return (
@@ -92,7 +94,7 @@ export default function Wholesale() {
           </div>
           <div className={box}>
             <h2 className="text-h3 text-text-primary">Питання щодо опту</h2>
-            {BUSINESS.contactPeople.map((p) => {
+            {biz.contactPeople.map((p) => {
               const l = contactLinks(p.phone);
               return (
                 <p key={p.name} className="flex flex-wrap gap-3 text-body">
@@ -102,7 +104,7 @@ export default function Wholesale() {
               );
             })}
             <div className="text-text-primary"><Messengers /></div>
-            <a href={`mailto:${BUSINESS.publicEmail}`} className="self-start text-body text-text-primary underline">{BUSINESS.publicEmail}</a>
+            <a href={`mailto:${biz.publicEmail}`} className="self-start text-body text-text-primary underline">{biz.publicEmail}</a>
           </div>
         </div>
       </section>

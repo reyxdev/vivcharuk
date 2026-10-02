@@ -116,12 +116,14 @@ function Invoice({ o }: { o: PrintOrder }) {
   const rows = o.items.map((i) => ({ key: i.id, name: [i.name, i.size, i.other].filter(Boolean).join(', '), unit: unitLabel(i.unit), qty: i.quantity, price: i.unitPriceMinor, sum: i.totalMinor }));
   if (o.shippingMinor) rows.push({ key: 'ship', name: `Доставка (${DELIVERY_LABEL[o.delivery.method ?? ''] ?? ''})`, unit: 'посл.', qty: 1, price: o.shippingMinor, sum: o.shippingMinor });
   const total = o.totalMinor ?? 0;
+  // D28: the shop phone is edited in «Налаштування → Магазин»; the public value is what the invoice prints.
+  const { data: site } = useQuery({ queryKey: ['site-settings'], queryFn: () => api<{ contact: { phone: string } }>('/site/settings'), staleTime: 60_000 });
   return (
     <section className="vk-page">
       <h1 style={{ textAlign: 'center', marginBottom: '6mm' }}>Рахунок на оплату № {o.number}<br /><span style={{ fontSize: '12pt', fontWeight: 400 }}>від {longDate(o.placedAt)}</span></h1>
       <table style={{ marginBottom: '5mm' }}>
         <tbody>
-          <tr><th style={{ width: '24%' }}>Постачальник</th><td><b>{BUSINESS.legalEntityName}</b><br />РНОКПП {BUSINESS.legalId}<br />IBAN {BUSINESS.iban}<br />{BUSINESS.factoryAddress}<br />тел. {BUSINESS.phones[0]}</td></tr>
+          <tr><th style={{ width: '24%' }}>Постачальник</th><td><b>{BUSINESS.legalEntityName}</b><br />РНОКПП {BUSINESS.legalId}<br />IBAN {BUSINESS.iban}<br />{BUSINESS.factoryAddress}<br />тел. {site?.contact.phone ?? BUSINESS.phones[0]}</td></tr>
           <tr><th>Покупець</th><td>{o.company ? <><b>{o.company.name}</b><br />ЄДРПОУ {o.company.edrpou}<br /></> : null}{[o.customer, o.patronymic].filter(Boolean).join(' ')}, {prettyPhone(o.phone)}{o.email ? `, ${o.email}` : ''}</td></tr>
         </tbody>
       </table>

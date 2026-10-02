@@ -53,8 +53,10 @@ export async function blogRoutes(app: FastifyInstance) {
       where: { id: { in: ids }, deletedAt: null },
       select: { id: true, status: true, origin: true, partnerRegion: true, priceMinMinor: true, priceMaxMinor: true, inStock: true, translations: { where: { locale: { in: [l, 'uk'] } }, select: { locale: true, name: true, slug: true } } },
     }) : [];
+    const photos = await svc.figureMedia(body);
     reply.header('cache-control', 'public, max-age=0, s-maxage=300');
     return {
+      photos: photos.map((m) => ({ id: m.id, publicId: m.publicId, width: m.width, height: m.height })),
       slug: t.slug, title: t.title, excerpt: t.excerpt, metaTitle: t.metaTitle, metaDescription: t.metaDescription, body,
       publishedAt: t.post.publishedAt!.toISOString(), updatedAt: t.post.updatedAt.toISOString(), readMinutes: t.post.readMinutes,
       tags: t.post.tags.map((x) => x.tag.translations[0]?.name ?? x.tag.key),

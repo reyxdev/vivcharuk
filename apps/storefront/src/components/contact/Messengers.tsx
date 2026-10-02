@@ -1,10 +1,12 @@
-import { BUSINESS, contactLinks } from '@vivcharyk/schemas';
+import { contactLinks } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { BRAND } from './brandIcons';
 
 // Viber, Telegram, WhatsApp on the messenger number (round 9 part 5 #18, #5), each with its logo
 // beside the name (2026-10-02). Shown dashed and inert while the number is still a placeholder.
 export function Messengers({ tone = 'page', compact = false }: { tone?: 'page' | 'inverted'; compact?: boolean }) {
-  const l = contactLinks(BUSINESS.messengerPhone);
+  const biz = useBusiness();
+  const l = contactLinks(biz.messengerPhone);
   const items = [['Viber', l?.viber], ['Telegram', l?.telegram], ['WhatsApp', l?.whatsapp]] as const;
   // Filled, raised, with hover and press states, so they read as buttons on the page and in the footer.
   const look = tone === 'inverted'

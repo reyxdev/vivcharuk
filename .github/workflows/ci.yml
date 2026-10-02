@@ -1,0 +1,41 @@
+# Every push to main and every pull request: types and tests (developer decision D04, 2026-10-02).
+# The database is a throwaway Postgres with the demo catalogue; no real mail, Telegram or payments.
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: vivcharyk, POSTGRES_PASSWORD: ci, POSTGRES_DB: vivcharyk }
+        ports: ['5434:5432']
+        options: >-
+          --health-cmd "pg_isready -U vivcharyk" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://vivcharyk:ci@127.0.0.1:5434/vivcharyk
+      DATABASE_DIRECT_URL: postgresql://vivcharyk:ci@127.0.0.1:5434/vivcharyk
+      JWT_ACCESS_SECRET: ci-only-access-secret-0123456789abcdef
+      COOKIE_SECRET: ci-only-cookie-secret-0123456789abcdef
+      STAFF_TOKEN_SECRET: ci-only-staff-secret-0123456789abcdef
+      MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      SITE_URL: http://localhost:3001
+      ADMIN_URL: http://localhost:3000/admin
+      SEED_DEMO: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npx tsx prisma/seed/index.ts
+      - run: npm run typecheck
+      - run: npx vitest run
+      - run: npx vitest run
+        working-directory: apps/api
+      - run: npm run -s build -w @vivcharyk/admin && npm run -s build -w @vivcharyk/storefront

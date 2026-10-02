@@ -56,10 +56,14 @@ export async function messageFiles(messageId: string): Promise<OutFile[]> {
   return rows.map((a) => ({ filename: a.filename, contentType: a.contentType, content: readStored(a.objectKey) }));
 }
 
+/**
+ * `threadId: null` with mode 'new' (D34 «Новий лист») starts a conversation: the thread is created
+ * together with the letter, only after the letter has gone out.
+ */
 export async function sendFromMailbox(input: {
-  threadId: string; staff: { id: string; firstName: string | null }; to: string; subject: string; bodyHtml: string;
-  files: OutFile[]; mode: 'reply' | 'forward'; quote?: { fromName: string | null; fromEmail: string; occurredAt: Date; textBody: string | null };
-  inReplyTo?: string | null; references?: string[];
+  threadId: string | null; staff: { id: string; firstName: string | null }; to: string; subject: string; bodyHtml: string;
+  files: OutFile[]; mode: 'reply' | 'forward' | 'new'; quote?: { fromName: string | null; fromEmail: string; occurredAt: Date; textBody: string | null };
+  inReplyTo?: string | null; references?: string[]; newThread?: { counterpartName: string | null; orderId: string | null };
 }) {
   const total = input.files.reduce((s, f) => s + f.content.length, 0);
   if (total > MAX_ATTACH_BYTES) throw new AppError(422, 'VALIDATION_FAILED', undefined, undefined, [{ path: 'files', code: 'TOO_LARGE' }]);
@@ -103,20 +107,34 @@ export async function sendFromMailbox(input: {
     return { filename: f.filename, contentType: f.contentType, sizeBytes: f.content.length, sha256: hash, objectKey: key, riskFlag: riskOf(f.filename, f.contentType) };
   });
   const now = new Date();
-  await prisma.$transaction(async (tx) => {
+  const threadId = await prisma.$transaction(async (tx) => {
+    let threadId = input.threadId;
+    if (!threadId) {
+      const mailbox = await tx.mailbox.upsert({ where: { address: config.mailbox.address }, update: {}, create: { address: config.mailbox.address, displayName: BUSINESS.brand } });
+      threadId = (await tx.mailThread.create({
+        data: {
+          mailboxId: mailbox.id, subject: input.subject, counterpartEmail: input.to, counterpartName: input.newThread?.counterpartName ?? null,
+          status: 'WAITING', orderId: input.newThread?.orderId ?? null, lastMessageAt: now,
+        },
+        select: { id: true },
+      })).id;
+    }
     await tx.mailMessage.create({
       data: {
-        threadId: input.threadId, direction: 'OUTBOUND', kind: 'STAFF_REPLY', messageIdHeader: messageId,
+        threadId, direction: 'OUTBOUND', kind: 'STAFF_REPLY', messageIdHeader: messageId,
         inReplyTo: input.inReplyTo ?? null, references: input.references ?? [], fromEmail: config.mailbox.address, fromName: BUSINESS.brand,
         toEmails: [input.to], ccEmails: [], subject: input.subject, textBody: text, htmlSanitized: html, sentById: input.staff.id,
         deliveryState: 'SENT', occurredAt: now,
         attachments: { create: stored },
       },
     });
-    await tx.mailThread.update({ where: { id: input.threadId }, data: { lastMessageAt: now, ...(input.mode === 'reply' ? { status: 'WAITING' } : {}) } });
-    await tx.mailDraft.deleteMany({ where: { threadId: input.threadId, staffUserId: input.staff.id } });
+    if (input.threadId) {
+      await tx.mailThread.update({ where: { id: threadId }, data: { lastMessageAt: now, ...(input.mode === 'reply' ? { status: 'WAITING' } : {}) } });
+      await tx.mailDraft.deleteMany({ where: { threadId, staffUserId: input.staff.id } });
+    }
+    return threadId;
   });
-  return { messageId };
+  return { messageId, threadId };
 }
 
 /** Out-of-hours auto-reply (D1 #39–41), sent through the site's mail service, stored in the thread. */

@@ -19,7 +19,7 @@
     "build:tokens": "npm run build -w @vivcharyk/tokens",
     "dev:api": "npm run dev -w @vivcharyk/api",
     "dev:admin": "npm run dev -w @vivcharyk/admin",
-    "typecheck": "tsc -b",
+    "typecheck": "npm run -s build:tokens && tsc -p packages/schemas --noEmit && tsc -p apps/api --noEmit && tsc -p apps/admin --noEmit && cd apps/storefront && npx react-router typegen && tsc --noEmit",
     "test": "vitest run"
   },
   "prisma": {

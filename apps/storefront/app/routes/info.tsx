@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, useLoaderData, useMatches } from 'react-router';
-import type { Locale, VolumeTier } from '@vivcharyk/schemas';
+import type { LiveBusiness, Locale, VolumeTier } from '@vivcharyk/schemas';
 import { BUSINESS, isPlaceholder } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import type { Route } from './+types/info';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
@@ -34,12 +35,13 @@ const P = ({ children }: { children: ReactNode }) => <p className="text-body-lg 
 const UL = ({ items }: { items: ReactNode[] }) => <ul className="flex list-disc flex-col gap-2 pl-6 text-body-lg text-text-body">{items.map((x, i) => <li key={i}>{x}</li>)}</ul>;
 
 function Seller() {
+  const biz = useBusiness();
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 rounded-md border border-border-hairline bg-bg-surface p-4 text-body">
       <dt className="text-text-muted">Продавець</dt><dd>{BUSINESS.legalEntityName}</dd>
       <dt className="text-text-muted">РНОКПП</dt><dd>{BUSINESS.legalId}</dd>
       <dt className="text-text-muted">Адреса</dt><dd>{isPlaceholder(BUSINESS.factoryAddress) ? `${BUSINESS.locality} ${BUSINESS.factoryAddress}` : BUSINESS.factoryAddress}</dd>
-      <dt className="text-text-muted">Email</dt><dd>{BUSINESS.publicEmail}</dd>
+      <dt className="text-text-muted">Email</dt><dd>{biz.publicEmail}</dd>
     </dl>
   );
 }
@@ -49,6 +51,7 @@ function LegalStub() {
 }
 
 function Delivery({ f, l }: { f: Facts; l: Locale }) {
+  const biz = useBusiness();
   return (
     <>
       <H2>Доставка</H2>
@@ -56,7 +59,7 @@ function Delivery({ f, l }: { f: Facts; l: Locale }) {
       <UL items={[
         'Нова пошта — у відділення або поштомат (якщо посилка в нього поміститься), чи кур’єром за адресою.',
         'Укрпошта — у відділення.',
-        <>Самовивіз у Яворові, з магазину при цеху. {BUSINESS.hoursText} <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</>,
+        <>Самовивіз у Яворові, з магазину при цеху. {biz.hoursText} <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</>,
       ]} />
       <P>Вироби «свого розміру» та позиції з позначкою «Виготовимо під замовлення» спершу виготовляємо — це 14 днів, — а потім відправляємо.</P>
       <P>За кордон поки не доставляємо.</P>
@@ -78,6 +81,7 @@ function Delivery({ f, l }: { f: Facts; l: Locale }) {
 }
 
 function Returns({ l }: { l: Locale }) {
+  const biz = useBusiness();
   return (
     <>
       <P>Товар можна повернути або обміняти протягом 14 днів від отримання, якщо він зберіг товарний вигляд.</P>
@@ -87,16 +91,16 @@ function Returns({ l }: { l: Locale }) {
         'Вироби «свого розміру» виготовляємо саме для вас, тому поверненню вони не підлягають — окрім браку. Про це сказано ще до оформлення.',
       ]} />
       <H2>Як повернути</H2>
-      <P>Зателефонуйте або напишіть на {BUSINESS.publicEmail}, вкажіть номер замовлення — підкажемо, куди й як відправити. <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</P>
+      <P>Зателефонуйте або напишіть на {biz.publicEmail}, вкажіть номер замовлення — підкажемо, куди й як відправити. <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</P>
     </>
   );
 }
 
-function faqItems(f: Facts, l: Locale): Array<{ q: string; a: ReactNode; text: string }> {
+function faqItems(f: Facts, l: Locale, biz: LiveBusiness): Array<{ q: string; a: ReactNode; text: string }> {
   const tiers = f.volumeTiers.map((t) => `від ${t.minUnits} шт. одного товару — −${t.percent}%`).join(', ');
   return [
-    { q: 'Де ви знаходитесь?', text: `У ${BUSINESS.locality}. Магазин і виробництво — в одному місці. ${BUSINESS.hoursText}`,
-      a: <>У {BUSINESS.locality}. Магазин і виробництво — в одному місці. {BUSINESS.hoursText} <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</> },
+    { q: 'Де ви знаходитесь?', text: `У ${BUSINESS.locality}. Магазин і виробництво — в одному місці. ${biz.hoursText}`,
+      a: <>У {BUSINESS.locality}. Магазин і виробництво — в одному місці. {biz.hoursText} <Link to={path.seg(l, 'contacts')} className="underline">Контакти</Link>.</> },
     { q: 'Це все ваше виробництво?', text: 'Кожен товар підписаний: «Власне виробництво» або «Від партнерів». Власні вироби ми робимо самі — від сирої вовни до готового виробу.',
       a: <>Кожен товар підписаний: «Власне виробництво» або «Від партнерів». Власні вироби ми робимо самі — від сирої вовни до готового виробу. <Link to={path.seg(l, 'production')} className="underline">Як ми виробляємо</Link>.</> },
     { q: 'Чи можна замовити ліжник свого розміру?', text: 'Так, там, де на сторінці товару є «Свій розмір». Виготовлення — 14 днів, лише повна передоплата карткою; повернення — тільки у разі браку.',
@@ -114,7 +118,8 @@ function faqItems(f: Facts, l: Locale): Array<{ q: string; a: ReactNode; text: s
 }
 
 function Faq({ f, l }: { f: Facts; l: Locale }) {
-  const items = faqItems(f, l);
+  const biz = useBusiness();
+  const items = faqItems(f, l, biz);
   // FAQPage structured data, same text as the page (30 AI search; round 10 part 7 #11).
   const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.text } })) };
   return (

@@ -169,7 +169,9 @@ export function CustomerPage() {
             <Contact href={`https://t.me/+${digits}`} icon={Send} label="Telegram" external />
             {c.email && can('mail.read') && (latestThread
               ? <Link to={`/mail/${latestThread.id}`} className="flex flex-col items-center gap-1 text-caption text-text-body"><span className="flex size-12 items-center justify-center rounded-full border border-border-control bg-bg-surface text-text-primary hover:bg-bg-alt"><Mail size={20} strokeWidth={1.75} /></span>Лист</Link>
-              : <Contact href={`mailto:${c.email}`} icon={Mail} label="Лист" />)}
+              : can('mail.reply')
+                ? <Link to={`/mail?compose=${encodeURIComponent(c.email)}`} className="flex flex-col items-center gap-1 text-caption text-text-body"><span className="flex size-12 items-center justify-center rounded-full border border-border-control bg-bg-surface text-text-primary hover:bg-bg-alt"><Mail size={20} strokeWidth={1.75} /></span>Лист</Link>
+                : <Contact href={`mailto:${c.email}`} icon={Mail} label="Лист" />)}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CustomerMarks vip={c.marks.vip} regular={c.marks.regular} caution={null} />

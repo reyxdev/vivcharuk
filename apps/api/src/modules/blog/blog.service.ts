@@ -22,9 +22,17 @@ async function embedStatuses(body: PostBody) {
   return (id: string) => { const r = rows.find((x) => x.id === id); return !r || r.deletedAt ? 'MISSING' as const : r.status === 'ACTIVE' ? 'ACTIVE' as const : 'OTHER' as const; };
 }
 
+/** The photos of `figure` blocks (D37) that still exist in «Фото й відео». */
+export const figureIds = (body: PostBody) => body.blocks.flatMap((b) => (b.type === 'figure' ? [b.mediaId] : []));
+export async function figureMedia(body: PostBody) {
+  const ids = figureIds(body);
+  return ids.length ? prisma.media.findMany({ where: { id: { in: ids }, kind: 'IMAGE' }, select: { id: true, provider: true, publicId: true, width: true, height: true } }) : [];
+}
+
 export async function lint(body: PostBody) {
   const plain = bodyPlain(body);
-  return lintPost(body, plain, await embedStatuses(body));
+  const photos = await figureMedia(body);
+  return lintPost(body, plain, await embedStatuses(body), (id) => photos.some((m) => m.id === id));
 }
 
 export async function listPosts() {
@@ -48,6 +56,8 @@ export async function getPost(id: string) {
     id: p.id, status: p.status, publishedAt: p.publishedAt?.toISOString() ?? null, scheduledFor: p.scheduledFor?.toISOString() ?? null, slug: t.slug,
     ...doc, hasDraft: !!draft, draftUpdatedAt: p.draftUpdatedAt?.toISOString() ?? null,
     lints: await lint(doc.body), readMinutes: readMinutes(bodyPlain(doc.body)),
+    // Thumbnails for the photo chips in the editor.
+    photos: (await figureMedia(doc.body)).map((m) => ({ id: m.id, thumb: m.provider === 'local' ? `/media/${m.publicId.slice('local:'.length)}-480.webp` : null })),
   };
 }
 

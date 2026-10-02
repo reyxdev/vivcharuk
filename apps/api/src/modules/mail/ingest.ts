@@ -10,7 +10,7 @@ import { isWorkingTime } from './hours';
 // One message from the mailbox into the panel's threads (round 19 D1). Idempotent: a message already
 // stored (same Message-ID in the same thread, or the same IMAP uid) is not stored again.
 
-const ORDER_NO = /\bVCH-\d{2}-\d{4,}\b/i;
+export const ORDER_NO = /\bVCH-\d{2}-\d{4,}\b/i;
 
 const addresses = (a: AddressObject | AddressObject[] | undefined) =>
   (Array.isArray(a) ? a : a ? [a] : []).flatMap((x) => x.value).map((v) => ({ email: (v.address ?? '').toLowerCase(), name: v.name || null })).filter((v) => v.email);

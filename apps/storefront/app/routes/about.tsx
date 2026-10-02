@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
 
 export function meta() {
@@ -40,15 +41,16 @@ function PlaceMap() {
 
 // 21 §21.8: a claim, the evidence that makes it checkable, and where the evidence lives.
 // Only claims with evidence; round 9 §F1 limits the production claim to the stages the client names.
-const CLAIMS: Array<{ claim: string; evidence: string; link: { seg: 'production' | 'contacts' | null; label: string } }> = [
+const claims = (hoursText: string): Array<{ claim: string; evidence: string; link: { seg: 'production' | 'contacts' | null; label: string } }> => [
   { claim: 'Ми робимо самі — від сирої вовни до готового виробу, від сирої шкури до овчини.', evidence: 'Миття, чесання, прядіння, ткання, валяння, пошиття й вичинка шкур — кожен етап показано окремо.', link: { seg: 'production', label: 'Як ми виробляємо' } },
   { claim: 'Ми не перепродаємо чуже як своє.', evidence: 'Кожен товар підписаний: «Власне виробництво» або «Від партнерів». У каталозі за цим можна відфільтрувати.', link: { seg: null, label: '' } },
   { claim: 'Ми не ховаємо склад.', evidence: 'Склад у відсотках — на сторінці кожного товару, у таблиці характеристик.', link: { seg: null, label: '' } },
-  { claim: 'Ми не вигадуємо історію — до нас можна приїхати.', evidence: `Магазин і виробництво — в одному місці, в Яворові. ${BUSINESS.hoursText}`, link: { seg: 'contacts', label: 'Контакти' } },
+  { claim: 'Ми не вигадуємо історію — до нас можна приїхати.', evidence: `Магазин і виробництво — в одному місці, в Яворові. ${hoursText}`, link: { seg: 'contacts', label: 'Контакти' } },
   { claim: 'Ми не обіцяємо того, чого не маємо.', evidence: 'Сертифікатів у нас немає, і ми про них не пишемо. Маємо цех, куди можна приїхати.', link: { seg: null, label: '' } },
 ];
 
 export default function About() {
+  const biz = useBusiness();
   const { locale = 'uk' } = useParams();
   const l = locale as Locale;
   return (
@@ -79,7 +81,7 @@ export default function About() {
         <div className="mx-auto flex max-w-(--container-wide) flex-col gap-8 px-4 lg:px-12">
           <h2 id="values" className="text-h1 text-text-primary">Чого ми тримаємося</h2>
           <ul className="grid gap-4 md:grid-cols-2">
-            {CLAIMS.map((c) => (
+            {claims(biz.hoursText).map((c) => (
               <li key={c.claim} className="flex flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-6">
                 <p className="text-h4 text-text-primary">«{c.claim}»</p>
                 <p className="text-body text-text-body">{c.evidence}</p>

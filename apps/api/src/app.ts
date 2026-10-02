@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit';
 import { randomUUID } from 'node:crypto';
 import { ZodError } from 'zod';
 import { config } from './config';
+import { enqueue } from './lib/jobs';
 import { AppError } from './lib/errors';
 import { healthRoutes } from './modules/health/health.routes';
 import { authRoutes } from './modules/auth/auth.routes';
@@ -39,6 +40,19 @@ import { adminMediaRoutes } from './modules/content/media.routes';
 import { telegramRoutes } from './modules/notifications/telegram.routes';
 import { ADMIN_ROOT, adminBase, adminStatic } from './plugins/adminStatic';
 import { mediaStatic } from './plugins/mediaStatic';
+
+// D21 (2026-10-02): a server error reaches the developer («Технічна підтримка») in Telegram — the same
+// error at most once per 10 minutes, with how many times it happened meanwhile.
+const seenErrors = new Map<string, { at: number; count: number }>();
+function reportServerError(err: Error, where: string, requestId: string) {
+  if (config.env === 'test') return;
+  const key = `${where}|${err.message}`.slice(0, 300);
+  const now = Date.now();
+  const s = seenErrors.get(key);
+  if (s && now - s.at < 600_000) { s.count++; return; }
+  seenErrors.set(key, { at: now, count: 1 });
+  void enqueue('notify.telegram', { kind: 'server_error', message: `${err.name}: ${err.message}`, where, requestId, count: s?.count }).catch(() => undefined);
+}
 
 export async function buildApp() {
   const app = Fastify({
@@ -80,6 +94,7 @@ export async function buildApp() {
       return reply.status(400).send({ error: { code: 'MALFORMED_BODY', message: 'MALFORMED_BODY', requestId: req.id } });
     }
     req.log.error(err);
+    reportServerError(err, `${req.method} ${req.url.split('?')[0]}`, req.id);
     return reply.status(500).send({ error: { code: 'INTERNAL_ERROR', message: 'INTERNAL_ERROR', requestId: req.id } });
   });
 

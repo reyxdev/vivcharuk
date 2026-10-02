@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSwipeClose } from '@/lib/motion';
-import { BUSINESS } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 
 /**
  * «Купити в 1 клік» (round 9 §P4.1; round 11 #40: a small centred dialog, a bottom sheet on
  * phones). The buyer leaves a phone number; we call back and create the order.
  */
 export function QuickOrder({ variantId, label }: { variantId: string; label: string }) {
+  const biz = useBusiness();
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState('+380');
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -61,7 +62,7 @@ export function QuickOrder({ variantId, label }: { variantId: string; label: str
               <button type="submit" disabled={state === 'sending'} aria-busy={state === 'sending'} className={`min-h-12 rounded-md bg-bg-inverted px-6 text-body font-semibold text-text-on-inverted disabled:opacity-50 ${state === 'sending' ? 'vk-busy disabled:opacity-100' : ''}`}>
                 {state === 'sending' ? 'Зачекайте…' : 'Чекаю дзвінка'}
               </button>
-              <p className="text-caption text-text-muted">Лише номери України. Номер використаємо тільки для цього замовлення. Або зателефонуйте самі: {BUSINESS.phones[0]}.</p>
+              <p className="text-caption text-text-muted">Лише номери України. Номер використаємо тільки для цього замовлення. Або зателефонуйте самі: {biz.phones[0]}.</p>
             </>
           )}
         </form>

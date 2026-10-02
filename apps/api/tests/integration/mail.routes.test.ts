@@ -10,6 +10,7 @@ const dir = mkdtempSync(path.join(tmpdir(), 'mail-routes-'));
 process.env.MAIL_DIR = dir;
 process.env.MAILBOX_PASSWORD = ''; // not delete: Prisma would load it back from .env
 const { prisma } = await import('../../src/lib/prisma');
+const { config } = await import('../../src/config');
 const { buildApp } = await import('../../src/app');
 const { signAccess } = await import('../../src/modules/auth/tokens');
 const { ingestRaw } = await import('../../src/modules/mail/ingest');
@@ -20,6 +21,7 @@ const tag = `r${Date.now()}`;
 let token = '';
 let sessionId = '';
 let threadId = '';
+let composedId = '';
 const auth = () => ({ authorization: `Bearer ${token}` });
 
 beforeAll(async () => {
@@ -34,7 +36,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await purgeThreads([threadId]);
+  await purgeThreads([threadId, composedId].filter(Boolean));
   await prisma.mailSenderRule.deleteMany({ where: { pattern: `buyer-${tag}@example.test` } });
   await prisma.staffSession.delete({ where: { id: sessionId } });
   await app.close();
@@ -92,6 +94,36 @@ describe('mail routes', () => {
     await app.inject({ method: 'PATCH', url: `/api/v1/admin/mail/threads/${threadId}`, headers: auth(), payload: { deleted: false } });
     t = (await app.inject({ method: 'GET', url: `/api/v1/admin/mail/threads/${threadId}`, headers: auth() })).json();
     expect(t.deleted).toBe(false);
+  });
+
+  it('«Новий лист» starts a conversation waiting for the answer', async () => {
+    const to = `new-${tag}@example.test`;
+    const r = await app.inject({ method: 'POST', url: '/api/v1/admin/mail/compose', headers: auth(), payload: { to: ` ${to.toUpperCase()} `, subject: `Пропозиція ${tag}`, bodyHtml: '<p>Добрий день!</p>' } });
+    expect(r.statusCode).toBe(200);
+    composedId = r.json().threadId;
+    const t = (await app.inject({ method: 'GET', url: `/api/v1/admin/mail/threads/${composedId}`, headers: auth() })).json();
+    expect(t).toMatchObject({ status: 'WAITING', counterpartEmail: to, subject: `Пропозиція ${tag}` });
+    expect(t.messages).toHaveLength(1);
+    expect(t.messages[0]).toMatchObject({ direction: 'OUTBOUND', toEmails: [to] });
+    expect(t.messages[0].textBody).toContain('Вівчарик');
+    const list = (await app.inject({ method: 'GET', url: '/api/v1/admin/mail/threads?view=replied', headers: auth() })).json();
+    expect(list.items.find((x: { id: string }) => x.id === composedId)?.unread).toBe(false);
+  });
+
+  it('«Новий лист» refuses a bad address, the mailbox itself, an empty subject or text', async () => {
+    const send = (payload: object) => app.inject({ method: 'POST', url: '/api/v1/admin/mail/compose', headers: auth(), payload: { to: `x-${tag}@example.test`, subject: 'Тема', bodyHtml: '<p>Текст</p>', ...payload } });
+    expect((await send({ to: 'not-an-address' })).statusCode).toBe(422);
+    expect((await send({ to: config.mailbox.address })).json().error.fieldErrors[0]).toMatchObject({ path: 'to', code: 'SELF' });
+    expect((await send({ subject: ' ' })).statusCode).toBe(422);
+    expect((await send({ bodyHtml: '<p> </p>' })).statusCode).toBe(422);
+    expect(await prisma.mailThread.count({ where: { counterpartEmail: `x-${tag}@example.test` } })).toBe(0);
+  });
+
+  it('suggests recipients from orders only after two letters', async () => {
+    expect((await app.inject({ method: 'GET', url: '/api/v1/admin/mail/recipients?q=a', headers: auth() })).json().items).toEqual([]);
+    const r = await app.inject({ method: 'GET', url: '/api/v1/admin/mail/recipients?q=example', headers: auth() });
+    expect(r.statusCode).toBe(200);
+    expect(r.json().items.length).toBeLessThanOrEqual(8);
   });
 
   it('settings come with the six templates and five labels', async () => {

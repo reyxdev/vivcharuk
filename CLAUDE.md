@@ -1,7 +1,24 @@
 # Вівчарик — project instructions
 
-Carpathian wool manufacturer. This repository currently holds the **product blueprint only**;
-application code does not exist yet. See [docs/00-README.md](docs/00-README.md) for the index.
+Carpathian wool manufacturer. The blueprint is in `docs/` (index: [docs/00-README.md](docs/00-README.md));
+the application is built (launch planned 2026-10-03).
+
+## Code map
+
+- `apps/api` — Fastify + Prisma + pg-boss. Modules in `src/modules/*` (orders, products, mail «Пошта» over
+  IMAP/Porkbun, newsletter, notifications = order e-mails + the staff Telegram bot, stock = shop till, …);
+  background jobs in `src/modules/jobs/jobs.ts`; tests in `tests/` (`cd apps/api && npx vitest run`).
+- `apps/admin` — the panel (Vite + React 19, served by the API at `/admin`). Shared kit in
+  `src/components/` (Shell, ui.tsx, DataTable, Filters, status, sections); one folder per section in
+  `src/features/`. Interface rules: docs/00-client-decisions-20.md.
+- `apps/storefront` — the site (React Router 7 SSR, `server.mjs` in production).
+- `packages/schemas` (shared types, BUSINESS facts, permissions), `packages/tokens` (design tokens).
+- `prisma/` — schema, migrations, seeds (`SEED_DEMO=1` only in development).
+- `deploy/` — `push.sh` (upload + install on the VPS), `install.sh`, Caddyfile; `start.sh` runs everything locally.
+- Checks: `npm run typecheck`, `npx vitest run` (root and `apps/api`). Never run plain `tsc` without
+  `--noEmit`: emitted `.js` next to `.ts` is picked up by Vite first.
+- Local mail, Telegram and payments: tests blank their secrets (apps/api/vitest.config.ts); never send to
+  real addresses from tests.
 
 ## Reading discipline
 

@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clock, Mail, Paperclip, RefreshCw, Search, Settings2, ShieldAlert, Star } from 'lucide-react';
+import { Clock, Mail, Paperclip, RefreshCw, Search, Settings2, ShieldAlert, SquarePen, Star } from 'lucide-react';
 import { api, post } from '@/lib/api';
 import { dateTime } from '@/lib/format';
 import { useMe } from '@/features/auth/useSession';
 import { FilterButton, FilterChips, type FilterGroup, type FilterState } from '@/components/Filters';
-import { EmptyState, Hint, IconCircle, Sheet, SkeletonRows, Tabs, useStored } from '@/components/ui';
+import { EmptyState, Hint, IconCircle, PrimaryButton, Sheet, SkeletonRows, Tabs, useStored, useToast } from '@/components/ui';
 import { STATUS_TITLE, type MailSettings, type SyncStatus, type ThreadList } from './api';
 import { labelClass, ThreadView } from './ThreadView';
 import { MailSettingsPanel } from './MailSettingsPanel';
+import { NewLetter } from './NewLetter';
 
 // «Пошта» (round 19 D1; round 20 #167–170, #278–280): two columns (list | letter). Tabs Нові ·
 // Відповіли · Усі; Закриті, Спам, Кошик and the labels live under «Фільтри».
@@ -44,6 +45,9 @@ function SyncLine({ s }: { s: SyncStatus | undefined }) {
 export function MailPage() {
   const { id } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
+  const qc = useQueryClient();
   const [params, setParams] = useSearchParams();
   const { data: me } = useMe();
   const [storedTab, setStoredTab] = useStored<Tab>('mail.tab', 'inbox');
@@ -89,6 +93,20 @@ export function MailPage() {
   const open = (tid: string) => nav({ pathname: `/mail/${tid}`, search: params.toString() });
   const back = () => nav({ pathname: '/mail', search: params.toString() });
 
+  // D34 «Новий лист»: `?compose=<email>` opens the composer (also from the customer card).
+  const compose = params.get('compose');
+  const withoutCompose = () => { const p = new URLSearchParams(params); p.delete('compose'); return p.toString(); };
+  const startLetter = () => nav({ search: `${params.toString() ? `${params}&` : ''}compose=` }, { state: { compose: true } });
+  const closeLetter = () => {
+    if ((location.state as { compose?: boolean } | null)?.compose) nav(-1);
+    else nav({ search: withoutCompose() }, { replace: true });
+  };
+  const letterSent = (tid: string) => {
+    toast('Надіслано');
+    void qc.invalidateQueries({ queryKey: ['mail'] });
+    nav({ pathname: `/mail/${tid}`, search: withoutCompose() }, { replace: true });
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <div className={`flex flex-wrap items-center gap-3 ${id ? 'max-lg:hidden' : ''}`}>
@@ -98,14 +116,18 @@ export function MailPage() {
           <p className="text-caption text-text-muted">info@vivcharuk.com</p>
         </div>
         <Hint text="Листи зі скриньки info@: відповідайте тут — лист піде від info@vivcharuk.com." />
-        {me?.permissions.includes('mail.manage_mailboxes') && (
-          <button type="button" onClick={() => setSettingsOpen(true)} title="Шаблони, мітки, автовідповідь" aria-label="Шаблони, мітки, автовідповідь"
-            className="ml-auto inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border-control bg-bg-surface px-3 text-body-sm hover:bg-bg-alt">
-            <Settings2 size={17} strokeWidth={1.75} /><span className="max-md:hidden">Налаштування</span>
-          </button>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {me?.permissions.includes('mail.manage_mailboxes') && (
+            <button type="button" onClick={() => setSettingsOpen(true)} title="Шаблони, мітки, автовідповідь" aria-label="Шаблони, мітки, автовідповідь"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border-control bg-bg-surface px-3 text-body-sm hover:bg-bg-alt max-md:min-h-12">
+              <Settings2 size={17} strokeWidth={1.75} /><span className="max-md:hidden">Налаштування</span>
+            </button>
+          )}
+          {me?.permissions.includes('mail.reply') && <PrimaryButton icon={SquarePen} onClick={startLetter}>Новий лист</PrimaryButton>}
+        </div>
       </div>
       {settingsOpen && settings && <Sheet title="Шаблони, мітки, автовідповідь" wide onClose={() => setSettingsOpen(false)}><MailSettingsPanel settings={settings} onDone={() => setSettingsOpen(false)} /></Sheet>}
+      {compose !== null && me?.permissions.includes('mail.reply') && <NewLetter to={compose} settings={settings} onClose={closeLetter} onSent={letterSent} />}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]">
         <section className={`flex min-w-0 flex-col gap-2.5 ${id ? 'max-lg:hidden' : ''}`} aria-label="Листи">

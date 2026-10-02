@@ -157,7 +157,8 @@ async function linkChat(chatId: string, username: string | undefined, staff: { i
   // T39: what will come and how to switch it off; T40: an example of a new-order notice.
   const perms = await resolvePermissions(staff.id, staff.permVersion);
   const owner = await isOwner(staff.id);
-  const kinds = Object.values(KINDS).filter((k) => (k.perm === 'owner' ? owner : k.perm === 'self' ? true : perms.has(k.perm))).map((k) => `• ${k.label}`);
+  const tech = (await prisma.staffRoleAssignment.count({ where: { staffUserId: staff.id, role: { key: 'tech' } } })) > 0;
+  const kinds = Object.values(KINDS).filter((k) => (k.perm === 'tech' ? tech : k.perm === 'owner' ? owner : k.perm === 'self' ? true : perms.has(k.perm))).map((k) => `• ${k.label}`);
   await sendTo(chatId, `🎉 <b>Готово, ${esc(staff.firstName)}!</b> Сповіщення панелі приходитимуть сюди.\n\nЩо надходитиме:\n${kinds.join('\n')}\n\nЗайве вимикається галочками в панелі: «Пароль і вхід» → Telegram. Вночі (22:00–08:00) і на вихідних — без звуку.`, { silent: false });
   if (perms.has('orders.read')) {
     await sendTo(chatId, ['<i>Приклад — так виглядатиме нове замовлення:</i>', '', '🛍 <b>Нове замовлення VCH-26-0012</b>', '💰 2 400 ₴ · 💳 передоплата', '📦 Плед «Полонина» 150×200 × 1', '🚚 Нова пошта, відділення · 📍 Косів', '📞 +380 67 000 00 00'].join('\n'), { silent: true });

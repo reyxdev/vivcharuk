@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { BUSINESS, contactLinks, isPlaceholder } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
 import { Messengers } from '@/components/contact/Messengers';
 import mapPreview from '@/features/home/art/map-preview.svg?url';
@@ -16,20 +17,21 @@ export function meta() {
 const box = 'flex flex-col gap-4 rounded-xl border border-border-hairline bg-bg-surface p-6';
 
 export default function Contacts() {
+  const biz = useBusiness();
   const { locale = 'uk' } = useParams();
   const l = locale as Locale;
   return (
     <div className="mx-auto flex max-w-(--container-wide) flex-col gap-8 px-4 py-(--section-y-sm) lg:px-12">
       <header className="flex flex-col gap-3">
         <h1 className="text-h1 text-text-primary">Контакти</h1>
-        <p className="max-w-[60ch] text-body-lg text-text-body">Магазин і виробництво в одному місці — у {BUSINESS.locality}. {BUSINESS.hoursText}</p>
+        <p className="max-w-[60ch] text-body-lg text-text-body">Магазин і виробництво в одному місці — у {BUSINESS.locality}. {biz.hoursText}</p>
       </header>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
         <div className="flex flex-col gap-5">
           <section className={box} aria-labelledby="c-phones">
             <h2 id="c-phones" className="text-h3 text-text-primary">Телефони</h2>
-            {BUSINESS.contactPeople.map((p) => {
+            {biz.contactPeople.map((p) => {
               const links = contactLinks(p.phone);
               return (
                 <div key={p.name} className="flex flex-wrap items-center gap-3">
@@ -42,12 +44,12 @@ export default function Contacts() {
             })}
             <h3 className="mt-2 text-body font-semibold text-text-primary">Месенджери</h3>
             <div className="text-text-primary"><Messengers /></div>
-            <a href={`mailto:${BUSINESS.publicEmail}`} className="self-start text-body text-text-primary underline">{BUSINESS.publicEmail}</a>
+            <a href={`mailto:${biz.publicEmail}`} className="self-start text-body text-text-primary underline">{biz.publicEmail}</a>
           </section>
 
           <section className={box} aria-labelledby="c-visit">
             <h2 id="c-visit" className="text-h3 text-text-primary">Приїздіть</h2>
-            <p className="text-body text-text-body">При цеху працює магазин: вироби можна побачити наживо. {BUSINESS.hoursText} Щоб Іван показав виробництво, зателефонуйте заздалегідь.</p>
+            <p className="text-body text-text-body">При цеху працює магазин: вироби можна побачити наживо. {biz.hoursText} Щоб Іван показав виробництво, зателефонуйте заздалегідь.</p>
             {/* Round 9 part 5 #4: tours have no page of their own; they are mentioned here and arranged by phone. */}
             <p className="text-body text-text-body">Цех можна оглянути разом із власником — домовтеся про час телефоном.</p>
             <p className="text-body text-text-body"><Link to={path.seg(l, 'production')} className="text-text-primary underline">Як ми виробляємо</Link> — усі етапи по черзі.</p>

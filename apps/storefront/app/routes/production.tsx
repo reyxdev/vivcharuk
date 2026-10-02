@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLoaderData } from 'react-router';
 import type { Locale, ProductListItem } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import type { Route } from './+types/production';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
@@ -151,11 +152,12 @@ function Chapter({ id, title, lead, stages, offset }: { id: string; title: strin
 }
 
 export default function Production() {
+  const biz = useBusiness();
   const { locale, stages, products } = useLoaderData<typeof loader>();
   const wool = stages.filter((s) => s.track === 'WOOL');
   const hide = stages.filter((s) => s.track === 'HIDE');
   const sewing = wool.find((s) => s.key === 'sewing');
-  const phone = BUSINESS.phones[0];
+  const phone = biz.phones[0];
 
   return (
     <>
@@ -198,7 +200,7 @@ export default function Production() {
       <section id="pryizdit" className="scroll-mt-32 bg-bg-inverted text-text-on-inverted">
         <div className="mx-auto flex max-w-(--container-wide) flex-col gap-5 px-4 py-(--section-y-md) lg:px-12">
           <h2 className="max-w-[22ch] text-h1">Приїздіть: магазин і виробництво в одному місці</h2>
-          <p className="max-w-[56ch] text-body-lg opacity-90">У Яворові при цеху працює магазин — вироби можна побачити й помацати. {BUSINESS.hoursText}</p>
+          <p className="max-w-[56ch] text-body-lg opacity-90">У Яворові при цеху працює магазин — вироби можна побачити й помацати. {biz.hoursText}</p>
           <div className="flex flex-wrap gap-3">
             <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="rounded-lg bg-bg-page px-6 py-3.5 text-body-lg font-semibold text-text-primary">Подзвонити {phone}</a>
             <Link to={path.seg(locale, 'contacts')} className="rounded-lg border-2 border-text-on-inverted px-6 py-3 text-body-lg font-semibold">Як доїхати</Link>

@@ -4,12 +4,22 @@ import { z } from 'zod';
 import { AppError } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
 import { requirePermission } from '../../plugins/staffAuth';
+import { postBody } from '@vivcharyk/schemas';
+import { figureIds } from '../blog/blog.service';
 
 // Local files are <path>-480.webp, -960.webp, -1600.webp (round 18); a video shows its poster frame.
 const thumbOf = (m: { provider: string; publicId: string } | null | undefined) =>
   m && m.provider === 'local' ? `/media/${m.publicId.slice('local:'.length)}-480.webp` : null;
 
 const PAGE = 60;
+
+/** Article photos (D37) live inside the article body — the published text and an open draft alike. */
+async function figurePosts() {
+  const ids = (body: unknown) => { const r = postBody.safeParse(body); return r.success ? figureIds(r.data) : []; };
+  const rows = await prisma.post.findMany({ where: { deletedAt: null }, select: { id: true, draftDocument: true, translations: { where: { locale: 'uk' }, select: { title: true, bodyJson: true } } } });
+  return rows.map((p) => ({ id: p.id, title: p.translations[0]?.title ?? '', media: new Set([...ids(p.translations[0]?.bodyJson), ...ids((p.draftDocument as { body?: unknown } | null)?.body)]) }))
+    .filter((p) => p.media.size > 0);
+}
 
 /**
  * «Фото й відео» (round 20 #166): one grid of every photo and video, a search by its description,
@@ -26,9 +36,11 @@ export async function adminMediaRoutes(app: FastifyInstance) {
     }).parse(req.query);
     // Poster frames are part of their video, not separate pictures.
     const posters = (await prisma.media.findMany({ where: { posterId: { not: null } }, select: { posterId: true } })).map((m) => m.posterId!);
+    const figures = await figurePosts();
     const elsewhere = q.unused ? [
       ...(await prisma.banner.findMany({ select: { mediaId: true, mobileMediaId: true } })).flatMap((b) => [b.mediaId, b.mobileMediaId]),
       ...(await prisma.post.findMany({ where: { deletedAt: null }, select: { coverMediaId: true } })).map((p) => p.coverMediaId),
+      ...figures.flatMap((p) => [...p.media]),
     ].filter((x): x is string => !!x) : [];
     const where: Prisma.MediaWhereInput = {
       id: { notIn: [...posters, ...elsewhere] },
@@ -52,7 +64,8 @@ export async function adminMediaRoutes(app: FastifyInstance) {
       items: page.map((m) => {
         const c = m._count;
         const uses = c.products + c.heroForCategories + c.variants + c.stagePhotos + c.stageVideos
-          + banners.filter((b) => b.mediaId === m.id || b.mobileMediaId === m.id).length + posts.filter((p) => p.coverMediaId === m.id).length;
+          + banners.filter((b) => b.mediaId === m.id || b.mobileMediaId === m.id).length + posts.filter((p) => p.coverMediaId === m.id).length
+          + figures.filter((p) => p.media.has(m.id)).length;
         return {
           id: m.id, kind: m.kind, width: m.width, height: m.height, bytes: m.bytes, durationSec: m.durationSec, createdAt: m.createdAt.toISOString(),
           alt: m.translations[0]?.alt ?? '', thumb: thumbOf(m.kind === 'VIDEO' ? posterRows.find((p) => p.id === m.posterId) : m), uses,
@@ -76,10 +89,13 @@ export async function adminMediaRoutes(app: FastifyInstance) {
       },
     });
     if (!m) throw new AppError(404, 'NOT_FOUND');
-    const [banners, posts] = await Promise.all([
+    const [banners, posts, figures] = await Promise.all([
       prisma.banner.findMany({ where: { OR: [{ mediaId: id }, { mobileMediaId: id }] }, include: { translations: { where: { locale: 'uk' } } } }),
       prisma.post.findMany({ where: { deletedAt: null, coverMediaId: id }, include: { translations: { where: { locale: 'uk' }, select: { title: true } } } }),
+      figurePosts(),
     ]);
+    const articles = new Map(posts.map((p) => [p.id, { id: p.id, title: p.translations[0]?.title ?? '' }]));
+    for (const p of figures) if (p.media.has(id)) articles.set(p.id, { id: p.id, title: p.title });
     const products = new Map<string, { id: string; name: string }>();
     for (const p of [...m.products.filter((x) => !x.product.deletedAt).map((x) => x.product), ...m.variants.map((v) => v.product)]) products.set(p.id, { id: p.id, name: p.translations[0]?.name ?? p.sku });
     return {
@@ -90,7 +106,7 @@ export async function adminMediaRoutes(app: FastifyInstance) {
       categories: m.heroForCategories.map((c) => ({ id: c.id, name: c.translations[0]?.name ?? c.id })),
       stages: [...m.stagePhotos, ...m.stageVideos].map((s) => ({ key: s.key, title: s.translations[0]?.title ?? s.key })),
       banners: banners.map((b) => ({ id: b.id, placement: b.placement, title: b.translations[0]?.headline ?? '' })),
-      posts: posts.map((p) => ({ id: p.id, title: p.translations[0]?.title ?? '' })),
+      posts: [...articles.values()],
     };
   });
 }

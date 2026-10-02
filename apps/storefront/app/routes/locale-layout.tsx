@@ -1,8 +1,10 @@
 import { isRouteErrorResponse, Outlet, redirect, useLoaderData, useLocation, useRouteError, useRouteLoaderData } from 'react-router';
-import type { CategoryNode } from '@vivcharyk/schemas';
+import { useMemo } from 'react';
+import { DEFAULT_SITE_CONTACT, DEFAULT_TICKER, liveBusiness, type CategoryNode, type Locale, type SiteContact } from '@vivcharyk/schemas';
 import type { Route } from './+types/locale-layout';
-import { isLocale } from '@/lib/locale';
-import { apiGet } from '@/lib/api.server';
+import { isEnabledLocale, isLocale } from '@/lib/locale';
+import { alternatesFor, apiGet, apiGetCached } from '@/lib/api.server';
+import { BusinessProvider } from '@/lib/business';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { CartDrawer } from '@/features/cart/CartDrawer';
@@ -12,9 +14,19 @@ import { ConsentBanner } from '@/features/consent/ConsentBanner';
 import { NotFound } from '@/components/layout/NotFound';
 import { PageMotion } from '@/components/layout/Motion';
 import { AnnouncementStrip, type StripMessage } from '@/components/layout/AnnouncementStrip';
-import { BUSINESS } from '@vivcharyk/schemas';
-import { path } from '@/lib/segments';
+import { SEGMENTS, type SegmentKey } from '@/lib/segments';
 
+interface SiteSettings { contact: SiteContact & { hours: string }; ticker: Array<{ text: string; linkUrl: string | null }> }
+
+/** D39: the `/uk/` page matching a URL of a hidden locale — same page, else the home page. */
+async function ukTarget(url: URL, from: Locale) {
+  const [, ...parts] = url.pathname.split('/').filter(Boolean);
+  if (!parts.length) return '/uk/';
+  const key = (Object.keys(SEGMENTS) as SegmentKey[]).find((k) => SEGMENTS[k][from] === parts[0]);
+  if (key === 'product') return (parts[1] && (await alternatesFor('product', parts[1], from)).uk) || '/uk/';
+  if (key) return `/uk/${[SEGMENTS[key].uk, ...parts.slice(1)].join('/')}${url.search}`;
+  return (await alternatesFor('category', parts.at(-1)!, from)).uk ?? '/uk/';
+}
 export async function loader({ params, request }: Route.LoaderArgs) {
   if (!isLocale(params.locale)) {
     // An unknown two-letter prefix is a locale we do not serve; anything else is a path that lost its
@@ -23,29 +35,34 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     const rest = /^[a-z]{2}$/.test(params.locale ?? '') ? parts.slice(1) : parts;
     throw redirect(`/uk/${rest.join('/')}`, 301);
   }
-  const [{ data }, ann, facts] = await Promise.all([
+  // D39: a translated locale that is switched off sends the visitor to the same page in Ukrainian.
+  if (!isEnabledLocale(params.locale)) throw redirect(await ukTarget(new URL(request.url), params.locale), 302);
+  const [{ data }, ann, settings] = await Promise.all([
     apiGet<{ items: CategoryNode[] }>('/categories', params.locale),
     apiGet<{ seasonal: { text: string; linkUrl: string | null } | null }>('/site/announcement', params.locale).catch(() => ({ data: { seasonal: null } })),
-    apiGet<{ cardPayments: boolean }>('/site/facts', params.locale).catch(() => ({ data: { cardPayments: false } })),
+    apiGetCached<SiteSettings>('/site/settings', 'uk').catch(() => null),
   ]);
-  // Round 11 strip messages; «Огляд перед оплатою» only while COD with inspection is really on offer
-  // (it needs the card deposit, round 14). The seasonal message leads while active.
-  const l = params.locale;
+  // The strip (round 11): the owner's phrases from the panel (D29; «Огляд перед оплатою» comes back only
+  // while COD with inspection is really on offer, round 14). The seasonal message leads while active.
   const strip: StripMessage[] = [
     ...(ann.data.seasonal ? [{ text: ann.data.seasonal.text, href: ann.data.seasonal.linkUrl }] : []),
-    { text: 'Відправляємо по Україні за 2–4 дні', href: path.seg(l, 'delivery') },
-    ...(facts.data.cardPayments ? [{ text: 'Огляд перед оплатою на пошті', href: path.seg(l, 'delivery') }] : []),
-    { text: BUSINESS.tagline.replace(/\.$/, '') },
-    { text: 'Зроблено в Яворові', href: path.seg(l, 'production') },
+    ...(settings?.ticker ?? DEFAULT_TICKER.filter((t) => !t.cardOnly)).map((t) => ({ text: t.text, href: t.linkUrl })),
   ];
   // Absolute URLs for canonical and hreflang (29 §29.3 rule 4).
-  return { locale: params.locale, categories: data.items, strip, origin: (process.env.SITE_URL ?? 'http://127.0.0.1:5173').replace(/\/$/, '') };
+  return { locale: params.locale, categories: data.items, strip, contact: settings?.contact ?? null, origin: (process.env.SITE_URL ?? 'http://127.0.0.1:5173').replace(/\/$/, '') };
+}
+
+/** D28: the live hours, phone and e-mail for every component below (useBusiness). */
+function Business({ contact, children }: { contact: SiteContact | null; children: React.ReactNode }) {
+  const value = useMemo(() => liveBusiness(contact ?? DEFAULT_SITE_CONTACT), [contact]);
+  return <BusinessProvider value={value}>{children}</BusinessProvider>;
 }
 
 export default function LocaleLayout() {
-  const { locale, categories, origin, strip } = useLoaderData<typeof loader>();
+  const { locale, categories, origin, strip, contact } = useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   return (
+    <Business contact={contact}>
     <div className="flex min-h-dvh flex-col max-md:pb-16">
       <SeoHead origin={origin} locale={locale} />
       <AnnouncementStrip messages={strip} />
@@ -58,6 +75,7 @@ export default function LocaleLayout() {
       <FloatingUi locale={locale} />
       <ConsentBanner locale={locale} />
     </div>
+    </Business>
   );
 }
 
@@ -68,6 +86,7 @@ export function ErrorBoundary() {
   const locale = data?.locale ?? 'uk';
   const missing = isRouteErrorResponse(error) && error.status === 404;
   return (
+    <Business contact={data?.contact ?? null}>
     <div className="flex min-h-dvh flex-col max-md:pb-16">
       {data && <SiteHeader locale={locale} categories={data.categories} />}
       <main className="flex-1">
@@ -81,5 +100,6 @@ export function ErrorBoundary() {
       {data && <SiteFooter locale={locale} />}
       {data && <CartDrawer locale={locale} />}
     </div>
+    </Business>
   );
 }

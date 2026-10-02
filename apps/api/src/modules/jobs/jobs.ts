@@ -13,6 +13,7 @@ import { orderMail, type OrderMailKind } from '../notifications/orderMail';
 import { sendAutoReply } from '../mail/send';
 import { purgeThreads } from '../mail/mail.routes';
 import { newsletterMail } from '../newsletter/newsletter.service';
+import { dueReviewRequests, requestReview } from '../notifications/reviewRequest';
 
 // Telegram notices: composed and fanned out in ../notifications/notices.ts (docs/00-client-decisions-21.md).
 export type { Notify } from '../notifications/notices';
@@ -99,6 +100,9 @@ const HANDLERS: Partial<Record<JobName, (jobs: PgBoss.Job<never>[]) => Promise<v
 
   // T31, T33: the week in counts, Monday 08:00.
   'reports.weekly': async () => { await dispatch({ kind: 'weekly' }); },
+
+  // Round 19 D4: «Залиште відгук», once per order, 3 days after delivery (reviewRequest.ts).
+  'reviews.requestAfterDelivery': async () => { for (const id of await dueReviewRequests()) await requestReview(id); },
 };
 
 const SCHEDULE: Array<[JobName, string]> = [
@@ -108,6 +112,7 @@ const SCHEDULE: Array<[JobName, string]> = [
   ['posts.publishScheduled', '*/5 * * * *'],
   ['quickOrders.purge', '0 3 * * *'],
   ['reports.weekly', '0 8 * * 1'],
+  ['reviews.requestAfterDelivery', '0 10 * * *'],
   ['mail.purge', '20 3 * * *'],
   ['telegram.daily', '0 19 * * 1-5'],
   ['telegram.lowStock', '0 9 * * *'],

@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 /**
  * An article body (22 §22.6): a constrained list of blocks — anything not here cannot be written.
- * Inline text allows **bold**, *italic* and [link](https://…) only. `figure` and `videoEmbed`
- * join when media storage exists.
+ * Inline text allows **bold**, *italic* and [link](https://…) only. `figure` is a photo from
+ * «Фото й відео» (developer decision D37): alt is required, the caption optional. `videoEmbed` waits.
  */
 const text = z.string().max(4000);
 export const postBlock = z.discriminatedUnion('type', [
@@ -17,6 +17,10 @@ export const postBlock = z.discriminatedUnion('type', [
   z.object({ type: z.literal('productEmbed'), productId: z.string() }),
   z.object({ type: z.literal('faq'), items: z.array(z.object({ q: z.string().trim().min(1).max(300), a: z.string().trim().min(1).max(2000) })).min(1).max(12) }),
   z.object({ type: z.literal('divider') }),
+  z.object({
+    type: z.literal('figure'), mediaId: z.string().min(1).max(40),
+    alt: z.string().trim().min(3).max(200), caption: z.string().trim().max(300).transform((v) => v || null).nullable().default(null),
+  }),
 ]);
 export type PostBlock = z.infer<typeof postBlock>;
 export const postBody = z.object({ blocks: z.array(postBlock).max(200) });
@@ -33,6 +37,7 @@ export function bodyPlain(body: PostBody) {
       case 'blockquote': return [b.text + (b.attribution ? ` — ${b.attribution}` : '')];
       case 'bulletList': case 'orderedList': return b.items;
       case 'faq': return b.items.flatMap((i) => [i.q, i.a]);
+      case 'figure': return b.caption ? [b.caption] : [];
       default: return [];
     }
   }).map(strip).filter(Boolean).join('\n\n');
@@ -43,7 +48,7 @@ export const readMinutes = (plain: string) => Math.max(1, Math.round(plain.split
 export interface PostLint { level: 'block' | 'warn'; message: string }
 
 /** Save-time checks (22 §22.6, §22.8). `block` stops publishing; `warn` is shown to the writer. */
-export function lintPost(body: PostBody, plain: string, embedStatus: (productId: string) => 'ACTIVE' | 'OTHER' | 'MISSING'): PostLint[] {
+export function lintPost(body: PostBody, plain: string, embedStatus: (productId: string) => 'ACTIVE' | 'OTHER' | 'MISSING', photoExists: (mediaId: string) => boolean = () => true): PostLint[] {
   const out: PostLint[] = [];
   const bl = body.blocks;
   if (bl[0]?.type !== 'keyFacts') out.push({ level: 'block', message: 'Перший блок має бути «Коротко» (ключові факти)' });
@@ -55,6 +60,7 @@ export function lintPost(body: PostBody, plain: string, embedStatus: (productId:
     const st = embedStatus((b as { productId: string }).productId);
     if (st !== 'ACTIVE') out.push({ level: 'block', message: st === 'MISSING' ? 'Згаданого товару не існує' : 'Згаданий товар не на сайті (чернетка чи архів)' });
   }
+  if (bl.some((b) => b.type === 'figure' && !photoExists(b.mediaId))) out.push({ level: 'block', message: 'Фото зі статті більше немає у «Фото й відео» — оберіть інше' });
   const words = plain.split(/\s+/).length;
   if (words > 600 && !bl.some((b) => b.type === 'heading' && b.level === 2)) out.push({ level: 'warn', message: 'Довга стаття без жодного підзаголовка' });
   const lower = plain.toLowerCase();

@@ -12,9 +12,9 @@ const ORDER_SEGMENT: Record<string, string> = { uk: 'zamovlennia', en: 'order', 
 const DELIVERY: Record<string, string> = { NP_BRANCH: 'Нова пошта, відділення', NP_COURIER: 'Нова пошта, кур’єр', UKRPOSHTA: 'Укрпошта', PICKUP: 'Самовивіз у Яворові' };
 const PAY: Record<string, string> = { CARD: 'карткою онлайн', PREPAYMENT: 'передоплата, решта на пошті', COD_INSPECTION: 'накладений платіж з оглядом', IBAN: 'на рахунок IBAN' };
 const uah = (minor: number | null) => (minor === null ? '—' : `${new Intl.NumberFormat('uk-UA').format(Math.round(minor / 100))} ₴`);
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
-const C = { ink: '#1F2A22', muted: '#5E594F', line: '#E2D3BE', page: '#F6EBDD', card: '#FFFBF4', accent: '#2F5D46' };
+export const C = { ink: '#1F2A22', muted: '#5E594F', line: '#E2D3BE', page: '#F6EBDD', card: '#FFFBF4', accent: '#2F5D46' };
 
 export function layout(title: string, blocks: string[], button?: { href: string; label: string }) {
   const btn = button

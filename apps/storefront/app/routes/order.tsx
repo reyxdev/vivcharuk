@@ -4,6 +4,7 @@ import { MascotScene } from '@/features/mascot/MascotScene';
 import { useQuery } from '@tanstack/react-query';
 import type { Locale, OrderView } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { formatUah } from '@/lib/money';
 import { path } from '@/lib/segments';
 
@@ -114,6 +115,7 @@ function IbanBox({ number, amountMinor, locale }: { number: string; amountMinor:
 }
 
 export default function OrderPage() {
+  const biz = useBusiness();
   const { locale = 'uk', token = '' } = useParams();
   const [params] = useSearchParams();
   const { data: o, isError } = useQuery({
@@ -147,7 +149,7 @@ export default function OrderPage() {
 
       {failed && (
         <p role="alert" className="rounded-md border border-danger bg-bg-surface px-4 py-3 text-body">
-          Оплата не пройшла. Спробуйте ще раз або оберіть інший спосіб — зателефонуйте нам {BUSINESS.phones[0]}.
+          Оплата не пройшла. Спробуйте ще раз або оберіть інший спосіб — зателефонуйте нам {biz.phones[0]}.
         </p>
       )}
 
@@ -171,7 +173,7 @@ export default function OrderPage() {
 
       <ReceiptCard o={o} locale={l} />
 
-      <p className="text-center text-body-sm text-text-muted">Збережіть посилання на цю сторінку — за ним ви знову побачите замовлення і чек. Питання? {BUSINESS.phones[0]}</p>
+      <p className="text-center text-body-sm text-text-muted">Збережіть посилання на цю сторінку — за ним ви знову побачите замовлення і чек. Питання? {biz.phones[0]}</p>
     </div>
   );
 }

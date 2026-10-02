@@ -2,6 +2,7 @@ import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useLoaderData, useRouteLoaderData } from 'react-router';
 import type { CategoryNode, Locale, ProductListItem } from '@vivcharyk/schemas';
 import { BUSINESS, contactLinks, isPlaceholder } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import type { Route } from './+types/home';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
@@ -14,6 +15,7 @@ import { IconHut, IconMeasure, IconStar } from '@/features/home/TrustIcons';
 import { categoryArt } from '@/features/home/categoryArt';
 import { ProductCard } from '@/features/catalog/components/ProductCard';
 import { Messengers } from '@/components/contact/Messengers';
+import { HomeBanners, type HomeBanner } from '@/features/home/HomeBanners';
 import type { loader as layoutLoader } from './locale-layout';
 
 interface Collection { key: string; slug: string; name: string; products: number }
@@ -22,15 +24,16 @@ interface ReviewSummary { count: number; average: number | null }
 export async function loader({ params }: Route.LoaderArgs) {
   const locale = params.locale as Locale;
   // Homepage rails are own manufacture only; the endpoint enforces it (26 §26.10.1, D3.5).
-  const [{ data }, cols, stages, reviews] = await Promise.all([
+  const [{ data }, cols, stages, reviews, banners] = await Promise.all([
     apiGet<{ items: ProductListItem[] }>('/products/featured', locale),
     apiGet<{ items: Collection[] }>('/collections', locale),
     apiGet<{ items: HomeStage[] }>('/production/stages', locale),
     apiGet<{ summary: ReviewSummary }>('/reviews?perPage=1', locale),
+    apiGet<{ items: HomeBanner[] }>('/site/banners', locale).catch(() => ({ data: { items: [] as HomeBanner[] } })),
   ]);
   return {
     locale, hits: data.items, collections: cols.data.items.filter((c) => c.products > 0),
-    stages: stages.data.items, reviews: reviews.data.summary,
+    stages: stages.data.items, reviews: reviews.data.summary, banners: banners.data.items,
   };
 }
 
@@ -68,7 +71,7 @@ function Circle({ c, locale }: { c: CategoryNode; locale: Locale }) {
 }
 
 // Round 10 part 2 #7–8: four circles + «Усі категорії», editable in the admin (★ на головній).
-function Categories({ categories, locale }: { categories: CategoryNode[]; locale: Locale }) {
+function Categories({ categories, locale, banners }: { categories: CategoryNode[]; locale: Locale; banners: HomeBanner[] }) {
   const [all, setAll] = useState(false);
   const featured = (categories.some((c) => c.isFeatured) ? categories.filter((c) => c.isFeatured) : categories).slice(0, 4);
   const rest = categories.filter((c) => !featured.includes(c));
@@ -76,6 +79,8 @@ function Categories({ categories, locale }: { categories: CategoryNode[]; locale
     <section className="relative bg-bg-page pb-(--section-y-sm) pt-24">
       {/* The meadow runs on past the hero as a grassy hill edge (round 11 hill transitions, round 17 B7). */}
       <div className="pointer-events-none absolute inset-x-0 -top-0.5 h-[66px]" dangerouslySetInnerHTML={{ __html: meadowEdge }} />
+      {/* D27: the panel's banners, right under the hero. */}
+      <HomeBanners items={banners} />
       <div className="mx-auto flex max-w-(--container-wide) flex-wrap justify-center gap-x-6 gap-y-8 px-4 lg:gap-x-14">
         {featured.map((c) => <Circle key={c.id} c={c} locale={locale} />)}
         {all && rest.map((c) => <Circle key={c.id} c={c} locale={locale} />)}
@@ -105,12 +110,13 @@ function Trust({ label, text, icon }: { label: ReactNode; text: string; icon: Re
 const google = (label: ReactNode) => isPlaceholder(BUSINESS.googleProfileUrl) ? label : <a href={BUSINESS.googleProfileUrl} target="_blank" rel="noreferrer" className="hover:underline">{label}</a>;
 
 export default function Home() {
-  const { locale, hits, collections, stages, reviews } = useLoaderData<typeof loader>();
+  const biz = useBusiness();
+  const { locale, hits, collections, stages, reviews, banners } = useLoaderData<typeof loader>();
   const layout = useRouteLoaderData<typeof layoutLoader>('routes/locale-layout');
   const categories = layout?.categories ?? [];
   const first = categories[0];
   const yarn = findKey(categories, YARN_KEY);
-  const phone = BUSINESS.contactPeople[0].phone;
+  const phone = biz.contactPeople[0].phone;
   const tel = contactLinks(phone)?.tel;
 
   // Round 10 part 2, resulting order. Sections without content are skipped; the peach/cream
@@ -213,7 +219,7 @@ export default function Home() {
     <Band tone={tone} hill={hill} className="grid items-center gap-8 md:grid-cols-[1fr_1.3fr] md:gap-14">
       <div className="flex flex-col items-start gap-4">
         <BandTitle>Приїжджайте до нас у Яворів</BandTitle>
-        <p className="text-body-lg text-text-muted">Магазин і майстерня в одному місці. {BUSINESS.hoursText} Зателефонуйте перед візитом — і Іван покаже виробництво.</p>
+        <p className="text-body-lg text-text-muted">Магазин і майстерня в одному місці. {biz.hoursText} Зателефонуйте перед візитом — і Іван покаже виробництво.</p>
         <p className="text-body-lg text-text-body">{isPlaceholder(BUSINESS.factoryAddress) ? BUSINESS.locality : BUSINESS.factoryAddress}</p>
         <a href={BUSINESS.mapsUrl} target="_blank" rel="noreferrer" className="rounded-lg border-2 border-text-primary px-6 py-3 text-body font-semibold text-text-primary">Прокласти маршрут</a>
       </div>
@@ -243,7 +249,7 @@ export default function Home() {
   return (
     <>
       <HeroScene locale={locale} catalogHref={first ? path.category(locale, first.slug) : path.home(locale)} />
-      <Categories categories={categories} locale={locale} />
+      <Categories categories={categories} locale={locale} banners={banners} />
       {sections.map(([key, render], i) => <Fragment key={key}>{render(i % 2 === 0 ? 'alt' : 'page', i)}</Fragment>)}
     </>
   );

@@ -153,7 +153,7 @@ interface SystemRoleSpec {
   readonly permissions: readonly PermissionKey[];
 }
 
-// Seven system roles (docs/24 §24.5). «Сезонний мерчендайзер» is a worked custom example, not
+// Eight system roles (docs/24 §24.5 + «Технічна підтримка», 2026-10-02). «Сезонний мерчендайзер» is a worked custom example, not
 // a system role, and is not seeded.
 export const SYSTEM_ROLES = {
   owner: {
@@ -227,6 +227,31 @@ export const SYSTEM_ROLES = {
       'customers.read', 'customers.update',
       'reviews.read', 'reviews.reply',
       'mail.read', 'mail.reply', 'mail.assign', 'mail.update',
+    ],
+  },
+  // 2026-10-02 (developer decision D23): the site's developer — settings, catalogue structure, content,
+  // checking orders and mail when something breaks; no money, no refunds, no people, no anonymising.
+  // Receives server-error notices in Telegram.
+  tech: {
+    name: 'Технічна підтримка',
+    description: 'Розробник сайту: налаштування, каталог, перевірка роботи; без грошей і без людей',
+    permissions: [
+      'products.read', 'products.create', 'products.update', 'products.publish', 'products.archive', 'products.restore',
+      'products.bulk_edit', 'products.import', 'products.export', 'products.manage_media', 'products.manage_custom_size', 'products.translate',
+      'templates.manage', 'libraries.manage',
+      'categories.read', 'categories.create', 'categories.update', 'categories.reorder', 'categories.feature', 'categories.translate',
+      'orders.read', 'orders.print_documents', 'orders.note',
+      'payments.read', 'payment_settings.read',
+      'customers.read',
+      'reviews.read',
+      'blog.read', 'blog.create', 'blog.update', 'blog.publish', 'blog.schedule', 'blog.translate',
+      'gallery.read', 'gallery.upload', 'gallery.update', 'gallery.manage_albums',
+      'promotions.read', 'promotions.manage_banners', 'promotions.manage_hero',
+      'mail.read', 'mail.manage_mailboxes',
+      'analytics.read', 'analytics.read_search_queries',
+      'settings.read', 'settings.update', 'settings.manage_integrations', 'settings.manage_redirects',
+      'employees.read',
+      'audit.read',
     ],
   },
   photographer: {

@@ -9,15 +9,18 @@ import { useMe } from '@/features/auth/useSession';
 import { chime, setSoundOn, soundOn } from '@/lib/newOrderSound';
 import { GhostButton, Hint, IconCircle, PageHeader, PrimaryButton, SkeletonRows, useToast, useUnsavedGuard } from '@/components/ui';
 import { BannersEditor } from './BannersEditor';
-import { errorText, inputCls, labelCls, Panel, Switch, toLocal, fromLocal } from './parts';
+import { ShopForm, TickerEditor } from './SiteContent';
+import { hoursShort, type SiteContact, type TickerItem } from '@vivcharyk/schemas';
+import { errorText, inputCls, labelCls, Panel, Row, Switch, toLocal, fromLocal } from './parts';
 
 interface Settings {
   values: {
     'admin.announcement': string | null; 'payments.card_enabled': boolean;
     'payments.prepayment.min_minor': number; 'payments.cod.max_minor': number; 'pricing.volume_tiers': Array<{ minUnits: number; percent: number }>;
+    'site.contact': SiteContact; 'site.ticker': TickerItem[];
   };
   telegramBotConfigured: boolean; paymentsStub: boolean; novaPoshtaConfigured: boolean;
-  business: { hoursText: string; phone: string; publicEmail: string; address: string; legalEntityName: string };
+  business: { address: string; legalEntityName: string };
 }
 type Key = keyof Settings['values'];
 type TileKey = 'shop' | 'delivery' | 'payment' | 'wholesale' | 'mail' | 'notify' | 'site';
@@ -46,7 +49,7 @@ export function SettingsPage() {
   const v = s.values;
   const tiers = v['pricing.volume_tiers'];
   const tiles: Array<{ key: TileKey; title: string; icon: LucideIcon; color: string; sum: string; hidden?: boolean }> = [
-    { key: 'shop', title: 'Магазин', icon: Store, color: '#B08D4F', sum: `${s.business.hoursText.replace(/^Працюємо /, '')} · ${s.business.phone}` },
+    { key: 'shop', title: 'Магазин', icon: Store, color: '#B08D4F', sum: `${hoursShort(v['site.contact'].week)} · ${v['site.contact'].phone}` },
     { key: 'delivery', title: 'Доставка', icon: Truck, color: '#5A8AAF', sum: s.novaPoshtaConfigured ? 'Нова пошта підключена' : 'Нова пошта: ще без ключа' },
     { key: 'payment', title: 'Оплата', icon: Wallet, color: '#2E7355', sum: `Накладений платіж до ${uah(v['payments.cod.max_minor'])} · картка ${v['payments.card_enabled'] ? 'увімкнена' : 'вимкнена'}` },
     { key: 'wholesale', title: 'Опт', icon: Package, color: '#C77D58', sum: tiers.length ? tiers.map((t) => `від ${t.minUnits} шт. −${t.percent}%`).join(' · ') : 'Без оптових знижок' },
@@ -59,12 +62,12 @@ export function SettingsPage() {
   if (tile) return (
     <div className="flex max-w-2xl flex-col gap-4">
       <PageHeader title={tile.title} back="/settings" />
-      {open === 'shop' && <ShopInfo s={s} />}
+      {open === 'shop' && <ShopForm contact={v['site.contact']} business={s.business} canEdit={can('settings.update')} />}
       {open === 'delivery' && <DeliveryInfo s={s} />}
       {open === 'payment' && <PaymentForm s={s} canEdit={can('settings.update')} canCard={can('settings.manage_integrations')} />}
       {open === 'wholesale' && <WholesaleForm s={s} canEdit={can('settings.update')} />}
       {open === 'notify' && <NotifyForm s={s} canEdit={can('settings.manage_integrations')} canAnnounce={can('settings.update')} />}
-      {open === 'site' && <SiteForm canEdit={can('promotions.manage_banners')} />}
+      {open === 'site' && <SiteForm canEdit={can('promotions.manage_banners')} ticker={v['site.ticker']} />}
     </div>
   );
 
@@ -91,27 +94,6 @@ function TileBody({ t: { title, icon, color, sum, key: k } }: { t: { title: stri
         <span className="block truncate text-body-sm text-text-muted">{sum}</span>
       </span>
     </>
-  );
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="flex flex-col gap-0.5 border-b border-border-hairline py-2 last:border-0 sm:flex-row sm:gap-4"><span className="w-40 shrink-0 text-body-sm text-text-muted">{label}</span><span className="text-body text-text-primary">{children}</span></div>;
-}
-
-// Hours, phone and messengers live in the site's code for now: shown here so Іван sees what buyers see.
-function ShopInfo({ s }: { s: Settings }) {
-  const b = s.business;
-  return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-4">
-      <div>
-        <Row label="Години роботи">{b.hoursText}</Row>
-        <Row label="Телефон">{b.phone} <span className="text-body-sm text-text-muted">(дзвінки, Viber, Telegram, WhatsApp)</span></Row>
-        <Row label="Пошта для покупців">{b.publicEmail}</Row>
-        <Row label="Адреса">{b.address}</Row>
-        <Row label="Продавець">{b.legalEntityName}</Row>
-      </div>
-      <p className="rounded-lg bg-bg-alt p-3 text-body-sm text-text-body">Так це бачать покупці на сайті. Щоб змінити години чи телефон, напишіть розробнику — скоро це можна буде робити тут.</p>
-    </div>
   );
 }
 
@@ -206,8 +188,8 @@ function NotifyForm({ s, canEdit, canAnnounce }: { s: Settings; canEdit: boolean
 
 interface Announcement { text: string; linkUrl: string | null; startsAt: string | null; endsAt: string | null; isActive: boolean }
 
-// The strip at the top of the site: four fixed phrases plus one seasonal message that leads while active.
-function SiteForm({ canEdit }: { canEdit: boolean }) {
+// The strip at the top of the site: the owner's phrases (D29) plus one seasonal message that leads while active.
+function SiteForm({ canEdit, ticker }: { canEdit: boolean; ticker: TickerItem[] }) {
   const toast = useToast();
   const { data, refetch, isPending } = useQuery({ queryKey: ['announcement'], queryFn: () => api<Announcement | null>('/admin/announcement') });
   const [f, setF] = useState<{ text: string; linkUrl: string; startsAt: string; endsAt: string; isActive: boolean } | null>(null);
@@ -222,7 +204,8 @@ function SiteForm({ canEdit }: { canEdit: boolean }) {
   if (isPending) return <SkeletonRows rows={3} />;
   return (
     <div className="flex flex-col gap-4">
-      <Panel title="Стрічка вгорі сайту" sub="Завжди йдуть: «Відправляємо по Україні за 2–4 дні», «Огляд перед оплатою на пошті» (коли увімкнена оплата карткою), слоган і «Зроблено в Яворові». Сезонне повідомлення стає першим, доки діє.">
+      <TickerEditor items={ticker} canEdit={canEdit} />
+      <Panel title="Сезонне повідомлення" sub="Стає першим у стрічці, доки діє.">
         <label className={labelCls}>Сезонне повідомлення
           <input value={cur.text} onChange={(e) => setF({ ...cur, text: e.target.value })} maxLength={120} placeholder="Новорічні подарунки — відправимо до 20 грудня" disabled={!canEdit} className={inputCls} />
         </label>

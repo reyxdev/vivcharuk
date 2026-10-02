@@ -32,6 +32,7 @@ function eventText(e: OrderEvent) {
     case 'created_by_staff': return 'Створено в панелі після дзвінка';
     case 'unconfirmed_reminder': return 'Нагадування: не підтверджено дзвінком';
     case 'taken': return 'Взявся за замовлення';
+    case 'review_requested': return 'Надіслано лист «Залиште відгук»';
     case 'refund_recorded': return `Повернення грошей ${uah(p?.amountMinor)} ${HOW[p?.method ?? ''] ?? ''}${p?.note ? ` · ${p.note}` : ''}`;
     case 'contact_edited': return `Змінено ${(p?.fields ?? []).map((f) => FIELD[f] ?? f).join(', ') || 'контакти'}`;
     case 'caution_marked': return `Позначено «Обережно»: ${p?.reason ?? ''}`;

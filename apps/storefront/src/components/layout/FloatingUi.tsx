@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
-import { BUSINESS, contactLinks } from '@vivcharyk/schemas';
+import { contactLinks } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
 import { useCart } from '@/features/cart/api';
 import { Messengers } from '@/components/contact/Messengers';
@@ -15,9 +16,10 @@ const svg = (d: string) => <svg className={icon} viewBox="0 0 24 24" fill="none"
 const Badge = ({ n, bump = false }: { n: number; bump?: boolean }) => (n > 0 ? <span className={`${bump ? 'vk-bounce ' : ''}absolute -right-2.5 -top-1 min-w-5 rounded-full bg-bg-inverted px-1.5 text-center text-caption font-semibold leading-5 text-text-on-inverted`}>{n}</span> : null);
 
 function People() {
+  const biz = useBusiness();
   return (
     <div className="flex flex-col gap-2">
-      {BUSINESS.contactPeople.map((p) => {
+      {biz.contactPeople.map((p) => {
         const l = contactLinks(p.phone);
         return (
           <p key={p.name} className="flex flex-wrap items-center gap-3 text-body">
@@ -52,6 +54,7 @@ function BottomBar({ locale }: { locale: Locale }) {
 }
 
 function ContactSheet({ locale }: { locale: Locale }) {
+  const biz = useBusiness();
   const open = useUi((s) => s.contactOpen);
   const setContact = useUi((s) => s.setContact);
   if (!open) return null;
@@ -61,7 +64,7 @@ function ContactSheet({ locale }: { locale: Locale }) {
         <div className="flex items-center justify-between"><h2 className="text-h3 text-text-primary">Зв'язок</h2><button type="button" onClick={() => setContact(false)} aria-label="Закрити" className="text-h3 text-text-muted">×</button></div>
         <People />
         <div className="text-text-primary"><Messengers /></div>
-        <p className="text-body-sm text-text-muted">{BUSINESS.hoursText} <Link to={path.seg(locale, 'contacts')} onClick={() => setContact(false)} className="underline">Контакти</Link></p>
+        <p className="text-body-sm text-text-muted">{biz.hoursText} <Link to={path.seg(locale, 'contacts')} onClick={() => setContact(false)} className="underline">Контакти</Link></p>
       </div>
     </div>
   );

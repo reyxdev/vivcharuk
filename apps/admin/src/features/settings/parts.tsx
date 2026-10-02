@@ -28,6 +28,11 @@ export function errorText(e: unknown, known: Record<string, string> = {}) {
   return known[field ?? ''] ?? known[e.body?.error.message ?? ''] ?? messageFor(e.code);
 }
 
+/** A label and its value in a read-only list. */
+export function Row({ label, children }: { label: string; children: ReactNode }) {
+  return <div className="flex flex-col gap-0.5 border-b border-border-hairline py-2 last:border-0 sm:flex-row sm:gap-4"><span className="w-40 shrink-0 text-body-sm text-text-muted">{label}</span><span className="text-body text-text-primary">{children}</span></div>;
+}
+
 /** A white card with a heading, used for setting panels. */
 export function Panel({ title, sub, children, actions }: { title: string; sub?: ReactNode; children: ReactNode; actions?: ReactNode }) {
   return (

@@ -32,6 +32,7 @@ export const KINDS = {
   daily: { label: 'Підсумок дня (19:00)', perm: 'orders.read' },
   weekly: { label: 'Підсумок тижня (понеділок)', perm: 'orders.read' },
   security: { label: 'Вхід у панель з нового пристрою', perm: 'self' },
+  server_error: { label: 'Помилки сервера', perm: 'tech' },
 } as const;
 export type Kind = keyof typeof KINDS;
 
@@ -49,6 +50,7 @@ export type Notify =
   | { kind: 'production'; text: string }
   | { kind: 'low_stock'; text: string }
   | { kind: 'daily' } | { kind: 'weekly' }
+  | { kind: 'server_error'; message: string; where: string; requestId: string; count?: number }
   | { kind: 'text'; text: string };
 
 interface Button { text: string; url: string }
@@ -155,6 +157,8 @@ export async function compose(n: Notify): Promise<Composed | null> {
     case 'daily':
     case 'weekly':
       return summary(n.kind);
+    case 'server_error':
+      return { kind: 'server_error', html: `🛠 <b>Помилка сервера</b>${n.count && n.count > 1 ? ` ×${n.count}` : ''}\n<code>${esc(n.where)}</code>\n${esc(n.message.slice(0, 600))}\nrequestId: <code>${esc(n.requestId)}</code>` };
     case 'text':
       return { kind: 'order', html: esc(n.text) };
   }
@@ -198,7 +202,8 @@ export async function recipients(c: Composed) {
     if (!p.telegramAllowed && !owner) continue;
     if ((p.telegramPrefs as Record<string, boolean> | null)?.[c.kind] === false) continue;
     const perm = KINDS[c.kind].perm;
-    if (perm === 'owner' ? !owner : perm === 'self' ? p.id !== c.onlyStaffId : !(await resolvePermissions(p.id, p.permVersion)).has(perm)) continue;
+    const tech = perm === 'tech' && (await prisma.staffRoleAssignment.count({ where: { staffUserId: p.id, role: { key: 'tech' } } })) > 0;
+    if (perm === 'tech' ? !tech : perm === 'owner' ? !owner : perm === 'self' ? p.id !== c.onlyStaffId : !(await resolvePermissions(p.id, p.permVersion)).has(perm)) continue;
     out.push(p);
   }
   return out;

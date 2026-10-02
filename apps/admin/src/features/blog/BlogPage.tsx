@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PostBlock, PostBody } from '@vivcharyk/schemas';
-import { Bold, ExternalLink, Heading2, Italic, Link2, List, ListOrdered, Minus, Newspaper, Package, Plus, Quote, Undo2, CalendarClock, EyeOff } from 'lucide-react';
+import { Bold, ExternalLink, Heading2, ImagePlus, Italic, Link2, List, ListOrdered, Minus, Newspaper, Package, Plus, Quote, Undo2, CalendarClock, EyeOff } from 'lucide-react';
 import { api, post } from '@/lib/api';
 import { dateTime } from '@/lib/format';
 import { useMe } from '@/features/auth/useSession';
@@ -10,6 +10,8 @@ import { DataTable, type Column } from '@/components/DataTable';
 import { DotsMenu, EmptyState, PageHeader, PrimaryButton, Sheet, SkeletonRows, useConfirm, useToast } from '@/components/ui';
 import { errorText, inputCls, labelCls } from '@/features/settings/parts';
 import { ApiError } from '@/lib/api';
+import { MediaPicker } from '@/features/media/MediaPicker';
+import type { MediaItem } from '@/features/media/api';
 
 interface Row { id: string; status: string; title: string; slug: string; publishedAt: string | null; scheduledFor: string | null; updatedAt: string; readMinutes: number | null; tags: string[] }
 interface Lint { level: 'block' | 'warn'; message: string }
@@ -77,6 +79,7 @@ function blocksToHtml(blocks: PostBlock[]) {
       case 'divider': return '<hr>';
       case 'productEmbed': return chip(b, 'Картка товару');
       case 'callout': return chip(b, `Примітка: ${b.text.slice(0, 80)}`);
+      case 'figure': return chip(b, `Фото: ${b.alt}${b.caption ? ` · підпис: ${b.caption.slice(0, 60)}` : ''}`);
       default: return '';
     }
   }).join('');
@@ -156,6 +159,8 @@ export function PostEditorPage() {
   const [saved, setSaved] = useState('');
   const [more, setMore] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [photoPick, setPhotoPick] = useState(false);
+  const [photo, setPhoto] = useState<MediaItem | null>(null);
   const [scheduling, setScheduling] = useState(false);
   const first = useRef(true);
   const pendingHtml = useRef<string | null>(null);
@@ -258,6 +263,7 @@ export function PostEditorPage() {
           <button type="button" className={tool} onMouseDown={(e) => e.preventDefault()} onClick={link} title="Посилання" aria-label="Посилання"><Link2 size={17} /></button>
           <button type="button" className={tool} onMouseDown={(e) => e.preventDefault()} onClick={() => cmd('insertHorizontalRule')} title="Розділювач" aria-label="Розділювач"><Minus size={18} /></button>
           <button type="button" className={`${tool} w-auto gap-1 px-2 text-body-sm`} onMouseDown={(e) => e.preventDefault()} onClick={() => setPicking(true)} title="Вставити картку товару"><Package size={17} /> Товар</button>
+          <button type="button" className={`${tool} w-auto gap-1 px-2 text-body-sm`} onMouseDown={(e) => e.preventDefault()} onClick={() => setPhotoPick(true)} title="Вставити фото"><ImagePlus size={17} /> Фото</button>
         </div>
         <div ref={ed} contentEditable suppressContentEditableWarning role="textbox" aria-multiline="true" aria-label="Текст статті"
           onFocus={() => document.execCommand('defaultParagraphSeparator', false, 'p')}
@@ -299,6 +305,13 @@ export function PostEditorPage() {
         document.execCommand('insertHTML', false, `${chip({ type: 'productEmbed', productId: x.id }, `Картка товару: ${x.name}`)}<p><br></p>`);
         setText(htmlToBlocks(ed.current!));
       }} />}
+      {photoPick && <MediaPicker onClose={() => setPhotoPick(false)} onPick={(m) => { setPhotoPick(false); setPhoto(m); }} />}
+      {photo && <PhotoText m={photo} onClose={() => setPhoto(null)} onDone={(alt, caption) => {
+        setPhoto(null);
+        ed.current?.focus();
+        document.execCommand('insertHTML', false, `${chip({ type: 'figure', mediaId: photo.id, alt, caption }, `Фото: ${alt}`)}<p><br></p>`);
+        setText(htmlToBlocks(ed.current!));
+      }} />}
       {scheduling && <Schedule onClose={() => setScheduling(false)} onPick={(at) => void publish(at)} />}
     </div>
   );
@@ -315,6 +328,26 @@ function ProductPick({ onClose, onPick }: { onClose: () => void; onPick: (p: { i
         {data && !data.items.length && <li className="px-3 py-2 text-body-sm text-text-muted">Нічого не знайшлося серед товарів на сайті.</li>}
       </ul>
       <p className="mt-2 text-caption text-text-muted">Не більше трьох товарів у статті, і не на самому початку.</p>
+    </Sheet>
+  );
+}
+
+/** D37: a photo needs a description for those who cannot see it; the caption under it is optional. */
+function PhotoText({ m, onClose, onDone }: { m: MediaItem; onClose: () => void; onDone: (alt: string, caption: string | null) => void }) {
+  const [alt, setAlt] = useState(m.alt);
+  const [caption, setCaption] = useState('');
+  return (
+    <Sheet title="Фото в статті" onClose={onClose}>
+      <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); onDone(alt.trim(), caption.trim() || null); }}>
+        {m.thumb && <img src={m.thumb} alt="" className="max-h-48 self-start rounded-lg object-cover" />}
+        <label className={labelCls}>Що на фото (для тих, хто не бачить, і для Google) — обов'язково
+          <input autoFocus value={alt} onChange={(e) => setAlt(e.target.value)} maxLength={200} placeholder="Руки мотають вовняну пряжу на веретено" className={inputCls} />
+        </label>
+        <label className={labelCls}>Підпис під фото (необов'язково)
+          <input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} className={inputCls} />
+        </label>
+        <PrimaryButton type="submit" disabled={alt.trim().length < 3}>Вставити</PrimaryButton>
+      </form>
     </Sheet>
   );
 }

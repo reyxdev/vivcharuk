@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { config } from '../../config';
 import { AppError } from '../../lib/errors';
 import { getSetting, invalidateSetting } from '../../lib/settings';
 import { prisma } from '../../lib/prisma';
@@ -9,6 +10,7 @@ import { audit } from '../audit/audit.service';
 import { DEFAULT_AUTOREPLY, DEFAULT_LABELS, DEFAULT_TEMPLATES, MAIL_AUTOREPLY_KEY, MAIL_LABELS_KEY, MAIL_TEMPLATES_KEY } from './defaults';
 import { OVERDUE_WORKING_MINUTES, workingMinutesBetween } from './hours';
 import { mailSyncStatus, markSeen, syncNow } from './imap';
+import { ORDER_NO } from './ingest';
 import { catalogueFiles, cleanReply, MAX_ATTACH_BYTES, messageFiles, sendFromMailbox, type OutFile } from './send';
 import { isViewable, readStored, removeStored } from './store';
 
@@ -157,6 +159,41 @@ export async function mailRoutes(app: FastifyInstance) {
     return r;
   });
 
+  // D34 «Новий лист»: a letter to any address, sent like a reply (info@, signature, copy in Sent),
+  // stored as a new conversation waiting for the answer.
+  app.post('/admin/mail/compose', { preHandler: requirePermission('mail.reply'), bodyLimit: 30_000_000 }, async (req) => {
+    const b = z.object({
+      to: z.string().trim().toLowerCase().email().max(200), subject: z.string().trim().min(1).max(200), bodyHtml: z.string().max(200_000),
+      files: z.array(fileIn).max(20).default([]), mediaIds: z.array(z.string()).max(20).default([]),
+    }).parse(req.body);
+    if (b.to === config.mailbox.address.toLowerCase()) throw new AppError(422, 'VALIDATION_FAILED', undefined, undefined, [{ path: 'to', code: 'SELF' }]);
+    const staff = await prisma.staffUser.findUniqueOrThrow({ where: { id: req.staff!.id }, select: { id: true, firstName: true } });
+    const number = (b.subject.match(ORDER_NO) ?? cleanReply(b.bodyHtml).match(ORDER_NO))?.[0]?.toUpperCase();
+    const order = number ? await prisma.order.findUnique({ where: { number }, select: { id: true } }) : null;
+    const files = [...decodeFiles(b.files), ...await catalogueFiles(b.mediaIds)];
+    const r = await sendFromMailbox({
+      threadId: null, staff, to: b.to, subject: b.subject, bodyHtml: b.bodyHtml, files, mode: 'new',
+      newThread: { counterpartName: await nameOf(b.to), orderId: order?.id ?? null },
+    });
+    await audit({ actorId: staff.id, actorEmail: req.staff!.email, action: 'mail.composed', resourceType: 'MailThread', resourceId: r.threadId, resourceLabel: b.to });
+    return r;
+  });
+
+  // Addresses to suggest in «Кому»: buyers' e-mails from orders, newest first.
+  app.get('/admin/mail/recipients', { preHandler: requirePermission('mail.reply') }, async (req) => {
+    const q = z.object({ q: z.string().trim().max(100).default('') }).parse(req.query);
+    if (q.q.length < 2) return { items: [] };
+    const rows = await prisma.order.findMany({
+      where: { email: { contains: q.q, mode: 'insensitive' } }, orderBy: { placedAt: 'desc' }, take: 40, select: { email: true, shippingAddress: true },
+    });
+    const seen = new Map<string, string | null>();
+    for (const o of rows) {
+      const email = o.email!.toLowerCase();
+      if (!seen.has(email)) seen.set(email, personName(o.shippingAddress));
+    }
+    return { items: [...seen].slice(0, 8).map(([email, name]) => ({ email, name })) };
+  });
+
   app.put<{ Params: { id: string } }>('/admin/mail/threads/:id/draft', { preHandler: requirePermission('mail.reply') }, async (req, reply) => {
     const b = z.object({ bodyHtml: z.string().max(200_000) }).parse(req.body);
     const body = cleanReply(b.bodyHtml);
@@ -275,6 +312,19 @@ export async function mailRoutes(app: FastifyInstance) {
   });
 
   app.post('/admin/mail/sync', { preHandler: requirePermission('mail.read') }, async () => { await syncNow(); return mailSyncStatus(); });
+}
+
+const personName = (address: unknown) => {
+  const a = (address ?? {}) as { firstName?: string; lastName?: string };
+  return [a.firstName, a.lastName].filter(Boolean).join(' ').trim() || null;
+};
+
+/** The name shown for a new conversation: from an earlier letter, else from the latest order. */
+async function nameOf(email: string) {
+  const t = await prisma.mailThread.findFirst({ where: { counterpartEmail: email, counterpartName: { not: null } }, orderBy: { lastMessageAt: 'desc' }, select: { counterpartName: true } });
+  if (t?.counterpartName) return t.counterpartName;
+  const o = await prisma.order.findFirst({ where: { email: { equals: email, mode: 'insensitive' } }, orderBy: { placedAt: 'desc' }, select: { shippingAddress: true } });
+  return o ? personName(o.shippingAddress) : null;
 }
 
 export async function unreadCount(staffId: string) {

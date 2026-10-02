@@ -15,8 +15,9 @@ const isOwner = async (id: string) => (await prisma.staffRoleAssignment.count({ 
 async function kindsFor(staffId: string, permVersion: number) {
   const perms = await resolvePermissions(staffId, permVersion);
   const owner = await isOwner(staffId);
+  const tech = (await prisma.staffRoleAssignment.count({ where: { staffUserId: staffId, role: { key: 'tech' } } })) > 0;
   return (Object.entries(KINDS) as Array<[Kind, (typeof KINDS)[Kind]]>)
-    .filter(([, k]) => (k.perm === 'owner' ? owner : k.perm === 'self' ? true : perms.has(k.perm)))
+    .filter(([, k]) => (k.perm === 'tech' ? tech : k.perm === 'owner' ? owner : k.perm === 'self' ? true : perms.has(k.perm)))
     .map(([key, k]) => ({ key, label: k.label }));
 }
 

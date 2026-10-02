@@ -5,12 +5,14 @@ import { BUSINESS } from '@vivcharyk/schemas';
 import type { Route } from './+types/article';
 import { apiGet, ApiError, redirectOr404 } from '@/lib/api.server';
 import { formatRange } from '@/lib/money';
+import { mediaSrcSet, mediaUrl } from '@/lib/media';
 import { path } from '@/lib/segments';
 import { Inline } from '@/features/blog/Inline';
 import type { loader as layoutLoader } from './locale-layout';
 
 interface Embed { id: string; live: boolean; slug: string; name: string; origin: string; partnerRegion: string | null; priceMinMinor: number; priceMaxMinor: number; inStock: boolean }
-interface Article { slug: string; title: string; excerpt: string; metaTitle: string | null; metaDescription: string | null; body: PostBody; publishedAt: string; updatedAt: string; readMinutes: number | null; tags: string[]; products: Embed[] }
+interface Photo { id: string; publicId: string; width: number; height: number }
+interface Article { photos: Photo[]; slug: string; title: string; excerpt: string; metaTitle: string | null; metaDescription: string | null; body: PostBody; publishedAt: string; updatedAt: string; readMinutes: number | null; tags: string[]; products: Embed[] }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const locale = params.locale as Locale;
@@ -47,6 +49,18 @@ function ProductEmbed({ p, locale }: { p: Embed | undefined; locale: Locale }) {
   );
 }
 
+/** D37: a photo from «Фото й відео», as wide as the text; its frame keeps the ratio, so nothing jumps. */
+function Figure({ p, alt, caption }: { p: Photo | undefined; alt: string; caption: string | null }) {
+  if (!p) return null;
+  return (
+    <figure className="flex flex-col gap-2">
+      <img src={mediaUrl(p.publicId, 960)} srcSet={mediaSrcSet(p.publicId)} sizes="(min-width: 800px) 768px, 100vw" width={p.width} height={p.height}
+        loading="lazy" decoding="async" alt={alt} className="h-auto w-full rounded-xl bg-bg-alt" />
+      {caption && <figcaption className="text-body-sm text-text-muted">{caption}</figcaption>}
+    </figure>
+  );
+}
+
 // Round 10 part 7 #15: under an article, only the products it mentions and sharing.
 function Share({ url, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false);
@@ -74,10 +88,11 @@ export default function ArticlePage() {
   const url = `${origin}${path.seg(l, 'journal')}/${a.slug}`;
   const faq = a.body.blocks.flatMap((b) => (b.type === 'faq' ? b.items : []));
   const mentioned = a.body.blocks.flatMap((b) => (b.type === 'productEmbed' ? [b.productId] : []));
+  const images = a.body.blocks.flatMap((b) => { const p = b.type === 'figure' ? a.photos.find((x) => x.id === b.mediaId) : undefined; const u = p && mediaUrl(p.publicId, 1600); return u ? [u.startsWith('/') ? origin + u : u] : []; });
   const ld = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Article', '@id': `${url}#article`, headline: a.title, description: a.excerpt, datePublished: a.publishedAt, dateModified: a.updatedAt, inLanguage: l, mainEntityOfPage: url, author: { '@type': 'Person', name: 'Іван' }, publisher: { '@id': `${origin}/#organization` } },
+      { '@type': 'Article', '@id': `${url}#article`, headline: a.title, description: a.excerpt, datePublished: a.publishedAt, dateModified: a.updatedAt, inLanguage: l, mainEntityOfPage: url, ...(images.length ? { image: images } : {}), author: { '@type': 'Person', name: 'Іван' }, publisher: { '@id': `${origin}/#organization` } },
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Журнал', item: `${origin}${path.seg(l, 'journal')}` }, { '@type': 'ListItem', position: 2, name: a.title, item: url }] },
       ...(faq.length ? [{ '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }] : []),
     ],
@@ -103,6 +118,7 @@ export default function ArticlePage() {
             case 'productEmbed': return <ProductEmbed key={i} p={a.products.find((p) => p.id === b.productId)} locale={l} />;
             case 'faq': return <section key={i} className="flex flex-col divide-y divide-border-hairline rounded-xl border border-border-hairline bg-bg-surface">{b.items.map((f, j) => <details key={j} className="group px-5 py-4"><summary className="flex cursor-pointer list-none justify-between gap-4 text-h4 text-text-primary">{f.q}<span aria-hidden="true" className="group-open:rotate-45">+</span></summary><p className="mt-3"><Inline text={f.a} /></p></details>)}</section>;
             case 'divider': return <hr key={i} className="border-border-hairline" />;
+            case 'figure': return <Figure key={i} p={a.photos.find((p) => p.id === b.mediaId)} alt={b.alt} caption={b.caption} />;
             default: return null;
           }
         })}

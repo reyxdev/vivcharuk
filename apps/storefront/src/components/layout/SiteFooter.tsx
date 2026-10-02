@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { BUSINESS, contactLinks } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { Messengers } from '@/components/contact/Messengers';
 import { PaymentMarks } from './PaymentMarks';
 import evening from './art/footer-evening.svg?url';
@@ -10,6 +11,7 @@ import { path, type SegmentKey } from '@/lib/segments';
 // Round 10 part 7 #23: information, contacts, messengers, payment icons and the mandatory legal
 // row. No category links: the mega menu carries them.
 export function SiteFooter({ locale }: { locale: Locale }) {
+  const biz = useBusiness();
   const head = 'font-semibold text-accent-text';
   const link = 'text-text-primary hover:underline';
   const info: Array<[SegmentKey, string]> = [['delivery', 'Доставка і оплата'], ['returns', 'Повернення та обмін'], ['faq', 'Питання й відповіді'], ['care', 'Догляд за виробами'], ['wholesale', 'Опт']];
@@ -37,11 +39,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           </nav>
           <div className="flex flex-col gap-2.5 text-body-sm">
             <span className={head}>{t(locale, 'footer.contacts')}</span>
-            {BUSINESS.contactPeople.map((p) => {
+            {biz.contactPeople.map((p) => {
               const l = contactLinks(p.phone);
               return <span key={p.name}>{p.name}: {l ? <a href={l.tel} className={link}>{p.phone}</a> : p.phone}</span>;
             })}
-            <a href={`mailto:${BUSINESS.publicEmail}`} className={link}>{BUSINESS.publicEmail}</a>
+            <a href={`mailto:${biz.publicEmail}`} className={link}>{biz.publicEmail}</a>
             <span className="text-text-muted">{BUSINESS.locality}</span>
             <div className="text-text-primary"><Messengers compact tone="inverted" /></div>
           </div>

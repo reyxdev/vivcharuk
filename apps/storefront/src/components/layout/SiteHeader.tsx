@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router';
 import type { CategoryNode, Locale } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
+import { useBusiness } from '@/lib/business';
 import { t } from '@/lib/i18n';
 import { path } from '@/lib/segments';
 import { HeaderSearch } from '@/features/search/HeaderSearch';
@@ -21,7 +22,6 @@ const IconHeart = () => <svg className={icon} viewBox="0 0 24 24" fill="none" st
 const IconBag = () => <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M2 10h20M4 10l1.7 8.4A2 2 0 007.7 20h8.6a2 2 0 002-1.6L20 10M6.5 10l3.5-6M17.5 10L14 4M9 13.5v3M12 13.5v3M15 13.5v3" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 const IconChevron = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>;
 
-const phoneHref = `tel:${BUSINESS.phones[0].replace(/[^+\d]/g, '')}`;
 
 /** ☰ that morphs into × (round 11 #69): the bars rotate after mount, so the change is seen. */
 function MenuIcon({ open }: { open: boolean }) {
@@ -38,6 +38,8 @@ function MenuIcon({ open }: { open: boolean }) {
 }
 
 export function SiteHeader({ locale, categories }: { locale: Locale; categories: CategoryNode[] }) {
+  const biz = useBusiness();
+  const phoneHref = `tel:${biz.phones[0].replace(/[^+\d]/g, '')}`;
   const drawerOpen = useUi((s) => s.menuOpen);
   const setDrawerOpen = useUi((s) => s.setMenu);
   const wish = useWishlist((s) => s.slugs.length);
