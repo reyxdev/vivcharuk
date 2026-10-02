@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="uk" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1F3A2E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Вівчарик" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Вівчарик — панель</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="/admin/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/admin/apple-touch-icon.png" />
+    <link rel="manifest" href="/admin/manifest.webmanifest" />
+    <script>
+      // Round 20 #53, #241: theme and text size are each person's choice, applied before first paint.
+      try {
+        var t = localStorage.getItem('vk.theme'); if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+        var f = localStorage.getItem('vk.font'); if (f) document.documentElement.dataset.font = f;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

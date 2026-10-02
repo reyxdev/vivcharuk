@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+@import '@vivcharyk/tokens/fonts.css';
+@import '@vivcharyk/tokens/tokens.css';
+@import '@vivcharyk/tokens/theme.css';
+
+body { @apply bg-bg-page text-text-body font-body; }
+
+@layer base {
+  /* Headings are e-Ukraine Head (10-typography, round 11). */
+  h1, h2, h3, h4 { @apply font-display; }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Motion (round 11 interview → 36 §36.3–36.4, 13 §13.10). Tokens only; everything below is off
+   under prefers-reduced-motion (13 §13.6) — states still change, they just do not move.
+   --------------------------------------------------------------------------------------------- */
+@layer base {
+  /* #77: a clear green ring with an offset, on every focusable element, never removed. */
+  :focus-visible { outline: 2px solid var(--success); outline-offset: 2px; }
+  /* #67 / A25: anything tappable darkens and presses in; no ripple. `scale` composes with transforms. */
+  :is(button, a[class*='rounded'], summary):not(:disabled):active { scale: 0.98; transition: scale var(--dur-fast) var(--ease-out); }
+}
+
+/* Button and field states live in the utilities layer: in `base` Tailwind's own `text-*`/`bg-*`
+   utilities would override them (the hover text disappeared on the dark fill). */
+@layer utilities {
+  /* #11 / A7: primary buttons — smooth colour change (the arrow nudge is .vk-arrow). */
+  :is(a, button).bg-bg-inverted.text-text-on-inverted { transition: background-color var(--dur-instant) var(--ease-gentle), scale var(--dur-fast) var(--ease-out); }
+  :is(a, button).bg-bg-inverted.text-text-on-inverted:not(:disabled):hover { background-color: var(--c-forest-700); }
+  /* #12 / A8: secondary (outlined) buttons fill from the bottom; the text inverts at the same moment. */
+  :is(a, button).border-2.border-text-primary {
+    background-image: linear-gradient(var(--text-primary), var(--text-primary));
+    background-repeat: no-repeat; background-position: bottom; background-size: 100% 0%;
+    transition: background-size var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out), scale var(--dur-fast) var(--ease-out);
+  }
+  :is(a, button).border-2.border-text-primary:hover { background-size: 100% 100%; color: var(--bg-page); }
+  /* #44: focused field — border darkens, soft green glow. */
+  :is(input, textarea, select):not([type='checkbox']):not([type='radio']):not([type='range']) { transition: border-color var(--dur-base), box-shadow var(--dur-base); }
+  :is(input, textarea, select):not([type='checkbox']):not([type='radio']):not([type='range']):focus { border-color: var(--c-forest-700); box-shadow: 0 0 0 3px var(--c-emerald-100); outline: none; }
+}
+
+@layer components {
+  .vk-arrow { display: inline-block; transition: translate var(--dur-base) var(--ease-out); }
+  :is(a, button):hover .vk-arrow { translate: 4px 0; }
+  /* #16 / A10: a card lifts 4 px with a soft shadow. */
+  .vk-lift { transition: translate var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); border-radius: var(--radius-md, 8px); }
+  @media (hover: hover) { .vk-lift:hover { translate: 0 -4px; box-shadow: var(--shadow-md); } }
+  /* #18: the heart fills with a light pulse (1.15, 260 ms). */
+  .vk-pulse { animation: vk-pulse 260ms var(--ease-out); }
+  @keyframes vk-pulse { 40% { scale: 1.15; } 100% { scale: 1; } }
+  /* #37: the cart icon bounces lightly (≤ 4 % overshoot) when the count changes. */
+  .vk-bounce { animation: vk-bounce var(--dur-slow) var(--ease-out); }
+  @keyframes vk-bounce { 35% { translate: 0 -3px; scale: 1.04; } 100% { translate: 0 0; scale: 1; } }
+  /* #21 / #23 / #60: rise in sequence (set --i for the stagger, capped by the caller). */
+  .vk-rise { animation: vk-rise var(--dur-slow) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+  @keyframes vk-rise { from { opacity: 0; translate: 0 12px; } }
+  .vk-fade-out { opacity: 0.35; transition: opacity 120ms var(--ease-in); }
+  /* #34: the price changes at once and its background glows briefly (the number never animates). */
+  .vk-flash { animation: vk-flash 600ms var(--ease-out); border-radius: 4px; }
+  @keyframes vk-flash { from { background-color: var(--c-gold-100); } to { background-color: transparent; } }
+  /* #13 / A9: while an important action runs, a wool thread runs through the button. */
+  .vk-busy { position: relative; }
+  .vk-busy::after {
+    content: ''; position: absolute; left: 12%; right: 12%; bottom: 7px; height: 6px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6'%3E%3Cpath d='M0 3q6-4 12 0t12 0' fill='none' stroke='%23C9A96A' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+    animation: vk-thread 700ms linear infinite;
+  }
+  @keyframes vk-thread { to { background-position: 24px 0; } }
+  /* #20 / A11: a thread draws round the category circle on hover and keyboard focus. */
+  .vk-ring { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-reveal) var(--ease-out); }
+  :is(a, button):is(:hover, :focus-visible) .vk-ring { stroke-dashoffset: 0; }
+  /* #10 / A6 and #68: menus slide in; their items appear in sequence (40 ms). */
+  .vk-drop { animation: vk-drop var(--dur-base) var(--ease-out) backwards; }
+  @keyframes vk-drop { from { opacity: 0; translate: 0 -8px; } }
+  .vk-seq > * { animation: vk-rise var(--dur-base) var(--ease-out) backwards; }
+  .vk-seq > :nth-child(2) { animation-delay: 40ms; } .vk-seq > :nth-child(3) { animation-delay: 80ms; }
+  .vk-seq > :nth-child(4) { animation-delay: 120ms; } .vk-seq > :nth-child(5) { animation-delay: 160ms; }
+  .vk-seq > :nth-child(n + 6) { animation-delay: 200ms; }
+  .vk-slide-left { animation: vk-slide-left var(--dur-slow) var(--ease-out) backwards; }
+  @keyframes vk-slide-left { from { translate: -100% 0; } }
+  /* #48: «Є промокод?» expands smoothly (grid rows 0fr → 1fr, 13 §13.10 accordion). */
+  .vk-expand { display: grid; grid-template-rows: 1fr; animation: vk-expand var(--dur-base) var(--ease-out); }
+  .vk-expand > * { overflow: hidden; }
+  @keyframes vk-expand { from { grid-template-rows: 0fr; opacity: 0; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .vk-busy::after { animation: none; }
+  .vk-ring { stroke-dashoffset: 0; }
+  :is(a, button):hover .vk-arrow, .vk-lift:hover { translate: none; }
+}
+
+@layer components {
+  /* Drawers slide in from their edge; the backdrop fades (round 11 #74, 13 §13.10). */
+  .vk-slide-right { animation: vk-slide-right var(--dur-slow) var(--ease-out) backwards; }
+  @keyframes vk-slide-right { from { translate: 100% 0; } }
+  .vk-fade-in { animation: vk-fade-in var(--dur-slow) var(--ease-out) backwards; }
+  @keyframes vk-fade-in { from { opacity: 0; } }
+  /* #38: a removed cart row collapses. */
+  .vk-collapse { overflow: hidden; animation: vk-collapse 220ms var(--ease-in) both; }
+  @keyframes vk-collapse { from { max-height: 12rem; } to { max-height: 0; opacity: 0; padding-block: 0; } }
+  /* #52: dialogs fade in with a slight scale-up (0.96 → 1). */
+  .vk-dialog { animation: vk-dialog var(--dur-slow) var(--ease-out) backwards; }
+  @keyframes vk-dialog { from { opacity: 0; scale: 0.96; } }
+}
+
+@layer components {
+  /* #22: the count on «Показати N товарів» rolls softly (a count, never a price or stock). */
+  .vk-roll { animation: vk-roll var(--dur-base) var(--ease-out); }
+  @keyframes vk-roll { from { opacity: 0; translate: 0 40%; } }
+  /* #25: phone filters come up as a full-screen sheet. */
+  @media (max-width: 1023px) { .vk-sheet { animation: vk-sheet var(--dur-slow) var(--ease-out) backwards; } }
+  @keyframes vk-sheet { from { translate: 0 100%; } }
+  /* A14: the loading thread — a wavy wool line running across. */
+  .vk-thread-bar {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6'%3E%3Cpath d='M0 3q6-4 12 0t12 0' fill='none' stroke='%232A4C3C' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+    animation: vk-thread 700ms linear infinite;
+  }
+}
+
+@layer components {
+  /* #60 / #62: rise once on entering the view (hidden only after hydration, below the fold). */
+  .vk-pre { opacity: 0; translate: 0 16px; transition: opacity var(--dur-reveal) var(--ease-out), translate var(--dur-reveal) var(--ease-out); }
+  .vk-pre.vk-in { opacity: 1; translate: 0 0; }
+  /* #53: the stitch — dashes run in along the thread, then it fades as the new page rises. */
+  .vk-stitch { stroke-dasharray: 0.012 0.008; animation: vk-stitch 300ms var(--ease-out) both; }
+  @keyframes vk-stitch { from { stroke-dashoffset: 1; opacity: 0.2; } to { stroke-dashoffset: 0; opacity: 1; } }
+  .vk-stitch-out { animation: vk-fade-out-top 450ms var(--ease-in) both; }
+  @keyframes vk-fade-out-top { to { opacity: 0; } }
+  /* backwards, not both: a finished animation must not leave a transform on <main> — it would
+     become the containing block of every position: fixed child (sticky buy bar, dialogs). */
+  .vk-page { animation: vk-rise var(--dur-slow) var(--ease-out) backwards; }
+}
+@media (prefers-reduced-motion: reduce) { .vk-pre { opacity: 1; translate: none; } }
+@layer components {
+  .vk-draw { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-cinematic) var(--ease-out) 150ms; }
+  .vk-in .vk-draw { stroke-dashoffset: 0; }
+}
+@layer components {
+  /* The woven hero thread: each half-wave draws in turn (delay and duration set inline). */
+  /* Hidden until the needle pulls it through (JS sets the real dash lengths). */
+  .vk-weave { stroke-dasharray: 2000; stroke-dashoffset: 2000; }
+}
+
+/* #54 morph: the browser's view transition, softened to the site's easing; off under reduced motion. */
+::view-transition-group(*) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-in-out); }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }

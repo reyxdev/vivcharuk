@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import '@vivcharyk/tokens/tokens.css';
+@import '@vivcharyk/tokens/theme.css';
+
+/* Round 20: the panel's own look. Palette «Ліс і вовна» (#55): forest menu, emerald buttons, gold
+   accents, fleece background, ink text. Light by default with a «Ялинова ніч» dark switch (#53, #240).
+   System font (#36), compact (#6), slightly larger text by default (#5) with a per-person size (#241).
+   The site's token names are kept, so every screen re-colours through these variables. */
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-wordmark: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --color-menu: var(--menu-bg);
+  --color-menu-text: var(--menu-text);
+  --color-menu-active: var(--menu-active);
+  --color-gold: var(--gold);
+  /* The site's token theme resets every default colour; the panel needs plain white, black and a light red. */
+  --color-white: #fff;
+  --color-black: #000;
+  --color-red-300: #fca5a5;
+}
+
+:root, [data-theme='light'] {
+  color-scheme: light;
+  --bg-page: #FAF8F4;
+  --bg-alt: #F2EDE3;
+  --bg-surface: #FFFFFF;
+  --bg-raised: #F2EDE3;
+  --bg-input: #FFFFFF;
+  --bg-inverted: #1F3A2E;
+  --text-on-inverted: #FAF8F4;
+  --text-primary: #1C1B18;
+  --text-body: #33312C;
+  --text-muted: #5E5B54;
+  --text-faint: #9A968D;
+  --border-hairline: #E8E0D1;
+  --border-control: #D2C4A9;
+  --accent: #2E7355;
+  --accent-text: #215C42;
+  --gold: #B08D4F;
+  --success: #2E7355;
+  --warning: #9A6B1E;
+  --danger: #8C2F22;
+  --info: #3E6D91;
+  --menu-bg: #1F3A2E;
+  --menu-text: #E8E0D1;
+  --menu-active: #2A4C3C;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-page: #0E1A14;
+  --bg-alt: #16281F;
+  --bg-surface: #16281F;
+  --bg-raised: #1F3A2E;
+  --bg-input: #0E1A14;
+  --bg-inverted: #FAF8F4;
+  --text-on-inverted: #1C1B18;
+  --text-primary: #FAF8F4;
+  --text-body: #E8E0D1;
+  --text-muted: #C6C3BC;
+  --text-faint: #9A968D;
+  --border-hairline: #2A4C3C;
+  --border-control: #356049;
+  --accent: #3C8A65;
+  --accent-text: #8DB580;
+  --gold: #C9A96A;
+  --success: #3C8A65;
+  --warning: #D4A24C;
+  --danger: #D9705F;
+  --info: #9EC0D8;
+  --menu-bg: #0B150F;
+  --menu-text: #E8E0D1;
+  --menu-active: #1F3A2E;
+}
+
+/* Compact headings for a working tool (the site's display sizes are too large here). */
+:root {
+  --type-h1-size: 1.5rem;
+  --type-h2-size: 1.25rem;
+  --type-h3-size: 1.125rem;
+  --type-h4-size: 1rem;
+  --type-h4-size-desktop: 1rem;
+  font-size: 106.25%; /* «трохи більший» by default (#5) */
+}
+:root[data-font='normal'] { font-size: 100%; }
+:root[data-font='large'] { font-size: 118.75%; }
+
+body { @apply bg-bg-page text-text-body font-body antialiased; -webkit-tap-highlight-color: transparent; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* 23 §23.3: a success state is never carried by colour alone. */
+@layer utilities {
+  .text-ok { color: var(--text-primary); }
+  .text-ok::before { content: ''; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.4rem; border-radius: 9999px; background: var(--success); vertical-align: 0.05em; }
+}
+
+/* Round 11 #79 / A26: a new order slides in at the top, highlighted for a few seconds. Motion stays
+   minimal (round 20 #196). */
+@layer utilities {
+  .vk-new { animation: vk-new-in 180ms ease-out, vk-new-glow 4s ease-out; }
+  @keyframes vk-new-in { from { opacity: 0; translate: 0 -12px; } }
+  @keyframes vk-new-glow { from { box-shadow: 0 0 0 2px var(--accent); } 70% { box-shadow: 0 0 0 2px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+  .vk-sheet { animation: vk-sheet-in 180ms ease-out; }
+  @keyframes vk-sheet-in { from { translate: 0 24px; opacity: 0; } }
+  .vk-skeleton { background: linear-gradient(90deg, var(--bg-alt) 0%, var(--bg-raised) 50%, var(--bg-alt) 100%); background-size: 200% 100%; animation: vk-shimmer 1.2s linear infinite; }
+  @keyframes vk-shimmer { to { background-position: -200% 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .vk-new, .vk-sheet, .vk-skeleton { animation: none; } }
+
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+}

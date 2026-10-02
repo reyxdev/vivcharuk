@@ -1,0 +1,8 @@
+/* Self-hosted: no third-party font request, no visitor IP sent anywhere (licences in fonts/). */
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Marck Script'; src: url('./fonts/marck-script-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }

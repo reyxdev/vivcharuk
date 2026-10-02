@@ -1,0 +1,26 @@
+{
+ "carding/IMG_3563.MOV/40/18": {
+  "video": "local:production/carding/95a7333665a5",
+  "poster": "local:production/carding/95a7333665a5-poster",
+  "width": 1280,
+  "height": 720,
+  "bytes": 2182420,
+  "durationSec": 18
+ },
+ "spinning/IMG_3566.MOV/25/18": {
+  "video": "local:production/spinning/15d4e1a25e4d",
+  "poster": "local:production/spinning/15d4e1a25e4d-poster",
+  "width": 1280,
+  "height": 720,
+  "bytes": 6955790,
+  "durationSec": 18
+ },
+ "weaving/IMG_3565.MOV/12/18": {
+  "video": "local:production/weaving/55141dbfe46b",
+  "poster": "local:production/weaving/55141dbfe46b-poster",
+  "width": 1280,
+  "height": 720,
+  "bytes": 5584914,
+  "durationSec": 18
+ }
+}

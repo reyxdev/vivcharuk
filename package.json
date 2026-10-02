@@ -1,0 +1,46 @@
+{
+  "name": "vivcharyk",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "db:up": "docker start vivcharyk-db",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed/index.ts",
+    "db:studio": "prisma studio",
+    "prisma:generate": "prisma generate",
+    "build:tokens": "npm run build -w @vivcharyk/tokens",
+    "dev:api": "npm run dev -w @vivcharyk/api",
+    "dev:admin": "npm run dev -w @vivcharyk/admin",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "tsx prisma/seed/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true,
+    "prisma@6.19.3": true,
+    "argon2@0.45.1": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+ "note": "Round 18: production videos from the user, 2026-10-02 (4K HEVC originals). Short silent loops cut from stretches with hands and machines only (no faces); full versions are not published yet.",
+ "stages": [
+  { "stage": "carding", "file": "IMG_3563.MOV", "start": 40, "length": 18, "alt": "Чесальна машина розчісує вовну" },
+  { "stage": "spinning", "file": "IMG_3566.MOV", "start": 25, "length": 18, "alt": "Прядильна машина скручує вовняну пряжу" },
+  { "stage": "weaving", "file": "IMG_3565.MOV", "start": 12, "length": 18, "alt": "Ткання ліжника на верстаті" }
+ ]
+}

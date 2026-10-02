@@ -1,0 +1,11 @@
+__DOMAIN__ {
+	encode zstd gzip
+	# The API and the admin panel are one process; everything else is the storefront.
+	@api path /api/* /admin /admin/* /media/*
+	reverse_proxy @api 127.0.0.1:3000
+	reverse_proxy 127.0.0.1:3001
+}
+
+www.__DOMAIN__ {
+	redir https://__DOMAIN__{uri} permanent
+}

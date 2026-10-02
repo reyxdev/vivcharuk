@@ -1,0 +1,1883 @@
+// Вівчарик — database schema.
+// Transcribed from docs/25-database-schema.md (canonical for data), with the superseding
+// decisions that document records applied: Lead, NewsletterSubscriber and WishlistItem are NOT
+// created; MailThread.leadId is dropped; "fields added" comments in §25.8e-§25.8g are real
+// fields here. Constraints Prisma cannot express (CHECK, append-only triggers, audit hash chain,
+// REVOKE, full-text search column) live in migration `hand_written_constraints`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.2 Localisation
+// ---------------------------------------------------------------------------------------------
+
+enum Locale {
+  uk
+  en
+  pl
+  de
+}
+
+// §25.8e: on every *Translation model.
+enum TranslationSource {
+  MACHINE
+  HUMAN
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.3 Catalogue
+// ---------------------------------------------------------------------------------------------
+
+model Category {
+  id            String   @id @default(cuid(2))
+  key           String?  @unique // stable machine key, independent of translated slugs (§25.8h)
+  hiddenLocales Locale[] @default([]) // locales where the category and its products return 404, e.g. ovchyna/shkira in pl, de (04 §4.2)
+  parentId      String?
+  sortOrder     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  isActive      Boolean  @default(true)
+
+  // Seed value for the admin product form ONLY — copied into Product on create, then never
+  // referenced again. Pricing reads Product.customSizeRatePerSqmMinor exclusively.
+  // See 00-client-decisions-5 §H3c.
+  defaultCustomSizeRatePerSqmMinor Int?
+  heroMediaId                      String?
+  iconKey                          String? // references the icon registry, not a file path
+  externalRef                      String?   @unique // §25.8g "oneknight:<id>"
+  deletedAt                        DateTime? @db.Timestamptz(3)
+  createdAt                        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt                        DateTime  @updatedAt @db.Timestamptz(3)
+
+  parent       Category?             @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]            @relation("CategoryTree")
+  heroMedia    Media?                @relation(fields: [heroMediaId], references: [id])
+  products     ProductCategory[]
+  translations CategoryTranslation[]
+
+  @@index([parentId, sortOrder])
+  @@index([isActive, isFeatured])
+}
+
+model CategoryTranslation {
+  id              String            @id @default(cuid(2))
+  categoryId      String
+  locale          Locale
+  name            String
+  slug            String
+  description     String?           @db.Text
+  metaTitle       String?
+  metaDescription String?
+  source          TranslationSource @default(HUMAN)
+  sourceHash      String?
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@unique([locale, slug])
+  @@index([locale])
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PricingUnit {
+  PIECE
+  KILOGRAM
+  SKEIN
+  METRE
+}
+
+// Own manufacture vs resold partner goods. See 00-client-decisions.md §D3.
+enum ProductOrigin {
+  OWN_MANUFACTURE
+  PARTNER_MANUFACTURE
+}
+
+model Product {
+  id          String        @id @default(cuid(2))
+  sku         String        @unique
+  status      ProductStatus @default(DRAFT)
+  pricingUnit PricingUnit   @default(PIECE)
+
+  origin        ProductOrigin @default(OWN_MANUFACTURE)
+  partnerName   String? // required when origin = PARTNER_MANUFACTURE; never rendered
+  partnerRegion String? // "Косівщина", "Закарпаття"
+
+  // Denormalised from variants for listing performance. Maintained in a transaction
+  // whenever a variant price changes; never written by hand.
+  priceMinMinor Int
+  priceMaxMinor Int
+  currency      Currency @default(UAH)
+  inStock       Boolean  @default(false)
+
+  isHandmade    Boolean @default(false) // drives the gold "handmade tier" badge
+  isUniquePiece Boolean @default(false) // stock == 1, one-of-one
+
+  // Made-to-order is a property of WHICH SIZE the customer picks (00-client-decisions-5 §H3b).
+  allowsCustomSize Boolean @default(false)
+  madeToOrderDays  Int? // 14 when a custom size is chosen
+
+  // Custom-size pricing (00-client-decisions-5 §H3c): price = max(area_m2 × rate, minPrice).
+  customSizeRatePerSqmMinor Int?
+  customSizeMinPriceMinor   Int? // floor — setup labour outweighs a tiny piece
+  // Loom and frame limits — PHYSICAL constraints.
+  customSizeMinWidthCm      Int?
+  customSizeMaxWidthCm      Int?
+  customSizeMinLengthCm     Int?
+  customSizeMaxLengthCm     Int?
+
+  // Provenance block. See 01-brand-strategy.md §1.8.
+  woolOrigin      String?
+  woolMicron      Int?
+  productionStage String[] // ordered stage keys performed in-house
+
+  // §25.8f Product gains (00-client-decisions-12):
+  templateId       String // immutable after creation
+  searchSynonyms   String[] // «Інші назви»
+  pinnedRelatedIds String[] // pinned «З цим купують»
+  badgeOverride    Json? // manual add/remove of Хіт / Новинка / Знижка
+  storyStagesOff   String[] // unticked «Історія виробу» stages
+  liveRevisionId   String?
+  draftRevisionId  String?
+  // §25.8i: ProductRevision is append-only, so the editor's working copy lives here and is
+  // overwritten by autosave; a revision is written at each publish (history, «Повернути»).
+  draftDocument    Json?
+  draftUpdatedAt   DateTime? @db.Timestamptz(3)
+  draftUpdatedById String?
+  editLockById     String?
+  editLockAt       DateTime? @db.Timestamptz(3)
+
+  externalRef String? @unique // §25.8g "oneknight:<id>"
+
+  publishedAt DateTime? @db.Timestamptz(3)
+  deletedAt   DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  template     ProductTemplate         @relation(fields: [templateId], references: [id])
+  translations ProductTranslation[]
+  variants     ProductVariant[]
+  categories   ProductCategory[]
+  media        ProductMedia[]
+  attributes   ProductAttributeValue[]
+  composition  ProductComposition[]
+  reviews      Review[]
+  relatedFrom  ProductRelation[]       @relation("RelSource")
+  relatedTo    ProductRelation[]       @relation("RelTarget")
+  collections  CollectionProduct[]
+
+  @@index([status, publishedAt])
+  @@index([status, inStock, priceMinMinor])
+  @@index([isHandmade])
+  @@index([origin, status])
+  @@index([templateId])
+}
+
+model ProductTranslation {
+  id              String                   @id @default(cuid(2))
+  productId       String
+  locale          Locale
+  name            String
+  slug            String
+  description     String                   @db.Text
+  // SEO overrides — null means "generate from content"
+  metaTitle       String?
+  metaDescription String?
+  source          TranslationSource        @default(HUMAN)
+  sourceHash      String?
+  // §25.10 #1: generated column (see migration hand_written_constraints); never written by the app.
+  // dbgenerated() mirrors the GENERATED ALWAYS expression so migrate diff sees no drift.
+  searchVector    Unsupported("tsvector")? @default(dbgenerated("(setweight(to_tsvector('simple'::regconfig, immutable_unaccent(COALESCE(name, ''::text))), 'A'::\"char\") || setweight(to_tsvector('simple'::regconfig, immutable_unaccent(COALESCE(description, ''::text))), 'B'::\"char\"))"))
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@unique([locale, slug]) // slug unique per locale, not globally
+  @@index([locale])
+  @@index([searchVector], type: Gin)
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  sortOrder  Int    @default(0)
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId, sortOrder])
+}
+
+// --- Variants ---
+
+model ProductVariant {
+  id             String   @id @default(cuid(2))
+  productId      String
+  sku            String   @unique
+  priceMinor     Int
+  compareAtMinor Int? // strike-through price; null = no discount shown
+  currency       Currency @default(UAH)
+
+  stockQty       Int     @default(0)
+  lowStockAt     Int     @default(3)
+  allowBackorder Boolean @default(false)
+
+  weightGrams       Int?
+  // Packed parcel size (round 10 part 5): parcel lockers only when the packed item fits.
+  packedLengthCm    Int?
+  packedWidthCm     Int?
+  packedHeightCm    Int?
+  packedWeightGrams Int?
+  dimensionsMm      Json? // { w, h, d } — shipping calculation input
+  barcode           String?
+
+  // Yarn, rovnytsia and raw wool only. Pending client confirmation (00-client-decisions §D6.3).
+  dyeLot       String?
+  lengthMetres Int? // yarn: метраж
+  plyThickness String? // yarn: товщина
+  position     Int       @default(0)
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime? @db.Timestamptz(3)
+
+  // §25.8f ProductVariant gains:
+  madeToOrderDays  Int? // per-variant «Виготовимо під замовлення»
+  isMainColor      Boolean   @default(false)
+  discountPercent  Int?
+  discountStartsAt DateTime? @db.Timestamptz(3)
+  discountEndsAt   DateTime? @db.Timestamptz(3) // compareAtMinor restored automatically at the end
+
+  externalRef String? @unique // §25.8g "oneknight:<id>"
+
+  product    Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options    VariantOptionValue[]
+  mediaId    String?
+  media      Media?               @relation(fields: [mediaId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([productId, isActive, position])
+  @@index([stockQty])
+  @@index([productId, dyeLot])
+}
+
+model OptionType {
+  id           String                  @id @default(cuid(2))
+  key          String                  @unique // "size" | "color" | "composition" | "weight"
+  displayAs    OptionDisplay           @default(PILL)
+  position     Int                     @default(0)
+  values       OptionValue[]
+  translations OptionTypeTranslation[]
+}
+
+enum OptionDisplay {
+  PILL
+  SWATCH
+  DROPDOWN
+  SIZE_GRID
+}
+
+model OptionValue {
+  id            String  @id @default(cuid(2))
+  optionTypeId  String
+  key           String
+  hex           String? // colour swatches only
+  swatchMediaId String? // texture swatch
+  position      Int     @default(0)
+
+  // §25.8f OptionValue gains (displayName is per locale via OptionValueTranslation):
+  dimensions      Json? // {widthCm, lengthCm} or {insoleCm} or {lengthCm}
+  sortKey         Int
+  colorFamily     String? // «сірий», «багатоколірний» ...
+  isNaturalUndyed Boolean @default(false)
+  isHidden        Boolean @default(false) // replaces deletion once in use
+
+  optionType   OptionType               @relation(fields: [optionTypeId], references: [id], onDelete: Cascade)
+  translations OptionValueTranslation[]
+  variants     VariantOptionValue[]
+  productMedia ProductMedia[]
+
+  @@unique([optionTypeId, key])
+}
+
+model VariantOptionValue {
+  variantId     String
+  optionValueId String
+
+  variant     ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  optionValue OptionValue    @relation(fields: [optionValueId], references: [id])
+
+  @@id([variantId, optionValueId])
+  @@index([optionValueId])
+}
+
+// --- Attributes — the specification table ---
+
+model AttributeDefinition {
+  options      Json? // list-type attributes: [{ key, label: { uk, … } }] — e.g. yarn thickness, pillow filling (§25.8h)
+  id           String                           @id @default(cuid(2))
+  key          String                           @unique
+  dataType     AttributeType
+  unit         String?
+  isFilterable Boolean                          @default(false)
+  isComparable Boolean                          @default(false)
+  position     Int                              @default(0)
+  translations AttributeDefinitionTranslation[]
+  values       ProductAttributeValue[]
+  templates    ProductTemplateAttribute[]
+}
+
+enum AttributeType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  ENUM
+}
+
+model ProductAttributeValue {
+  id           String   @id @default(cuid(2))
+  productId    String
+  definitionId String
+  valueText    String?
+  valueNumber  Float?
+  valueBool    Boolean?
+
+  product    Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  definition AttributeDefinition @relation(fields: [definitionId], references: [id])
+
+  @@unique([productId, definitionId])
+  @@index([definitionId, valueNumber])
+}
+
+model ProductRelation {
+  sourceId String
+  targetId String
+  kind     RelationKind
+  position Int          @default(0)
+
+  source Product @relation("RelSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target Product @relation("RelTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@id([sourceId, targetId, kind])
+}
+
+enum RelationKind {
+  CROSS_SELL
+  UP_SELL
+  BUNDLE
+  COMPLETES_SET
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.4 Media
+// ---------------------------------------------------------------------------------------------
+
+model Media {
+  id          String  @id @default(cuid(2))
+  provider    String  @default("cloudinary")
+  publicId    String // Cloudinary public_id
+  format      String
+  width       Int
+  height      Int
+  bytes       Int
+  blurhash    String? // LQIP — protects CLS
+  dominantHex String?
+
+  kind        MediaKind @default(IMAGE)
+  durationSec Int?
+  posterId    String? // video poster frame
+
+  // Art direction. See 09-color-palette.md §9.6.
+  focalX       Float @default(0.5) // 0..1
+  focalY       Float @default(0.5)
+  textSafeZone Json? // { x, y, w, h } in 0..1 units
+
+  albumId      String?
+  uploadedById String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  translations      MediaTranslation[] // alt text and caption, per locale
+  album             MediaAlbum?        @relation(fields: [albumId], references: [id])
+  products          ProductMedia[]
+  heroForCategories Category[]
+  variants          ProductVariant[]
+  stagePhotos       ProductionStage[]  @relation("StagePhoto")
+  stageVideos       ProductionStage[]  @relation("StageVideo")
+
+  @@index([albumId, createdAt])
+  @@index([kind])
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+model MediaTranslation {
+  id         String            @id @default(cuid(2))
+  mediaId    String
+  locale     Locale
+  alt        String // required — enforced at API layer
+  caption    String?
+  source     TranslationSource @default(HUMAN)
+  sourceHash String?
+
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaId, locale])
+  @@index([locale])
+}
+
+model ProductMedia {
+  productId     String
+  mediaId       String
+  position      Int       @default(0)
+  role          MediaRole @default(GALLERY)
+  // §25.8f: photo slots per colour reuse ProductMedia with an optional optionValueId.
+  optionValueId String?
+
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media       Media        @relation(fields: [mediaId], references: [id])
+  optionValue OptionValue? @relation(fields: [optionValueId], references: [id], onDelete: SetNull)
+
+  @@id([productId, mediaId])
+  @@index([productId, position])
+  @@index([optionValueId])
+}
+
+enum MediaRole {
+  PRIMARY
+  GALLERY
+  DETAIL
+  LIFESTYLE
+  PRODUCTION
+  SCALE_REFERENCE
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.5 Orders
+// ---------------------------------------------------------------------------------------------
+
+enum Currency {
+  UAH
+  EUR
+  PLN
+  USD
+}
+
+// AWAITING_QUOTE precedes PENDING and exists only for international orders.
+// IN_PRODUCTION sits between CONFIRMED and PACKING for made-to-order items (§G2).
+enum OrderStatus {
+  AWAITING_QUOTE
+  PENDING
+  CONFIRMED
+  IN_PRODUCTION
+  PACKING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  UNPAID
+  AUTHORIZED
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+}
+
+enum PaymentMethod {
+  CARD_ONLINE
+  COD
+  BANK_TRANSFER
+}
+
+enum ShippingCarrier {
+  NOVA_POSHTA
+  UKRPOSHTA
+  PICKUP
+  INTERNATIONAL
+}
+
+model Order {
+  id       String   @id @default(cuid(2))
+  number   String   @unique // human-facing, e.g. VCH-25-0417
+  locale   Locale
+  currency Currency @default(UAH)
+
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  paymentMethod PaymentMethod
+
+  // Captured at purchase time. Never joined live.
+  subtotalMinor     Int
+  discountMinor     Int             @default(0)
+  discountSource    DiscountSource? // which rule produced discountMinor; never both (18 §18.10a)
+  volumeTierPercent Int? // snapshot of the wholesale tier applied, e.g. 10 or 20
+  // Nullable, not zero-defaulted: AWAITING_QUOTE has no shipping cost yet.
+  shippingMinor     Int?
+
+  // Ukrainian COD-with-inspection only (00-client-decisions-5 §H1.3).
+  shippingForwardMinor       Int?
+  shippingReturnDepositMinor Int?
+  // Credited exactly ONCE, on transition to DELIVERED.
+  depositAppliedMinor        Int  @default(0)
+  codAmountMinor             Int? // subtotal − discount − depositAppliedMinor
+  prepaymentMinor            Int? // partial prepayment charged online: min(max(10% subtotal, 460 ₴), total) (round 8 §L14; §25.8h)
+  amountDueNowMinor          Int? // what the «Оплатити …» button charges (round 10 part 5 #18)
+  totalMinor                 Int? // null until shippingMinor is known
+
+  email      String? // optional for ordinary uk orders (round 10 §P5a)
+  emailBouncedAt DateTime? @db.Timestamptz(3) // round 19 D1 #27: an order e-mail came back undelivered
+  phone      String
+  customerId String?
+  guestToken String? @unique // lets a guest track an order without an account
+
+  shippingCarrier ShippingCarrier
+  shippingAddress Json // snapshot, not a relation
+  billingAddress  Json?
+  npWarehouseRef  String? // Nova Poshta branch/locker ref
+  trackingNumber  String?
+
+  customerNote String? @db.Text // no longer written by checkout (round 9 part 4); kept nullable
+  internalNote String? @db.Text // never exposed to the storefront
+
+  couponCode         String?
+  placedAt           DateTime  @default(now()) @db.Timestamptz(3)
+  quotedAt           DateTime? @db.Timestamptz(3) // shipping quote issued — AWAITING_QUOTE exit
+  quoteExpiresAt     DateTime? @db.Timestamptz(3) // halved for one-of-one items, see 18 §18.23.7
+  paidAt             DateTime? @db.Timestamptz(3)
+  expectedDispatchAt DateTime? @db.Timestamptz(3) // stamped once on entering IN_PRODUCTION, never recomputed (23 §23.8.2; §25.8h)
+  shippedAt          DateTime? @db.Timestamptz(3)
+  deliveredAt        DateTime? @db.Timestamptz(3)
+  cancelledAt        DateTime? @db.Timestamptz(3)
+
+  // §25.8e Round 10 (fields added):
+  attribution         Json? // { utm_source, utm_medium, utm_campaign, referrer, from } captured at checkout
+  confirmedByCallAt   DateTime? @db.Timestamptz(3) // «Підтверджено дзвінком»; required before PACKING
+  confirmedByCallById String?
+
+  // §25.8g Round 16 (fields added):
+  externalRef    String? @unique // "oneknight:<id>"
+  externalNumber String? @unique // ONEKNIGHT's numeric order number; `number` stays VCH-YY-NNNN
+  okContext      Json? // oneknight.context() captured at checkout, only if ok.js was loaded (after consent)
+
+  items          OrderItem[]
+  events         OrderEvent[]
+  payments       PaymentTransaction[]
+  fiscalReceipts FiscalReceipt[]
+  mailThreads    MailThread[]
+  customer       Customer?            @relation(fields: [customerId], references: [id])
+
+  @@index([status, placedAt])
+  @@index([email])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid(2))
+  orderId   String
+  variantId String? // nullable: variant may later be deleted
+
+  // Full snapshot. An order line must render correctly a decade from now.
+  sku                 String
+  nameSnapshot        String
+  optionsSnapshot     Json
+  // Custom-size builds only, e.g. { widthCm: 180, lengthCm: 240 }.
+  customSpec          Json?
+  imageUrlSnapshot    String?
+  unitPriceMinor      Int
+  pricingUnitSnapshot PricingUnit // renders "2 шт" vs "1,5 кг" years later
+  quantityMilli       Int // see CartItem.quantityMilli
+  totalMinor          Int
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid(2))
+  orderId   String
+  type      String // status_changed | note_added | email_sent
+  fromValue String?
+  toValue   String?
+  actorId   String? // null = system
+  payload   Json?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+// Append-only (docs/38 #61): DB trigger rejects UPDATE/DELETE.
+model PaymentTransaction {
+  id             String        @id @default(cuid(2))
+  orderId        String
+  provider       String
+  providerRef    String
+  status         PaymentStatus
+  amountMinor    Int
+  currency       Currency
+  rawPayload     Json // webhook body, retained for dispute resolution
+  idempotencyKey String        @unique // webhook replay protection
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@unique([provider, providerRef])
+  @@index([orderId])
+}
+
+// --- Stock reservation ---
+
+model StockReservation {
+  id            String   @id @default(cuid(2))
+  variantId     String
+  quantityMilli Int // see CartItem.quantityMilli
+  cartId        String
+  expiresAt     DateTime @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([variantId])
+  @@index([expiresAt]) // a cron job sweeps expired rows
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.6 Customers, carts, reviews
+// ---------------------------------------------------------------------------------------------
+
+// Order-derived record only. There is NO customer authentication anywhere in this system
+// (00-client-decisions-2 §E12). No passwordHash, no sessions, no account pages.
+model Customer {
+  id               String    @id @default(cuid(2))
+  email            String?   @unique // optional: e-mail at checkout is optional (round 10 §P5a)
+  phone            String?
+  firstName        String?
+  lastName         String?
+  locale           Locale    @default(uk)
+  acceptsMarketing Boolean   @default(false)
+  // Round 20 #139, #212–213, #222: «Обережно» with a reason, shown on the customer's next order.
+  cautionReason    String?
+  cautionAt        DateTime? @db.Timestamptz(3)
+  externalRef      String?   @unique // §25.8g "oneknight:<id>"
+  deletedAt        DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+
+  orders    Order[]
+  addresses CustomerAddress[]
+  reviews   Review[]
+  notes     CustomerNote[]
+}
+
+// Round 20 #140: notes on a customer card; the customer never sees them.
+model CustomerNote {
+  id         String   @id @default(cuid(2))
+  customerId String
+  authorId   String?
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+}
+
+model Cart {
+  id         String   @id @default(cuid(2))
+  token      String   @unique // httpOnly cookie value
+  customerId String?
+  locale     Locale   @default(uk)
+  currency   Currency @default(UAH)
+  couponCode String?
+  expiresAt  DateTime @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  items CartItem[]
+
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id         String @id @default(cuid(2))
+  cartId     String
+  variantId  String
+  customSpec Json? // { widthCm, lengthCm } for a custom-size line (§25.8h)
+  specKey    String @default("") // "" for stock sizes, "<w>x<l>" for custom sizes
+
+  // Integer thousandths of the variant's PricingUnit: 2 pieces = 2000; 1.5 kg = 1500.
+  quantityMilli Int
+  addedAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, variantId, specKey])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  REJECTED
+}
+
+enum ReviewSource {
+  SITE
+  PROM
+}
+
+// rating: DB-level CHECK (rating BETWEEN 1 AND 5) in migration hand_written_constraints.
+model Review {
+  id                 String       @id @default(cuid(2))
+  // Round 13 (N2): null = «Відгук про магазин» (shop review).
+  productId          String?
+  customerId         String?
+  authorName         String
+  authorEmail        String? // required for SITE reviews (API); imported Prom reviews have none (§25.8i)
+  rating             Int // 1..5, constrained in the DB
+  title              String?
+  body               String       @db.Text
+  status             ReviewStatus @default(PENDING)
+  isVerifiedPurchase Boolean      @default(false)
+  orderId            String? // proof for the verified badge
+  reply              String?      @db.Text
+  repliedById        String?
+  repliedAt          DateTime?    @db.Timestamptz(3)
+  helpfulCount       Int          @default(0)
+  mediaIds           String[]
+  // Round 13 (N2): imported Prom reviews. Imported (source != SITE) reviews are excluded
+  // from AggregateRating.
+  source             ReviewSource @default(SITE)
+  sourceDate         DateTime?    @db.Timestamptz(3) // original date for imported reviews
+  sourceRef          String? // original id, for de-duplicated re-imports
+  externalRef        String?      @unique // §25.8g "oneknight:<id>"
+  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
+
+  product  Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([productId, status, createdAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.7 Staff, roles, permissions
+// ---------------------------------------------------------------------------------------------
+
+model StaffUser {
+  id            String      @id @default(cuid(2))
+  email         String      @unique
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  avatarMediaId String?
+  status        StaffStatus @default(INVITED)
+  locale        Locale      @default(uk)
+
+  twoFactorSecret    String? // AEAD-encrypted; MANDATORY for every staff account (round 8 §L14)
+  twoFactorEnabledAt DateTime? @db.Timestamptz(3) // null = must enrol before anything else
+  twoFactorLastStep  Int? // last accepted TOTP time-step; replay guard
+  passwordChangedAt  DateTime? @db.Timestamptz(3)
+  lastLoginAt        DateTime? @db.Timestamptz(3)
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime? @db.Timestamptz(3)
+  // docs/32 §32.4 «The permVersion claim»: incremented on any role or grant change.
+  permVersion        Int       @default(0)
+  // Personal Telegram notifications (2026-10-02): the owner always may, others when the owner allows;
+  // linked by a one-time code from the panel typed into the bot.
+  telegramAllowed    Boolean   @default(false)
+  telegramChatId     String?   @unique
+  telegramUsername   String?
+  telegramLinkedAt   DateTime? @db.Timestamptz(3)
+  telegramPrefs      Json? // { [kind]: false } turns a kind off; missing = on (2026-10-02 T23)
+  telegramLastSentAt DateTime? @db.Timestamptz(3)
+
+  invitedById String?
+  invitedAt   DateTime? @db.Timestamptz(3)
+  suspendedAt DateTime? @db.Timestamptz(3)
+  deletedAt   DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  roles         StaffRoleAssignment[]
+  grants        StaffPermissionGrant[] // per-user overrides on top of roles
+  sessions      StaffSession[]
+  recoveryCodes StaffRecoveryCode[]
+  auditEntries  AuditLog[]
+
+  mailboxMemberships  MailboxMember[]
+  assignedMailThreads MailThread[]     @relation("MailThreadAssignee")
+  sentMailMessages    MailMessage[]    @relation("MailMessageSender")
+  mailThreadReads     MailThreadRead[]
+  mailDrafts          MailDraft[]
+
+  @@index([status])
+}
+
+enum StaffStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+  DEACTIVATED
+}
+
+model Role {
+  id          String                @id @default(cuid(2))
+  key         String                @unique // owner | administrator | manager | ...
+  name        String
+  description String?
+  isSystem    Boolean               @default(false) // system roles cannot be deleted
+  permissions RolePermission[]
+  assignments StaffRoleAssignment[]
+}
+
+model Permission {
+  id          String                 @id @default(cuid(2))
+  key         String                 @unique // "products.publish", "orders.export"
+  resource    String // "products"
+  action      String // "publish"
+  isDangerous Boolean                @default(false) // forces a confirm step in the admin UI
+  roles       RolePermission[]
+  grants      StaffPermissionGrant[]
+
+  @@unique([resource, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model StaffRoleAssignment {
+  staffUserId  String
+  roleId       String
+  assignedAt   DateTime @default(now()) @db.Timestamptz(3)
+  assignedById String?
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+  role      Role      @relation(fields: [roleId], references: [id])
+
+  @@id([staffUserId, roleId])
+}
+
+// Per-user override. effect=DENY always beats any ALLOW from a role.
+model StaffPermissionGrant {
+  staffUserId  String
+  permissionId String
+  effect       GrantEffect
+  grantedById  String?
+  grantedAt    DateTime    @default(now()) @db.Timestamptz(3)
+  expiresAt    DateTime?   @db.Timestamptz(3)
+
+  staffUser  StaffUser  @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([staffUserId, permissionId])
+}
+
+enum GrantEffect {
+  ALLOW
+  DENY
+}
+
+model StaffSession {
+  id               String    @id @default(cuid(2))
+  staffUserId      String
+  refreshTokenHash String    @unique // hash only; the token itself is never stored
+  ipAddress        String
+  userAgent        String
+  deviceLabel      String?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt       DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt        DateTime  @db.Timestamptz(3)
+  revokedAt        DateTime? @db.Timestamptz(3)
+  revokedById      String?
+  rememberDevice   Boolean   @default(false) // «Запам'ятати на 7 днів»: 7 d absolute, else ≤ 12 h
+  mfaVerifiedAt    DateTime  @db.Timestamptz(3) // no session exists without a passed second factor
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@index([staffUserId, revokedAt])
+  @@index([expiresAt])
+}
+
+// 10 per user, shown once at enrolment. Hash only (Argon2id); single use.
+model StaffRecoveryCode {
+  id          String    @id @default(cuid(2))
+  staffUserId String
+  codeHash    String
+  usedAt      DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@index([staffUserId, usedAt])
+}
+
+// Append-only (§25.1, docs/24 §24.13, docs/38 #61) and hash-chained (docs/38 #62).
+// seq, prevHash and hash are assigned by a BEFORE INSERT trigger (migration
+// hand_written_constraints); any value the application supplies is overwritten.
+model AuditLog {
+  id            String   @id @default(cuid(2))
+  actorId       String?
+  actorEmail    String // denormalised: survives user deletion
+  action        String // "product.price.updated"
+  resourceType  String
+  resourceId    String?
+  resourceLabel String? // "Ліжник «Черемош», 150×200"
+  before        Json?
+  after         Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  // Hash chain (docs/38 #62): chain order, hash of the previous row, hash of this row.
+  seq           BigInt   @unique @default(autoincrement())
+  prevHash      String?
+  hash          String?
+
+  actor StaffUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([resourceType, resourceId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8 Content: blog, gallery, promotions
+// (Lead, LeadStatus, LeadKind removed by round 10 §P7a — not created.)
+// ---------------------------------------------------------------------------------------------
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+model Post {
+  id           String     @id @default(cuid(2))
+  status       PostStatus @default(DRAFT)
+  coverMediaId String?
+  authorId     String?
+  readMinutes  Int?
+  publishedAt  DateTime?  @db.Timestamptz(3)
+  scheduledFor DateTime?  @db.Timestamptz(3)
+  // §25.8i: edits to a published article collect here (title, excerpt, body, meta, tags) and reach
+  // the site only at «Опублікувати зміни», as product drafts do.
+  draftDocument  Json?
+  draftUpdatedAt DateTime? @db.Timestamptz(3)
+  deletedAt    DateTime?  @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(3)
+
+  translations PostTranslation[]
+  tags         PostTag[]
+
+  @@index([status, publishedAt])
+  @@index([status, scheduledFor])
+}
+
+model PostTranslation {
+  id              String            @id @default(cuid(2))
+  postId          String
+  locale          Locale
+  title           String
+  slug            String
+  excerpt         String            @db.Text
+  bodyJson        Json // rich text as a structured document
+  bodyPlain       String            @db.Text // generated — full-text search + AI extraction
+  metaTitle       String?
+  metaDescription String?
+  source          TranslationSource @default(HUMAN)
+  sourceHash      String?
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, locale])
+  @@unique([locale, slug])
+  @@index([locale])
+}
+
+model MediaAlbum {
+  id           String                  @id @default(cuid(2))
+  key          String                  @unique // "production-2025-winter"
+  coverMediaId String?
+  isPublic     Boolean                 @default(true)
+  position     Int                     @default(0)
+  createdAt    DateTime                @default(now()) @db.Timestamptz(3)
+  media        Media[]
+  translations MediaAlbumTranslation[]
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+  BUNDLE
+}
+
+// round 8 §L14 — volume tiers live in Setting pricing.volume_tiers
+enum DiscountSource {
+  PROMO_CODE
+  VOLUME
+}
+
+model Promotion {
+  id                   String        @id @default(cuid(2))
+  code                 String?       @unique // null = automatic promotion
+  type                 PromotionType
+  valueMinor           Int?
+  percentage           Int?
+  minSubtotalMinor     Int?
+  usageLimit           Int?
+  usageCount           Int           @default(0)
+  perCustomerLimit     Int?
+  appliesToProductIds  String[]
+  appliesToCategoryIds String[]
+  startsAt             DateTime?     @db.Timestamptz(3)
+  endsAt               DateTime?     @db.Timestamptz(3)
+  isActive             Boolean       @default(true)
+  createdById          String?
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([isActive, startsAt, endsAt])
+}
+
+model Banner {
+  id            String              @id @default(cuid(2))
+  placement     String // "home_hero" | "category_top" | "announcement_bar"
+  mediaId       String?
+  mobileMediaId String?
+  linkUrl       String?
+  position      Int                 @default(0)
+  startsAt      DateTime?           @db.Timestamptz(3)
+  endsAt        DateTime?           @db.Timestamptz(3)
+  isActive      Boolean             @default(true)
+  translations  BannerTranslation[]
+
+  @@index([placement, isActive, position])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8b Remaining translation tables, customer addresses, blog tags
+// (WishlistItem deliberately not a table — localStorage only.)
+// ---------------------------------------------------------------------------------------------
+
+model OptionTypeTranslation {
+  id           String            @id @default(cuid(2))
+  optionTypeId String
+  locale       Locale
+  name         String // "Розмір", "Size", "Rozmiar", "Größe"
+  source       TranslationSource @default(HUMAN)
+  sourceHash   String?
+
+  optionType OptionType @relation(fields: [optionTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([optionTypeId, locale])
+  @@index([locale])
+}
+
+model OptionValueTranslation {
+  id            String            @id @default(cuid(2))
+  optionValueId String
+  locale        Locale
+  label         String // "Вишневий", "Cherry", …
+  source        TranslationSource @default(HUMAN)
+  sourceHash    String?
+
+  optionValue OptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
+
+  @@unique([optionValueId, locale])
+  @@index([locale])
+}
+
+model AttributeDefinitionTranslation {
+  id           String            @id @default(cuid(2))
+  definitionId String
+  locale       Locale
+  name         String // "Щільність"
+  helpText     String? // shown in the PDP spec table tooltip
+  source       TranslationSource @default(HUMAN)
+  sourceHash   String?
+
+  definition AttributeDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@unique([definitionId, locale])
+  @@index([locale])
+}
+
+model MediaAlbumTranslation {
+  id          String            @id @default(cuid(2))
+  albumId     String
+  locale      Locale
+  title       String
+  description String?           @db.Text
+  source      TranslationSource @default(HUMAN)
+  sourceHash  String?
+
+  album MediaAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, locale])
+  @@index([locale])
+}
+
+model BannerTranslation {
+  id         String            @id @default(cuid(2))
+  bannerId   String
+  locale     Locale
+  headline   String?
+  subline    String?
+  ctaLabel   String?
+  linkUrl    String? // per-locale override of Banner.linkUrl
+  source     TranslationSource @default(HUMAN)
+  sourceHash String?
+
+  banner Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+
+  @@unique([bannerId, locale])
+  @@index([locale])
+}
+
+model CustomerAddress {
+  id             String          @id @default(cuid(2))
+  customerId     String
+  label          String? // "Дім", "Офіс"
+  firstName      String
+  lastName       String
+  phone          String
+  country        String          @default("UA")
+  region         String?
+  city           String
+  carrier        ShippingCarrier
+  npWarehouseRef String? // Nova Poshta branch/locker
+  streetAddress  String? // courier delivery only
+  postalCode     String?
+  isDefault      Boolean         @default(false)
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, isDefault])
+}
+
+model Tag {
+  id           String           @id @default(cuid(2))
+  key          String           @unique
+  translations TagTranslation[]
+  posts        PostTag[]
+}
+
+model TagTranslation {
+  id         String            @id @default(cuid(2))
+  tagId      String
+  locale     Locale
+  name       String
+  slug       String
+  source     TranslationSource @default(HUMAN)
+  sourceHash String?
+
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, locale])
+  @@unique([locale, slug])
+  @@index([locale])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8c Mail (00-client-decisions-7 §K2). MailThread.leadId dropped with Lead (round 10 §P7a).
+// ---------------------------------------------------------------------------------------------
+
+enum MailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MailMessageKind {
+  CUSTOMER
+  STAFF_REPLY
+  TRANSACTIONAL
+}
+
+// OPEN = needs a reply from us
+enum MailThreadStatus {
+  OPEN
+  WAITING
+  CLOSED
+  SPAM
+}
+
+enum MailDeliveryState {
+  QUEUED
+  SENT
+  DELIVERED
+  BOUNCED
+  COMPLAINED
+  FAILED
+}
+
+enum MailSenderAction {
+  BLOCK
+  ALLOW
+  VIP // round 19 D1 #48: wholesale regulars, starred in the list
+}
+
+// One row per receiving address. At launch exactly one: info@ (00-client-decisions-8 §L2).
+model Mailbox {
+  id            String   @id @default(cuid(2))
+  address       String   @unique // lower-case, on {{DOMAIN}}
+  displayName   String // «Вівчарик» — the From: display name
+  isShared      Boolean  @default(true) // false = visible to members only
+  signatureHtml String?  @db.Text
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  members MailboxMember[]
+  threads MailThread[]
+}
+
+model MailboxMember {
+  mailboxId   String
+  staffUserId String
+
+  mailbox   Mailbox   @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@id([mailboxId, staffUserId])
+}
+
+model MailThread {
+  id               String           @id @default(cuid(2))
+  mailboxId        String
+  subject          String
+  counterpartEmail String // the customer side, lower-case
+  counterpartName  String?
+  status           MailThreadStatus @default(OPEN)
+  assignedToId     String?
+  orderId          String?
+  lastMessageAt    DateTime         @db.Timestamptz(3)
+  lastInboundAt    DateTime?        @db.Timestamptz(3) // drives SLA colouring
+  labels           String[]         @default([]) // round 19 D1 #13: keys from Setting mail.labels
+  autoRepliedAt    DateTime?        @db.Timestamptz(3) // out-of-hours auto-reply, at most one a day per thread
+  deletedAt        DateTime?        @db.Timestamptz(3) // bin: purged 30 days later (round 19 D1 #23)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+
+  mailbox    Mailbox          @relation(fields: [mailboxId], references: [id])
+  assignedTo StaffUser?       @relation("MailThreadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  order      Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  messages   MailMessage[]
+  reads      MailThreadRead[]
+  drafts     MailDraft[]
+  notes      MailNote[]
+
+  @@index([mailboxId, status, lastMessageAt])
+  @@index([assignedToId, status])
+  @@index([counterpartEmail])
+  @@index([orderId])
+}
+
+model MailMessage {
+  id                String             @id @default(cuid(2))
+  threadId          String
+  direction         MailDirection
+  kind              MailMessageKind
+  messageIdHeader   String // RFC 5322 Message-ID; generated by us on outbound
+  inReplyTo         String?
+  references        String[]
+  fromEmail         String
+  fromName          String?
+  toEmails          String[]
+  ccEmails          String[]
+  subject           String
+  textBody          String?            @db.Text // null when bodyWithheld
+  htmlSanitized     String?            @db.Text // sanitised at ingest; raw HTML is never rendered
+  bodyWithheld      Boolean            @default(false) // secret-bearing template: metadata only
+  rawObjectKey      String? // original MIME on the server's disk (MAIL_DIR), relative path
+  imapFolder        String? // round 19 D1: where the copy lives in the Porkbun mailbox
+  imapUid           Int?
+  authVerdict       Json? // { spf, dkim, dmarc, lookalike }
+  spamScore         Float?
+  templateKey       String? // TRANSACTIONAL only
+  sentById          String? // STAFF_REPLY only
+  providerMessageId String?
+  deliveryState     MailDeliveryState? // OUTBOUND only, updated from {{ESP}} webhooks
+  occurredAt        DateTime           @db.Timestamptz(3) // received or sent
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+
+  thread      MailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sentBy      StaffUser?       @relation("MailMessageSender", fields: [sentById], references: [id], onDelete: SetNull)
+  attachments MailAttachment[]
+
+  @@unique([threadId, messageIdHeader]) // one copy per thread, even if re-ingested
+  @@index([messageIdHeader]) // threading lookup
+  @@index([threadId, occurredAt])
+  @@index([providerMessageId])
+  @@index([imapFolder, imapUid])
+}
+
+// Internal note on a thread; the customer never sees it (round 19 D1 #37).
+model MailNote {
+  id        String   @id @default(cuid(2))
+  threadId  String
+  authorId  String?
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  thread MailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model MailAttachment {
+  id          String  @id @default(cuid(2))
+  messageId   String
+  filename    String
+  contentType String // as declared; never trusted for rendering
+  sizeBytes   Int
+  sha256      String
+  objectKey   String // private R2 bucket
+  contentId   String? // cid: for inline images
+  isInline    Boolean @default(false)
+  riskFlag    String? // executable | macro | archive | null
+
+  message MailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model MailThreadRead {
+  threadId    String
+  staffUserId String
+  readAt      DateTime @db.Timestamptz(3) // = occurredAt of the last message SHOWN, not now()
+
+  thread    MailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  staffUser StaffUser  @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@id([threadId, staffUserId])
+}
+
+model MailDraft {
+  threadId    String
+  staffUserId String
+  bodyHtml    String   @db.Text
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  thread    MailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  staffUser StaffUser  @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@id([threadId, staffUserId])
+}
+
+model MailSenderRule {
+  id          String           @id @default(cuid(2))
+  pattern     String           @unique // "name@host" or "@host"
+  action      MailSenderAction
+  createdById String?
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+}
+
+// Idempotency and reconciliation for the inbound webhook.
+model MailInboundReceipt {
+  objectKey   String    @id // R2 key written by the Email Worker
+  envelopeTo  String
+  receivedAt  DateTime  @db.Timestamptz(3)
+  processedAt DateTime? @db.Timestamptz(3)
+  attempts    Int       @default(0)
+  lastError   String?
+
+  @@index([processedAt, receivedAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Round 20 #133–137, #217–219, #274–277: a sale at the shop till — several items, a manual discount,
+// cash or transfer to a card, cash given and change. Undone the same day (stock returns). Room for a
+// fiscal receipt reference once the accountant decides (#175).
+// ---------------------------------------------------------------------------------------------
+
+enum ShopPayment {
+  CASH
+  CARD_TRANSFER
+}
+
+model ShopSale {
+  id            String      @id @default(cuid(2))
+  items         Json // [{ variantId, sku, name, options, quantity, priceMinor }]
+  subtotalMinor Int
+  discountMinor Int         @default(0)
+  totalMinor    Int
+  payment       ShopPayment
+  cashGivenMinor Int?
+  receiptRef    String? // a fiscal receipt number, if one is issued
+  note          String?
+  createdById   String?
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  cancelledAt   DateTime?   @db.Timestamptz(3)
+  cancelledById String?
+
+  @@index([createdAt])
+}
+
+// A one-time code that links a staff member's own Telegram chat to the bot: 6 digits, 10 minutes,
+// stored hashed, one live code per person.
+model TelegramLinkCode {
+  staffUserId String   @id
+  codeHash    String   @unique
+  tokenHash   String?  @unique // the one-tap link t.me/<bot>?start=<token> (2026-10-02 T01)
+  expiresAt   DateTime @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+}
+
+// A notice sent to one person, kept so it can be updated later («✓ Підтверджено — Іван», T28–T29).
+model TelegramMessage {
+  id        String   @id @default(cuid(2))
+  chatId    String
+  messageId Int
+  orderId   String?
+  hasPhoto  Boolean  @default(false)
+  text      String   @db.Text // the HTML text/caption as last sent, so lines can be appended
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// Round 20 #294: sign-in with a passkey (Face ID / fingerprint) on one's own device, after the first
+// password + code sign-in. Password + TOTP stays as the fallback.
+model StaffPasskey {
+  id           String    @id @default(cuid(2))
+  staffUserId  String
+  credentialId String    @unique // base64url
+  publicKey    Bytes
+  counter      Int       @default(0)
+  transports   String[]
+  label        String // «iPhone Івана»
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  lastUsedAt   DateTime? @db.Timestamptz(3)
+
+  @@index([staffUserId])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Round 19 D2: newsletter consent. Checkout checkbox (unchecked by default) or added by hand with a
+// note on where consent was given; subscribed only after the confirmation link (double opt-in).
+// After unsubscribing only the e-mail is kept, as a «do not write» entry.
+// ---------------------------------------------------------------------------------------------
+
+enum SubscriberStatus {
+  PENDING
+  CONFIRMED
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+model Subscriber {
+  id             String           @id @default(cuid(2))
+  email          String           @unique // lower-case
+  status         SubscriberStatus @default(PENDING)
+  locale         Locale           @default(uk)
+  source         String // checkout | manual
+  consentText    String? // the exact checkbox text, or the owner's note for a manual entry
+  consentAt      DateTime?        @db.Timestamptz(3)
+  confirmToken   String?          @unique
+  confirmedAt    DateTime?        @db.Timestamptz(3)
+  unsubToken     String           @unique
+  unsubscribedAt DateTime?        @db.Timestamptz(3)
+  bounceCount    Int              @default(0)
+  orderId        String?
+  createdById    String?
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8d Quick-order requests, idempotency, redirects, search log, settings, return policy
+// (NewsletterSubscriber removed by round 9 — not created.)
+// ---------------------------------------------------------------------------------------------
+
+enum QuickOrderStatus {
+  NEW
+  CALLED
+  CONVERTED
+  DECLINED
+  SPAM
+}
+
+// «Купити в 1 клік»: a phone number and a product, not an order.
+model QuickOrderRequest {
+  id           String           @id @default(cuid(2))
+  status       QuickOrderStatus @default(NEW)
+  phone        String // E.164, Ukrainian numbers only
+  productId    String
+  variantId    String?
+  quantity     Int              @default(1)
+  locale       Locale           @default(uk)
+  sourcePath   String?
+  assignedToId String?
+  orderId      String?          @unique // set on CONVERTED
+  internalNote String?          @db.Text
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  calledAt     DateTime?        @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+}
+
+model IdempotencyKey {
+  key          String    @id
+  scope        String // "checkout" | "refund" | "bulk-import"
+  requestHash  String // rejects key reuse with a different body
+  responseCode Int?
+  responseBody Json?
+  lockedAt     DateTime? @db.Timestamptz(3) // in-flight guard against double submit
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt    DateTime  @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@index([scope, createdAt])
+}
+
+model Redirect {
+  id         String   @id @default(cuid(2))
+  fromPath   String   @unique
+  toPath     String
+  statusCode Int      @default(301)
+  hitCount   Int      @default(0)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model SearchQueryLog {
+  id          String   @id @default(cuid(2))
+  query       String
+  locale      Locale
+  resultCount Int
+  clickedId   String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([query, createdAt])
+}
+
+model Setting {
+  key         String   @id
+  value       Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// Return policy is PER LOCALE, not site-wide (00-client-decisions-2 §E11).
+model ReturnPolicy {
+  id                   String   @id @default(cuid(2))
+  locale               Locale   @unique
+  returnDays           Int
+  basis                String // "UA_CONSUMER_RIGHTS" | "EU_DISTANCE_SELLING"
+  returnFeesPaidBy     String // "CUSTOMER" | "MERCHANT" | "MERCHANT_IF_DEFECT"
+  refundDays           Int // days to refund after receipt
+  restockingFeePercent Int      @default(0)
+  withdrawalFormUrl    String? // EU model withdrawal form — de, pl
+  notesMarkdown        String?  @db.Text
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8e Round 10 — fiscal receipts (Order fields and TranslationSource are applied above)
+// ---------------------------------------------------------------------------------------------
+
+enum FiscalReceiptKind {
+  SALE
+  RETURN
+}
+
+enum FiscalReceiptStatus {
+  PENDING
+  ISSUED
+  FAILED
+}
+
+// Kept at least 3 years (F6 #49).
+model FiscalReceipt {
+  id           String              @id @default(cuid(2))
+  orderId      String
+  kind         FiscalReceiptKind
+  status       FiscalReceiptStatus @default(PENDING)
+  amountMinor  Int
+  provider     String // "wayforpay" (built-in ПРРО); fallback "dps" (round 14)
+  providerId   String?             @unique
+  fiscalCode   String? // the receipt's fiscal number
+  receiptUrl   String? // official receipt link, shown on the order page only
+  // Round 14 (00-client-decisions-14.md):
+  isPrepayment Boolean             @default(false) // receipt for the 460 ₴ prepayment
+  qrPayload    String? // the tax service's verification QR content
+  pdfUrl       String? // official PDF from the provider; the site never renders its own
+  lastError    String?
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  issuedAt     DateTime?           @db.Timestamptz(3)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status, createdAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8f Product templates, libraries, revisions, stock movements (00-client-decisions-12)
+// ---------------------------------------------------------------------------------------------
+
+model ProductTemplate {
+  id                 String                     @id @default(cuid(2))
+  key                String                     @unique // "lizhnyk" | "podushka" | "odyah" | ...
+  typePrefix         String // «Ліжник» — prefixed to product names (uk; translated)
+  defaultCategoryId  String?
+  pricingUnits       PricingUnit[] // allowed units, e.g. [SKEIN, KILOGRAM] for yarn
+  axes               String[] // OptionType keys in order: ["size","color","pattern"]
+  requiredFields     String[] // "name","price","photos>=3","size","color","composition","description","packedWeight"
+  storyStages        String[] // «Історія виробу» defaults
+  sizeCalcOverhangCm Int? // ліжник template: bed + overhang
+  sizeTable          Json? // clothing: per size {chestCm, lengthCm}
+  seoTitlePattern    String?
+  isHidden           Boolean                    @default(false) // the prepared ДЕРЕВО template
+  createdAt          DateTime                   @default(now()) @db.Timestamptz(3)
+  attributes         ProductTemplateAttribute[]
+  products           Product[]
+}
+
+model ProductTemplateAttribute {
+  templateId  String
+  attributeId String // AttributeDefinition
+  isRequired  Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  template  ProductTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  attribute AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@id([templateId, attributeId])
+}
+
+model Material {
+  id           String                @id @default(cuid(2))
+  group        String // вовна | овчина | шкіра | змішані
+  careSection  String? // anchor on the shared care page
+  isHidden     Boolean               @default(false)
+  translations MaterialTranslation[]
+  compositions ProductComposition[]
+}
+
+// Referenced by §25.8f but not written out there; follows the §25.2 pattern.
+model MaterialTranslation {
+  id         String            @id @default(cuid(2))
+  materialId String
+  locale     Locale
+  name       String
+  source     TranslationSource @default(HUMAN)
+  sourceHash String?
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, locale])
+  @@index([locale])
+}
+
+model ProductComposition {
+  productId  String
+  materialId String
+  role       String @default("main") // main | warp | weft | filling
+  percent    Int // per role, must total 100
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@id([productId, materialId, role])
+  @@index([materialId])
+}
+
+model GlossaryTerm {
+  id           String                    @id @default(cuid(2))
+  term         String                    @unique // «полонина»
+  translations GlossaryTermTranslation[] // explanation per locale
+}
+
+// Referenced by §25.8f but not written out there; follows the §25.2 pattern.
+model GlossaryTermTranslation {
+  id          String            @id @default(cuid(2))
+  termId      String
+  locale      Locale
+  explanation String            @db.Text
+  source      TranslationSource @default(HUMAN)
+  sourceHash  String?
+
+  term GlossaryTerm @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+  @@unique([termId, locale])
+  @@index([locale])
+}
+
+// Append-only (docs/38 #61), except publishedAt may be set once (see hand_written_constraints).
+model ProductRevision {
+  id          String    @id @default(cuid(2))
+  productId   String
+  snapshot    Json // full product + variants + media order + texts
+  createdById String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  publishedAt DateTime? @db.Timestamptz(3)
+
+  @@index([productId, createdAt])
+}
+
+enum StockMovementSource {
+  ORDER
+  CANCELLATION
+  SHOP_SALE
+  MANUAL
+  IMPORT
+}
+
+// Append-only (docs/38 #61).
+model StockMovement {
+  id          String              @id @default(cuid(2))
+  variantId   String
+  shopSaleId  String? // round 20: movements of one till sale
+  delta       Int // in quantityMilli units for weight-priced goods
+  source      StockMovementSource
+  orderId     String?
+  reason      String? // required for MANUAL
+  createdById String?
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@index([variantId, createdAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8g Round 16 — ONEKNIGHT seams (not connected). externalRef fields applied above.
+// ---------------------------------------------------------------------------------------------
+
+model ProcessedWebhookEvent {
+  id          String    @id // sender's event id — idempotency
+  sender      String // "oneknight"
+  type        String
+  receivedAt  DateTime  @default(now()) @db.Timestamptz(3)
+  processedAt DateTime? @db.Timestamptz(3)
+
+  @@index([sender, receivedAt])
+}
+
+// ---------------------------------------------------------------------------------------------
+// 20 §20.6 Production stages. Keys match ProductTemplate.storyStages / Product.storyStagesOff.
+// Only the stages of round 9 §F1 exist; a stage without a photograph does not render in production.
+// ---------------------------------------------------------------------------------------------
+
+enum ProductionTrack {
+  WOOL
+  HIDE
+}
+
+model ProductionStage {
+  id        String          @id @default(cuid(2))
+  key       String          @unique // washing | carding | spinning | weaving | felting | sewing | tanning
+  track     ProductionTrack
+  position  Int             @default(0)
+  isActive  Boolean         @default(true)
+  photoId   String?
+  videoId   String?
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime        @updatedAt @db.Timestamptz(3)
+
+  photo        Media?                       @relation("StagePhoto", fields: [photoId], references: [id])
+  video        Media?                       @relation("StageVideo", fields: [videoId], references: [id])
+  translations ProductionStageTranslation[]
+
+  @@index([track, position])
+}
+
+model ProductionStageTranslation {
+  id          String            @id @default(cuid(2))
+  stageId     String
+  locale      Locale
+  title       String
+  body        String            @db.Text
+  // The four fact slots; null = not stated by the client yet, never rendered as a placeholder.
+  duration    String?
+  temperature String?
+  machine     String?
+  person      String? // first name and role only; no faces in photographs (round 9)
+  source      TranslationSource @default(HUMAN)
+  sourceHash  String?
+
+  stage ProductionStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@unique([stageId, locale])
+}
+
+// ---------------------------------------------------------------------------------------------
+// §25.8i Collections (round 10 part 2 #18, round 11 #65, round 12 T9): На подарунок, Весільні, Для
+// дітей. A product joins by a tick in its editor; the order inside a collection is set on the
+// collection page. Rotating card photos (round 11) wait for media storage.
+// ---------------------------------------------------------------------------------------------
+
+model Collection {
+  id        String   @id @default(cuid(2))
+  key       String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  translations CollectionTranslation[]
+  products     CollectionProduct[]
+}
+
+model CollectionTranslation {
+  id              String            @id @default(cuid(2))
+  collectionId    String
+  locale          Locale
+  name            String
+  slug            String
+  description     String?           @db.Text
+  metaTitle       String?
+  metaDescription String?
+  source          TranslationSource @default(HUMAN)
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, locale])
+  @@unique([locale, slug])
+}
+
+model CollectionProduct {
+  collectionId String
+  productId    String
+  sortOrder    Int    @default(0)
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, productId])
+  @@index([productId])
+}

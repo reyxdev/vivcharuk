@@ -1,0 +1,47 @@
+# Вівчарик — paths excluded from Claude Code context
+# The blueprint in docs/ is NOT ignored: it is the project. Reading discipline for it
+# lives in CLAUDE.md, because the problem there is how much is read, not whether.
+
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+.vite/
+coverage/
+.turbo/
+
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+.git/
+.DS_Store
+*.log
+*.bak
+*.tmp
+.env
+.env.*
+!.env.example
+
+# Media — never useful as context, always expensive to enumerate
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.avif
+*.mp4
+*.mov
+*.pdf
+*.psd
+*.ai
+*.sketch
+*.fig
+
+# Generated
+*.min.js
+*.min.css
+*.map
+prisma/migrations/
+public/uploads/

@@ -1,0 +1,15 @@
+<symbol id="m-sheep" viewBox="0 0 190 130">
+<path d="M58 94L56 122M76 98L75 124M112 98L113 124M130 94L132 122" stroke="#1B1712" stroke-width="6" stroke-linecap="round"></path>
+<path d="M51 121h10v6h-10zM70 123h10v6h-10zM108 123h10v6h-10zM127 121h10v6h-10z" fill="#1B1712"></path>
+<circle cx="36" cy="62" r="7" fill="#FFFFFF" stroke="#1B1712" stroke-width="2.2"></circle>
+<path d="M150.0 70.0A6.4 6.4 0 0 1 147.2 79.9A7.5 7.5 0 0 1 138.9 88.8A9.1 9.1 0 0 1 126.1 95.9A10.4 10.4 0 0 1 109.9 100.4A11.2 11.2 0 0 1 92.0 102.0A11.2 11.2 0 0 1 74.1 100.4A10.4 10.4 0 0 1 57.9 95.9A9.1 9.1 0 0 1 45.1 88.8A7.5 7.5 0 0 1 36.8 79.9A6.4 6.4 0 0 1 34.0 70.0A6.4 6.4 0 0 1 36.8 60.1A7.5 7.5 0 0 1 45.1 51.2A9.1 9.1 0 0 1 57.9 44.1A10.4 10.4 0 0 1 74.1 39.6A11.2 11.2 0 0 1 92.0 38.0A11.2 11.2 0 0 1 109.9 39.6A10.4 10.4 0 0 1 126.1 44.1A9.1 9.1 0 0 1 138.9 51.2A7.5 7.5 0 0 1 147.2 60.1A6.4 6.4 0 0 1 150.0 70.0Z" fill="#FFFFFF" stroke="#1B1712" stroke-width="2.6" stroke-linejoin="round"></path>
+<path d="M75.1 53.2a4.3 4.3 0 1 1 6.0 -1.7 M51.0 71.7a3.7 3.7 0 1 1 5.2 -1.5 M85.6 49.4a3.2 3.2 0 1 1 4.5 -1.3 M84.8 85.7a3.2 3.2 0 1 1 4.5 -1.3 M65.4 76.1a4.9 4.9 0 1 1 6.9 -2.0 M99.4 65.0a5.0 5.0 0 1 1 6.9 -2.0 M73.6 85.2a3.4 3.4 0 1 1 4.7 -1.3 M99.8 76.7a3.7 3.7 0 1 1 5.2 -1.5 M110.6 49.0a3.1 3.1 0 1 1 4.4 -1.2 M128.0 81.0a3.6 3.6 0 1 1 5.0 -1.4 M117.4 73.5a4.8 4.8 0 1 1 6.7 -1.9 M88.1 76.4a4.2 4.2 0 1 1 5.9 -1.7 M134.7 64.8a4.3 4.3 0 1 1 6.1 -1.7 M49.8 81.7a4.3 4.3 0 1 1 6.0 -1.7 M71.3 64.5a4.3 4.3 0 1 1 6.1 -1.7 M117.8 58.2a3.5 3.5 0 1 1 4.9 -1.4 M60.2 56.0a3.8 3.8 0 1 1 5.3 -1.5 M108.0 90.0a3.6 3.6 0 1 1 5.0 -1.4 M84.0 62.0a3.9 3.9 0 1 1 5.4 -1.5" fill="none" stroke="#1B1712" stroke-width="1.5" stroke-linecap="round" opacity="0.8"></path>
+<path d="M140 46Q158 30 176 40Q188 50 184 64Q178 74 164 72Q150 70 143 60Z" fill="#FFFFFF" stroke="#1B1712" stroke-width="2.6" stroke-linejoin="round"></path>
+<path d="M150 46Q136 40 128 50Q138 56 150 52Z" fill="#FFFFFF" stroke="#1B1712" stroke-width="2.2" stroke-linejoin="round"></path>
+<path d="M146 48Q138 46 134 50" fill="none" stroke="#E9A48F" stroke-width="2"></path>
+<path d="M147.0 40.0A2.0 2.0 0 0 1 148.1 37.0A2.4 2.4 0 0 1 151.1 34.5A2.9 2.9 0 0 1 155.6 33.2A3.0 3.0 0 0 1 160.4 33.2A2.9 2.9 0 0 1 164.9 34.5A2.4 2.4 0 0 1 167.9 37.0A2.0 2.0 0 0 1 169.0 40.0" fill="#FFFFFF" stroke="#1B1712" stroke-width="2.2"></path>
+<path d="M160 50Q164 46 168 50" fill="none" stroke="#1B1712" stroke-width="2.4" stroke-linecap="round"></path>
+<path d="M180 58q3 2 1 5" fill="none" stroke="#1B1712" stroke-width="2.4" stroke-linecap="round"></path>
+<path d="M172 66Q177 68 181 64" fill="none" stroke="#1B1712" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="170" cy="60" r="3.5" fill="#E9A48F" opacity="0.8"></circle>
+</symbol>

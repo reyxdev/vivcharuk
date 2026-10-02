@@ -1,0 +1,19 @@
+node_modules/
+dist/
+/build/
+apps/*/build/
+.react-router/
+*.tsbuildinfo
+.env
+.env.local
+coverage/
+packages/tokens/dist/
+shkuri.tar.gz
+
+# Photos and videos (served at /media/); on the server they live in MEDIA_DIR
+media/
+
+# Development mail preview (messages the site would send)
+mail-outbox/
+# Mail originals and attachments read by the panel (round 19); on the server in MAIL_DIR
+mail-store/

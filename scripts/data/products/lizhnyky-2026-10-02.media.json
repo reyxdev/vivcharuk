@@ -1,0 +1,956 @@
+{
+ "VCH-LZH-001/IMG_3570.HEIC": {
+  "publicId": "local:products/vch-lzh-001/54ea7262870f",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 765114
+ },
+ "VCH-LZH-001/IMG_3569.HEIC": {
+  "publicId": "local:products/vch-lzh-001/c303264b00e7",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 471906
+ },
+ "VCH-LZH-001/IMG_3572.HEIC": {
+  "publicId": "local:products/vch-lzh-001/3ed4e6fb7896",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 417130
+ },
+ "VCH-LZH-002/IMG_3573.HEIC": {
+  "publicId": "local:products/vch-lzh-002/34f1c4e4a9b7",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 678586
+ },
+ "VCH-LZH-002/IMG_3574.HEIC": {
+  "publicId": "local:products/vch-lzh-002/3845eef3c4fe",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 445282
+ },
+ "VCH-LZH-002/IMG_3575.HEIC": {
+  "publicId": "local:products/vch-lzh-002/e6faae0f18c8",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 443848
+ },
+ "VCH-LZH-003/IMG_3576.HEIC": {
+  "publicId": "local:products/vch-lzh-003/d682647b1425",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 772856
+ },
+ "VCH-LZH-003/IMG_3577.HEIC": {
+  "publicId": "local:products/vch-lzh-003/05c30081e164",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 448620
+ },
+ "VCH-LZH-003/IMG_3578.HEIC": {
+  "publicId": "local:products/vch-lzh-003/14906aefc846",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 440782
+ },
+ "VCH-LZH-004/IMG_3579.HEIC": {
+  "publicId": "local:products/vch-lzh-004/ed79a3a6df57",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 702314
+ },
+ "VCH-LZH-004/IMG_3580.HEIC": {
+  "publicId": "local:products/vch-lzh-004/34a2becf8aab",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 446460
+ },
+ "VCH-LZH-004/IMG_3581.HEIC": {
+  "publicId": "local:products/vch-lzh-004/799003ea98bc",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 363474
+ },
+ "VCH-LZH-005/IMG_3582.HEIC": {
+  "publicId": "local:products/vch-lzh-005/436fa72be3f6",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 774540
+ },
+ "VCH-LZH-005/IMG_3583.HEIC": {
+  "publicId": "local:products/vch-lzh-005/aec25162f74e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 463348
+ },
+ "VCH-LZH-005/IMG_3584.HEIC": {
+  "publicId": "local:products/vch-lzh-005/e8c1e1a00fbd",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 457458
+ },
+ "VCH-LZH-006/IMG_3585.HEIC": {
+  "publicId": "local:products/vch-lzh-006/b8849d82bc5c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 775158
+ },
+ "VCH-LZH-006/IMG_3586.HEIC": {
+  "publicId": "local:products/vch-lzh-006/70077b15c01c",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 457646
+ },
+ "VCH-LZH-006/IMG_3587.HEIC": {
+  "publicId": "local:products/vch-lzh-006/be5fdd50061e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 437462
+ },
+ "VCH-LZH-007/IMG_3588.HEIC": {
+  "publicId": "local:products/vch-lzh-007/f621a1995fa2",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 740438
+ },
+ "VCH-LZH-007/IMG_3589.HEIC": {
+  "publicId": "local:products/vch-lzh-007/887fb2aa5dad",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 448288
+ },
+ "VCH-LZH-007/IMG_3590.HEIC": {
+  "publicId": "local:products/vch-lzh-007/43dfdbed5d71",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 347836
+ },
+ "VCH-LZH-008/IMG_3591.HEIC": {
+  "publicId": "local:products/vch-lzh-008/54f9aee5adcb",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 601238
+ },
+ "VCH-LZH-008/IMG_3592.HEIC": {
+  "publicId": "local:products/vch-lzh-008/5a222e99fc8e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 454970
+ },
+ "VCH-LZH-008/IMG_3593.HEIC": {
+  "publicId": "local:products/vch-lzh-008/3e9c992b0453",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 379704
+ },
+ "VCH-LZH-009/IMG_3594.HEIC": {
+  "publicId": "local:products/vch-lzh-009/a6047db971ec",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 585348
+ },
+ "VCH-LZH-009/IMG_3595.HEIC": {
+  "publicId": "local:products/vch-lzh-009/c4dac5d220bf",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 415516
+ },
+ "VCH-LZH-009/IMG_3596.HEIC": {
+  "publicId": "local:products/vch-lzh-009/973908306d71",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 401244
+ },
+ "VCH-LZH-010/IMG_3597.HEIC": {
+  "publicId": "local:products/vch-lzh-010/55635f604e01",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 592692
+ },
+ "VCH-LZH-010/IMG_3598.HEIC": {
+  "publicId": "local:products/vch-lzh-010/25d778d359a2",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 459488
+ },
+ "VCH-LZH-010/IMG_3599.HEIC": {
+  "publicId": "local:products/vch-lzh-010/69e4b7d16090",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 321314
+ },
+ "VCH-LZH-011/IMG_3600.HEIC": {
+  "publicId": "local:products/vch-lzh-011/e6d3734f62f1",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 714332
+ },
+ "VCH-LZH-011/IMG_3601.HEIC": {
+  "publicId": "local:products/vch-lzh-011/69f2ccad741a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 464820
+ },
+ "VCH-LZH-011/IMG_3602.HEIC": {
+  "publicId": "local:products/vch-lzh-011/635da0c81473",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 402112
+ },
+ "VCH-LZH-012/IMG_3603.HEIC": {
+  "publicId": "local:products/vch-lzh-012/1bbc760d9f41",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 649990
+ },
+ "VCH-LZH-012/IMG_3604.HEIC": {
+  "publicId": "local:products/vch-lzh-012/1a51522e2913",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 466048
+ },
+ "VCH-LZH-012/IMG_3605.HEIC": {
+  "publicId": "local:products/vch-lzh-012/ed200fe7d4ca",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 282742
+ },
+ "VCH-LZH-013/IMG_3606.HEIC": {
+  "publicId": "local:products/vch-lzh-013/5adf93668efe",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 750838
+ },
+ "VCH-LZH-013/IMG_3607.HEIC": {
+  "publicId": "local:products/vch-lzh-013/63dbfd01d1ad",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 438016
+ },
+ "VCH-LZH-013/IMG_3608.HEIC": {
+  "publicId": "local:products/vch-lzh-013/93bc136dcab3",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 349304
+ },
+ "VCH-LZH-014/IMG_3609.HEIC": {
+  "publicId": "local:products/vch-lzh-014/0bbc822ba52a",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 824906
+ },
+ "VCH-LZH-014/IMG_3610.HEIC": {
+  "publicId": "local:products/vch-lzh-014/57174a4f6c20",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 521750
+ },
+ "VCH-LZH-014/IMG_3611.HEIC": {
+  "publicId": "local:products/vch-lzh-014/52ce5791d01e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 390596
+ },
+ "VCH-LZH-015/IMG_3612.HEIC": {
+  "publicId": "local:products/vch-lzh-015/4933a189e0a7",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 806672
+ },
+ "VCH-LZH-015/IMG_3613.HEIC": {
+  "publicId": "local:products/vch-lzh-015/754d64ff512e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 485344
+ },
+ "VCH-LZH-015/IMG_3614.HEIC": {
+  "publicId": "local:products/vch-lzh-015/bd4de73856b6",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 723922
+ },
+ "VCH-LZH-016/IMG_3615.HEIC": {
+  "publicId": "local:products/vch-lzh-016/9e2e9a7d4146",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 693898
+ },
+ "VCH-LZH-016/IMG_3616.HEIC": {
+  "publicId": "local:products/vch-lzh-016/c00b0d91ee57",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 451750
+ },
+ "VCH-LZH-016/IMG_3617.HEIC": {
+  "publicId": "local:products/vch-lzh-016/3ab81a3ab03b",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 362574
+ },
+ "VCH-LZH-017/IMG_3618.HEIC": {
+  "publicId": "local:products/vch-lzh-017/17ac438b624c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 668792
+ },
+ "VCH-LZH-017/IMG_3619.HEIC": {
+  "publicId": "local:products/vch-lzh-017/90aa0f678e99",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 423222
+ },
+ "VCH-LZH-017/IMG_3620.HEIC": {
+  "publicId": "local:products/vch-lzh-017/d09e42bdc07d",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 433586
+ },
+ "VCH-LZH-018/IMG_3621.HEIC": {
+  "publicId": "local:products/vch-lzh-018/64ed7c27a664",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 697138
+ },
+ "VCH-LZH-018/IMG_3622.HEIC": {
+  "publicId": "local:products/vch-lzh-018/0543d8878f0e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 421388
+ },
+ "VCH-LZH-018/IMG_3623.HEIC": {
+  "publicId": "local:products/vch-lzh-018/c12867d0e9e8",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 316554
+ },
+ "VCH-LZH-019/IMG_3624.HEIC": {
+  "publicId": "local:products/vch-lzh-019/a872a374f5d5",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 745960
+ },
+ "VCH-LZH-019/IMG_3625.HEIC": {
+  "publicId": "local:products/vch-lzh-019/fa1e6287fb30",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 486180
+ },
+ "VCH-LZH-019/IMG_3626.HEIC": {
+  "publicId": "local:products/vch-lzh-019/0cffddc39b16",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 445208
+ },
+ "VCH-LZH-020/IMG_3627.HEIC": {
+  "publicId": "local:products/vch-lzh-020/fc4830765b8c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 792936
+ },
+ "VCH-LZH-020/IMG_3628.HEIC": {
+  "publicId": "local:products/vch-lzh-020/4db677764f50",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 473626
+ },
+ "VCH-LZH-020/IMG_3629.HEIC": {
+  "publicId": "local:products/vch-lzh-020/5f5833afa185",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 483808
+ },
+ "VCH-LZH-021/IMG_3630.HEIC": {
+  "publicId": "local:products/vch-lzh-021/50a54661f44c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 722496
+ },
+ "VCH-LZH-021/IMG_3631.HEIC": {
+  "publicId": "local:products/vch-lzh-021/dffac8eb1ac0",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 443738
+ },
+ "VCH-LZH-021/IMG_3632.HEIC": {
+  "publicId": "local:products/vch-lzh-021/a7fbcd406bc8",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 828018
+ },
+ "VCH-DOR-001/IMG_3633.HEIC": {
+  "publicId": "local:products/vch-dor-001/12f3b86ab48c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 846734
+ },
+ "VCH-DOR-001/IMG_3634.HEIC": {
+  "publicId": "local:products/vch-dor-001/902833fae57f",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 801742
+ },
+ "VCH-DOR-001/IMG_3635.HEIC": {
+  "publicId": "local:products/vch-dor-001/f2b08bceae16",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 842388
+ },
+ "VCH-DOR-002/IMG_3636.HEIC": {
+  "publicId": "local:products/vch-dor-002/0ba2eead4d54",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 609038
+ },
+ "VCH-DOR-002/IMG_3637.HEIC": {
+  "publicId": "local:products/vch-dor-002/b4fe58a1447c",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 584972
+ },
+ "VCH-DOR-002/IMG_3638.HEIC": {
+  "publicId": "local:products/vch-dor-002/d29dfaf5c30e",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 795648
+ },
+ "VCH-DOR-003/IMG_3639.HEIC": {
+  "publicId": "local:products/vch-dor-003/4d69567c3862",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 778296
+ },
+ "VCH-DOR-003/IMG_3640.HEIC": {
+  "publicId": "local:products/vch-dor-003/eeb4211e1cad",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 822024
+ },
+ "VCH-DOR-003/IMG_3641.HEIC": {
+  "publicId": "local:products/vch-dor-003/59ab296134ff",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 291734
+ },
+ "VCH-DOR-004/IMG_3642.HEIC": {
+  "publicId": "local:products/vch-dor-004/810f477920d6",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 712504
+ },
+ "VCH-DOR-004/IMG_3643.HEIC": {
+  "publicId": "local:products/vch-dor-004/2d3e86073794",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 434210
+ },
+ "VCH-DOR-004/IMG_3644.HEIC": {
+  "publicId": "local:products/vch-dor-004/5ea2aa37fab1",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 710956
+ },
+ "VCH-DOR-005/IMG_3645.HEIC": {
+  "publicId": "local:products/vch-dor-005/a9bccf15e0db",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 674892
+ },
+ "VCH-DOR-005/IMG_3646.HEIC": {
+  "publicId": "local:products/vch-dor-005/f9c5c8c725c0",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 415854
+ },
+ "VCH-DOR-005/IMG_3647.HEIC": {
+  "publicId": "local:products/vch-dor-005/2928055bece9",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 660286
+ },
+ "VCH-DOR-006/IMG_3648.HEIC": {
+  "publicId": "local:products/vch-dor-006/460d70a68da1",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 719842
+ },
+ "VCH-DOR-006/IMG_3649.HEIC": {
+  "publicId": "local:products/vch-dor-006/cd2f62d15c01",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 428348
+ },
+ "VCH-DOR-006/IMG_3650.HEIC": {
+  "publicId": "local:products/vch-dor-006/6918f2bc4c1a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 526230
+ },
+ "VCH-DOR-007/IMG_3651.HEIC": {
+  "publicId": "local:products/vch-dor-007/cbe98c854226",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 608154
+ },
+ "VCH-DOR-007/IMG_3652.HEIC": {
+  "publicId": "local:products/vch-dor-007/ba636178d146",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 437868
+ },
+ "VCH-DOR-007/IMG_3653.HEIC": {
+  "publicId": "local:products/vch-dor-007/82c4aa045441",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 451996
+ },
+ "VCH-DOR-008/IMG_3654.HEIC": {
+  "publicId": "local:products/vch-dor-008/5ea08817be4f",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 582378
+ },
+ "VCH-DOR-008/IMG_3655.HEIC": {
+  "publicId": "local:products/vch-dor-008/2d3dbdff3e7b",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 584226
+ },
+ "VCH-DOR-008/IMG_3656.HEIC": {
+  "publicId": "local:products/vch-dor-008/32c0a82a3046",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 229744
+ },
+ "VCH-LZH-022/IMG_3657.HEIC": {
+  "publicId": "local:products/vch-lzh-022/26a278e9642f",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 739342
+ },
+ "VCH-LZH-022/IMG_3658.HEIC": {
+  "publicId": "local:products/vch-lzh-022/93249272b6c9",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 460698
+ },
+ "VCH-LZH-022/IMG_3659.HEIC": {
+  "publicId": "local:products/vch-lzh-022/7ee4dded00f5",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 779766
+ },
+ "VCH-LZH-023/IMG_3660.HEIC": {
+  "publicId": "local:products/vch-lzh-023/0b42a5e676f7",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 652736
+ },
+ "VCH-LZH-023/IMG_3661.HEIC": {
+  "publicId": "local:products/vch-lzh-023/eceb861316c6",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 431774
+ },
+ "VCH-LZH-023/IMG_3662.HEIC": {
+  "publicId": "local:products/vch-lzh-023/f13613274d65",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 327600
+ },
+ "VCH-LZH-024/IMG_3663.HEIC": {
+  "publicId": "local:products/vch-lzh-024/5c04e653d1fb",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 655608
+ },
+ "VCH-LZH-024/IMG_3664.HEIC": {
+  "publicId": "local:products/vch-lzh-024/cdae6f7c6b27",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 480924
+ },
+ "VCH-LZH-024/IMG_3665.HEIC": {
+  "publicId": "local:products/vch-lzh-024/1f4338a573cf",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 669686
+ },
+ "VCH-LZH-025/IMG_3666.HEIC": {
+  "publicId": "local:products/vch-lzh-025/d1c60b01eca6",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 715786
+ },
+ "VCH-LZH-025/IMG_3667.HEIC": {
+  "publicId": "local:products/vch-lzh-025/a661521390ce",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 446554
+ },
+ "VCH-LZH-025/IMG_3668.HEIC": {
+  "publicId": "local:products/vch-lzh-025/f74702182321",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 929504
+ },
+ "VCH-LZH-026/IMG_3669.HEIC": {
+  "publicId": "local:products/vch-lzh-026/c6f06606fda8",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 612934
+ },
+ "VCH-LZH-026/IMG_3670.HEIC": {
+  "publicId": "local:products/vch-lzh-026/20e3a3c9b3bb",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 426598
+ },
+ "VCH-LZH-026/IMG_3671.HEIC": {
+  "publicId": "local:products/vch-lzh-026/d2d7a49d70b4",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 273572
+ },
+ "VCH-LZH-027/IMG_3672.HEIC": {
+  "publicId": "local:products/vch-lzh-027/7b4458495b7a",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 780118
+ },
+ "VCH-LZH-027/IMG_3673.HEIC": {
+  "publicId": "local:products/vch-lzh-027/081c72b3fe26",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 717708
+ },
+ "VCH-LZH-027/IMG_3674.HEIC": {
+  "publicId": "local:products/vch-lzh-027/f4cf8a402c09",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 524774
+ },
+ "VCH-LZH-028/IMG_3675.HEIC": {
+  "publicId": "local:products/vch-lzh-028/e5d9ae9572de",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 676262
+ },
+ "VCH-LZH-028/IMG_3676.HEIC": {
+  "publicId": "local:products/vch-lzh-028/9ca6b0d496d7",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 593752
+ },
+ "VCH-LZH-028/IMG_3677.HEIC": {
+  "publicId": "local:products/vch-lzh-028/18892893612c",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 469684
+ },
+ "VCH-LZH-029/IMG_3678.HEIC": {
+  "publicId": "local:products/vch-lzh-029/6c282bb0ebfa",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 737462
+ },
+ "VCH-LZH-029/IMG_3679.HEIC": {
+  "publicId": "local:products/vch-lzh-029/c6d4f4a3a833",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 444044
+ },
+ "VCH-LZH-029/IMG_3680.HEIC": {
+  "publicId": "local:products/vch-lzh-029/4e7c478d0bf5",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 315654
+ },
+ "VCH-LZH-030/IMG_3681.HEIC": {
+  "publicId": "local:products/vch-lzh-030/9a9190d1ff09",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 626448
+ },
+ "VCH-LZH-030/IMG_3682.HEIC": {
+  "publicId": "local:products/vch-lzh-030/438f0221bdcc",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 430118
+ },
+ "VCH-LZH-030/IMG_3683.HEIC": {
+  "publicId": "local:products/vch-lzh-030/dda3aa660acf",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 426846
+ },
+ "VCH-LZH-031/IMG_3684.HEIC": {
+  "publicId": "local:products/vch-lzh-031/ea8b84fa3350",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 642516
+ },
+ "VCH-LZH-031/IMG_3685.HEIC": {
+  "publicId": "local:products/vch-lzh-031/d583f1a11aaf",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 456622
+ },
+ "VCH-LZH-031/IMG_3686.HEIC": {
+  "publicId": "local:products/vch-lzh-031/97615e178146",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 1021110
+ },
+ "VCH-LZH-032/IMG_3687.HEIC": {
+  "publicId": "local:products/vch-lzh-032/7ef64efdc141",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 752508
+ },
+ "VCH-LZH-032/IMG_3688.HEIC": {
+  "publicId": "local:products/vch-lzh-032/c13fc268aefd",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 436956
+ },
+ "VCH-LZH-032/IMG_3689.HEIC": {
+  "publicId": "local:products/vch-lzh-032/8ec730f0dd91",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 322370
+ },
+ "VCH-KYL-001/IMG_3691.HEIC": {
+  "publicId": "local:products/vch-kyl-001/f9c82da00492",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 575078
+ },
+ "VCH-KYL-001/IMG_3692.HEIC": {
+  "publicId": "local:products/vch-kyl-001/5e446ca633da",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 597004
+ },
+ "VCH-KYL-001/IMG_3694.HEIC": {
+  "publicId": "local:products/vch-kyl-001/29a97a7c7fd9",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 301544
+ },
+ "VCH-KYL-002/IMG_3695.HEIC": {
+  "publicId": "local:products/vch-kyl-002/e100e20bc9bc",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 516120
+ },
+ "VCH-KYL-002/IMG_3696.HEIC": {
+  "publicId": "local:products/vch-kyl-002/9d21329af9a6",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 450438
+ },
+ "VCH-KYL-002/IMG_3697.HEIC": {
+  "publicId": "local:products/vch-kyl-002/0f8609faf299",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 498582
+ },
+ "VCH-KYL-003/IMG_3699.HEIC": {
+  "publicId": "local:products/vch-kyl-003/1e5df20172ec",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 548354
+ },
+ "VCH-KYL-003/IMG_3700.HEIC": {
+  "publicId": "local:products/vch-kyl-003/0780baab467b",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 423944
+ },
+ "VCH-KYL-003/IMG_3701.HEIC": {
+  "publicId": "local:products/vch-kyl-003/2b98df32ce6a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 557544
+ },
+ "VCH-KYL-004/IMG_3703.HEIC": {
+  "publicId": "local:products/vch-kyl-004/3b3b8756890a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 515218
+ },
+ "VCH-KYL-004/IMG_3704.HEIC": {
+  "publicId": "local:products/vch-kyl-004/30eb40529184",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 481938
+ },
+ "VCH-KYL-004/IMG_3705.HEIC": {
+  "publicId": "local:products/vch-kyl-004/f67ae2d6a04f",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 503302
+ },
+ "VCH-KYL-005/IMG_3707.HEIC": {
+  "publicId": "local:products/vch-kyl-005/351826c79362",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 528808
+ },
+ "VCH-KYL-005/IMG_3708.HEIC": {
+  "publicId": "local:products/vch-kyl-005/e82a764095c3",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 358608
+ },
+ "VCH-KYL-005/IMG_3709.HEIC": {
+  "publicId": "local:products/vch-kyl-005/5630ec22a655",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 445788
+ },
+ "VCH-KYL-006/IMG_3710.HEIC": {
+  "publicId": "local:products/vch-kyl-006/d7966344504c",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 517148
+ },
+ "VCH-KYL-006/IMG_3711.HEIC": {
+  "publicId": "local:products/vch-kyl-006/d41d7e4cb87a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 345220
+ },
+ "VCH-KYL-006/IMG_3712.HEIC": {
+  "publicId": "local:products/vch-kyl-006/8e3175fed00a",
+  "width": 1600,
+  "height": 2133,
+  "bytes": 917874
+ },
+ "VCH-KYL-007/IMG_3713.HEIC": {
+  "publicId": "local:products/vch-kyl-007/50d19fc24cd0",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 397518
+ },
+ "VCH-KYL-007/IMG_3714.HEIC": {
+  "publicId": "local:products/vch-kyl-007/cf6e7293680a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 488990
+ },
+ "VCH-KYL-007/IMG_3715.HEIC": {
+  "publicId": "local:products/vch-kyl-007/658df9890c70",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 277420
+ },
+ "VCH-KYL-008/IMG_3716.HEIC": {
+  "publicId": "local:products/vch-kyl-008/207b22a7f606",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 438876
+ },
+ "VCH-KYL-008/IMG_3717.HEIC": {
+  "publicId": "local:products/vch-kyl-008/0ffe97f78b3e",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 363074
+ },
+ "VCH-KYL-008/IMG_3718.HEIC": {
+  "publicId": "local:products/vch-kyl-008/a808720fae05",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 521974
+ },
+ "VCH-KYL-009/IMG_3719.HEIC": {
+  "publicId": "local:products/vch-kyl-009/f7937d1c0536",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 384484
+ },
+ "VCH-KYL-009/IMG_3720.HEIC": {
+  "publicId": "local:products/vch-kyl-009/15b76e0e4a67",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 371366
+ },
+ "VCH-KYL-009/IMG_3721.HEIC": {
+  "publicId": "local:products/vch-kyl-009/211fd8c79910",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 475810
+ },
+ "VCH-KYL-010/IMG_3722.HEIC": {
+  "publicId": "local:products/vch-kyl-010/fae2c164b726",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 364414
+ },
+ "VCH-KYL-010/IMG_3723.HEIC": {
+  "publicId": "local:products/vch-kyl-010/20bea1c86cbb",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 361094
+ },
+ "VCH-KYL-010/IMG_3724.HEIC": {
+  "publicId": "local:products/vch-kyl-010/6774a239eedb",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 455800
+ },
+ "VCH-KYL-011/IMG_3725.HEIC": {
+  "publicId": "local:products/vch-kyl-011/8f531193542b",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 471122
+ },
+ "VCH-KYL-011/IMG_3726.HEIC": {
+  "publicId": "local:products/vch-kyl-011/ab7a1340d6eb",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 491214
+ },
+ "VCH-KYL-011/IMG_3727.HEIC": {
+  "publicId": "local:products/vch-kyl-011/92ab1c0e73ab",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 555010
+ },
+ "VCH-KYL-012/IMG_3729.HEIC": {
+  "publicId": "local:products/vch-kyl-012/438e2380cc7c",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 616204
+ },
+ "VCH-KYL-012/IMG_3730.HEIC": {
+  "publicId": "local:products/vch-kyl-012/8375b297997a",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 659978
+ },
+ "VCH-KYL-012/IMG_3731.HEIC": {
+  "publicId": "local:products/vch-kyl-012/d557622a4a7b",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 617308
+ },
+ "VCH-KYL-013/IMG_3732.HEIC": {
+  "publicId": "local:products/vch-kyl-013/f1cbaba2fde7",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 520282
+ },
+ "VCH-KYL-013/IMG_3733.HEIC": {
+  "publicId": "local:products/vch-kyl-013/9490af6d3903",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 517078
+ },
+ "VCH-KYL-013/IMG_3734.HEIC": {
+  "publicId": "local:products/vch-kyl-013/49cdcd9e551b",
+  "width": 1600,
+  "height": 1200,
+  "bytes": 565490
+ }
+}
