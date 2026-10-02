@@ -6,6 +6,7 @@ import { path } from '@/lib/segments';
 import { heroServerMarkup, heroUrl } from './heroMarkup';
 import { Needle } from './Needle';
 import { heroSound } from './heroSound';
+import { scrollToY } from '@/lib/smoothScroll';
 
 // The hero: landscape art rendered on the server (fast first paint), flock and shepherd brought to
 // life on the client (36 §36.3.6–36.3.7). The air layer sits above the header so a lifted sheep
@@ -40,6 +41,27 @@ const WAVES = (() => {
 // A needle leads the thread: its eye sits at the end of the drawn thread, it turns with the curve and
 // passes in front of or behind the letters together with the thread. Thread and needle are driven by
 // one clock, so they never drift apart; afterwards the needle rests at the end of the thread.
+/** Round 23 S24: a thread runs down from the buttons, inviting to scroll on; it fades once the page moves. */
+function ScrollCue() {
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    const on = () => setGone(window.scrollY > 40);
+    on(); window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
+  return (
+    <button type="button" aria-label="Гортати далі" tabIndex={gone ? -1 : 0}
+      onClick={(e) => { const s = e.currentTarget.closest('section'); if (s) scrollToY(s.getBoundingClientRect().bottom + window.scrollY - 64); }}
+      className={`mt-1 grid place-items-center rounded-full px-3 py-1 transition-opacity duration-300 sm:mt-3 ${gone ? 'pointer-events-none opacity-0' : ''}`}>
+      {/* A cream halo under the red thread keeps it readable over the dark firs. */}
+      <svg width="18" height="64" viewBox="0 0 18 64" aria-hidden="true">
+        <path className="vk-cue-thread" d="M9 2C13 12 5 19 9 30S13 51 9 62" pathLength={1} fill="none" stroke="#FAF6EE" strokeOpacity=".9" strokeWidth="6" strokeLinecap="round" />
+        <path className="vk-cue-thread" d="M9 2C13 12 5 19 9 30S13 51 9 62" pathLength={1} fill="none" stroke="#B3261E" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+    </button>
+  );
+}
+
 function WovenTitle({ children }: { children: React.ReactNode }) {
   const pieces = useRef<Array<SVGPathElement | null>>([]);
   const full = useRef<SVGPathElement>(null);
@@ -169,7 +191,7 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
   }, []);
 
   return (
-    <section ref={rootRef} className="relative max-w-full h-[35rem] sm:h-[37.5rem] lg:h-auto lg:aspect-[1440/620] lg:max-h-[calc(100dvh-4rem)] lg:min-h-[38.75rem]">
+    <section ref={rootRef} data-hold-stops-scroll className="relative max-w-full h-[35rem] sm:h-[37.5rem] lg:h-auto lg:aspect-[1440/620] lg:max-h-[calc(100dvh-4rem)] lg:min-h-[38.75rem]">
       {/* The still picture is its own compositor layer, painted once; the flock moves in the layer above it. */}
       {/* On the client the markup is '' and hydration keeps the server's art untouched (no second copy shipped). */}
       <div ref={stillRef} className="absolute inset-0 overflow-hidden will-change-transform [contain:strict]" dangerouslySetInnerHTML={{ __html: heroServerMarkup }} suppressHydrationWarning />
@@ -185,6 +207,7 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
           <Link to={catalogHref} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full bg-bg-inverted sm:max-w-none px-6 py-3 text-body font-semibold text-text-on-inverted sm:w-auto sm:rounded-lg sm:px-8 sm:py-4 sm:text-body-lg">Переглянути каталог <span className="vk-arrow" aria-hidden="true">→</span></Link>
           <Link to={path.seg(locale, 'production')} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full border-2 sm:max-w-none border-text-primary bg-bg-surface px-6 py-2.5 text-body font-semibold text-text-primary sm:w-auto sm:rounded-lg sm:px-8 sm:py-3.5 sm:text-body-lg">Як ми виробляємо</Link>
         </div>
+        <ScrollCue />
       </div>
       <div ref={layerRef} className="pointer-events-none absolute inset-0 z-(--z-dropdown)" />
       <SoundToggle />

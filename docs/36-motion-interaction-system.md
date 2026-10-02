@@ -1,5 +1,6 @@
 # 36 — Motion and Interaction System
 
+> **Round 23:** the site (not the panel) gets an inertial mouse-wheel and keyboard scroll through Lenis — the one exception to «no scroll-jacking» (A23, round 11 #56) and «no new animation libraries» below; phones, touchpads and «reduce motion» keep the native scroll; a red-thread scroll cue under the hero buttons — [00-client-decisions-23.md](00-client-decisions-23.md).
 > **Round 15:** hero flock is 12 sheep (one a lamb) on desktop; new §36.3.6 «Pick up a sheep» and §36.3.7 «The living flock and the shepherd on his hat» — [00-client-decisions-15.md](00-client-decisions-15.md).
 
 The consolidated result of the motion interview recorded in
@@ -297,7 +298,7 @@ monitor in the hero; each step switches off one thing, cheapest-to-lose first:
   properties (except the accordion's `grid-template-rows`, per §13.10).
 - The hero photograph is the LCP element and is never animated in.
 - CSS transitions first; Framer Motion (already chosen) only for morphs, springs and
-  scroll-linked values. No new animation libraries.
+  scroll-linked values. No new animation libraries (round 23 exception: Lenis for the smooth scroll).
 - Every state a movement communicates is also communicated in text or ARIA
   (`aria-busy`, `aria-live`, labels) — the site works fully with animation off.
 - Focus rings are never removed; touch targets ≥ 44 px.

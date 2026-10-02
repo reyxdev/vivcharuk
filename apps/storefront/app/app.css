@@ -146,3 +146,19 @@ body { @apply bg-bg-page text-text-body font-body; }
 /* #54 morph: the browser's view transition, softened to the site's easing; off under reduced motion. */
 ::view-transition-group(*) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-in-out); }
 @media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* Round 23: smooth scroll (src/lib/smoothScroll.ts) — the parts of Lenis' own stylesheet we need. A
+   stopped scroll is not clipped: that would hide the scrollbar and shift the page while a sheep is held. */
+html.lenis, html.lenis body { height: auto; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* Round 23 S24: the hero's thread draws itself downward, rests, fades, again. Still under reduce motion. */
+.vk-cue-thread { stroke-dasharray: 1; stroke-dashoffset: 1; animation: vk-cue 2.6s cubic-bezier(.45, 0, .2, 1) 1.2s infinite; }
+@keyframes vk-cue {
+  0% { stroke-dashoffset: 1; opacity: 1; }
+  55% { stroke-dashoffset: 0; opacity: 1; }
+  85% { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: 1; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .vk-cue-thread { animation: none; stroke-dashoffset: 0; } }

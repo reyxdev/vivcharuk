@@ -10,6 +10,7 @@ import { useCartUiStore } from '@/stores/cartUiStore';
 import { useUi } from '@/stores/uiStore';
 import { useWishlist } from '@/stores/wishlistStore';
 import { useBump } from '@/lib/motion';
+import { scrollToTop } from '@/lib/smoothScroll';
 
 const icon = 'size-6';
 const svg = (d: string) => <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d={d} strokeLinecap="round" strokeLinejoin="round" /></svg>;
@@ -98,7 +99,7 @@ function BackToTop() {
   }, []);
   if (!show) return null;
   return (
-    <button type="button" aria-label="Нагору" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+    <button type="button" aria-label="Нагору" onClick={scrollToTop}
       className="vk-fade-in fixed bottom-6 left-6 z-(--z-sticky) grid size-12 place-items-center rounded-full border border-border-control bg-bg-surface text-text-primary shadow-md max-md:bottom-20 max-md:left-auto max-md:right-4">
       {svg('M12 19V5M5 12l7-7 7 7')}
     </button>

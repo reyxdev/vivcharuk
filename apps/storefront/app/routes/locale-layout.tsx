@@ -13,6 +13,7 @@ import { SeoHead } from '@/components/layout/SeoHead';
 import { ConsentBanner } from '@/features/consent/ConsentBanner';
 import { NotFound } from '@/components/layout/NotFound';
 import { PageMotion } from '@/components/layout/Motion';
+import { SmoothScroll } from '@/components/layout/SmoothScroll';
 import { AnnouncementStrip, type StripMessage } from '@/components/layout/AnnouncementStrip';
 import { SEGMENTS, type SegmentKey } from '@/lib/segments';
 
@@ -68,6 +69,7 @@ export default function LocaleLayout() {
       <AnnouncementStrip messages={strip} />
       <SiteHeader locale={locale} categories={categories} partners={partners} />
       <PageMotion />
+      <SmoothScroll />
       {/* The new page rises as the stitch finishes (#53); keyed by path so it replays per page. */}
       <main key={pathname} className="vk-page flex-1"><Outlet /></main>
       <SiteFooter locale={locale} />
