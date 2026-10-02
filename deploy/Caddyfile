@@ -1,9 +1,32 @@
+{
+	# Admin API on a unix socket inside the container (not on the host's 127.0.0.1:2019, which every
+	# local user could reach through --network host). `caddy reload` finds it from this file.
+	admin unix//config/caddy-admin.sock
+}
+
 __DOMAIN__ {
 	encode zstd gzip
+
 	# The API and the admin panel are one process; everything else is the storefront.
+	# lb_try_*: while a service restarts (an update), a request that cannot connect is retried for up
+	# to 15 s instead of failing, so visitors see a short wait, not an error page.
 	@api path /api/* /admin /admin/* /media/*
-	reverse_proxy @api 127.0.0.1:3000
-	reverse_proxy 127.0.0.1:3001
+	handle @api {
+		reverse_proxy 127.0.0.1:3000 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+
+	handle {
+		# Site lock before launch (D13): basic auth + noindex on the storefront only, written by
+		# vivcharyk-unlock-site (deploy/unlock-site.sh). /api, /admin and /media stay open.
+		import /etc/caddy/site-lock.caddy
+		reverse_proxy 127.0.0.1:3001 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
 }
 
 www.__DOMAIN__ {
