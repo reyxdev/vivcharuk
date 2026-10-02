@@ -20,7 +20,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
     <>
     {/* Round 11 footer variant Б «Вечір у горах»: a low moon, terracotta and violet ridges, dark grass
         with arnica, bellflowers and white flowers rising into the footer. A cached image, not inline. */}
-    <img src={evening} alt="" aria-hidden="true" width={1440} height={170} className="block h-[110px] w-full sm:h-[170px]" />
+    <img src={evening} alt="" loading="lazy" decoding="async" aria-hidden="true" width={1440} height={170} className="block h-[110px] w-full sm:h-[170px]" />
     <footer data-theme="dark" className="bg-bg-alt text-text-body [content-visibility:auto] [contain-intrinsic-size:auto_520px]">
       <div className="mx-auto flex max-w-(--container-wide) flex-col gap-9 px-4 py-8 lg:px-30">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">

@@ -5,4 +5,6 @@
 @font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 @font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Marck Script'; src: url('./fonts/marck-script-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+/* The wordmark only ever spells the brand, so it uses a 2 KB subset of those letters (pyftsubset, from
+   marck-script-400.woff2). Small enough for Vite to inline into the CSS: no request, no fallback flash. */
+@font-face { font-family: 'Marck Script'; src: url('./fonts/marck-script-wordmark.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: block; }

@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useParams } from 'react-router';
+import type { Route } from './+types/root';
+import body400 from '../../../packages/tokens/fonts/e-ukraine-400.woff2?url';
+import body500 from '../../../packages/tokens/fonts/e-ukraine-500.woff2?url';
+import body700 from '../../../packages/tokens/fonts/e-ukraine-700.woff2?url';
 import './app.css';
+
+// The text faces on the first screen, fetched alongside the CSS instead of after the whole page is parsed.
+export const links: Route.LinksFunction = () =>
+  [body400, body500, body700].map((href) => ({ rel: 'preload', as: 'font', type: 'font/woff2', href, crossOrigin: 'anonymous' as const }));
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { locale } = useParams();
