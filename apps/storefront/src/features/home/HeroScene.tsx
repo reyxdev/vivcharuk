@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
 import { path } from '@/lib/segments';
-import heroSvg from './art/hero.svg?raw';
+import { heroServerMarkup, heroUrl } from './heroMarkup';
 import { Needle } from './Needle';
 import { heroSound } from './heroSound';
 
@@ -148,19 +148,22 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
   const rootRef = useRef<HTMLElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const groundRef = useRef<HTMLDivElement>(null);
+  const stillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = rootRef.current;
-    const layer = layerRef.current, groundHost = groundRef.current;
-    if (!root || !layer || !groundHost) return;
+    const layer = layerRef.current, groundHost = groundRef.current, still = stillRef.current;
+    if (!root || !layer || !groundHost || !still) return;
     let stop: (() => void) | undefined;
     let cancelled = false;
+    // Server-rendered art is already in the page; after client-side navigation it is fetched once.
+    const art = still.firstElementChild ? Promise.resolve() : fetch(heroUrl).then((r) => r.text()).then((t) => { if (!cancelled) still.innerHTML = t; });
     // Loaded after the hero is on screen, so it never competes with first paint (§36.3.6 guards).
-    import('./flockEngine').then(({ startFlock }) => {
+    void Promise.all([art, import('./flockEngine')]).then(([, { startFlock }]) => {
       if (!cancelled) { stop = startFlock(root, layer, groundHost); alignPathEdge(root); }
     });
     const onResize = () => alignPathEdge(root);
-    alignPathEdge(root);
+    void art.then(() => alignPathEdge(root));
     window.addEventListener('resize', onResize);
     return () => { cancelled = true; stop?.(); window.removeEventListener('resize', onResize); };
   }, []);
@@ -168,7 +171,8 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
   return (
     <section ref={rootRef} className="relative max-w-full h-[35rem] sm:h-[37.5rem] lg:h-auto lg:aspect-[1440/620] lg:max-h-[calc(100dvh-4rem)] lg:min-h-[38.75rem]">
       {/* The still picture is its own compositor layer, painted once; the flock moves in the layer above it. */}
-      <div className="absolute inset-0 overflow-hidden will-change-transform [contain:strict]" dangerouslySetInnerHTML={{ __html: heroSvg }} />
+      {/* On the client the markup is '' and hydration keeps the server's art untouched (no second copy shipped). */}
+      <div ref={stillRef} className="absolute inset-0 overflow-hidden will-change-transform [contain:strict]" dangerouslySetInnerHTML={{ __html: heroServerMarkup }} suppressHydrationWarning />
       <div ref={groundRef} className="pointer-events-none absolute inset-0 overflow-hidden [contain:strict]" />
       <div className="absolute inset-x-0 top-16 flex flex-col items-center gap-3 px-4 text-center sm:top-24 lg:top-[19%] lg:gap-4">
         {/* Round 11 #04 / A2: a wool thread weaves through the name — over one letter, under the
