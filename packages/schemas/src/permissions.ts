@@ -11,6 +11,8 @@
 //   Owner + Administrator only, which needs its own key (`payments.read_receipts`) because
 //   Manager and Support hold `payments.read`.
 // - round 9: quick-order requests are gated by `orders.read` / `orders.create`; no new resource.
+// - round 22 K22: the category list is changed by the Owner and the Administrator only; every other
+//   system role keeps `categories.read`.
 
 function perm<R extends string, A extends string>(
   resource: R,
@@ -173,8 +175,7 @@ export const SYSTEM_ROLES = {
       'products.read', 'products.create', 'products.update', 'products.archive',
       'products.bulk_edit', 'products.export', 'products.manage_price', 'products.manage_stock',
       'products.manage_media', 'products.manage_custom_size', 'products.translate',
-      'categories.read', 'categories.update', 'categories.reorder', 'categories.feature',
-      'categories.translate',
+      'categories.read',
       'orders.read', 'orders.create', 'orders.update', 'orders.change_status', 'orders.cancel',
       'orders.export', 'orders.quote', 'orders.manage_shipping', 'orders.print_documents',
       'orders.note',
@@ -198,7 +199,7 @@ export const SYSTEM_ROLES = {
     permissions: [
       'products.read', 'products.create', 'products.update', 'products.export',
       'products.manage_media', 'products.translate',
-      'categories.read', 'categories.update', 'categories.translate',
+      'categories.read',
       'reviews.read', 'reviews.moderate', 'reviews.reply',
       'blog.read', 'blog.create', 'blog.update', 'blog.publish', 'blog.schedule', 'blog.translate',
       'gallery.read', 'gallery.upload', 'gallery.update', 'gallery.manage_albums',
@@ -239,7 +240,7 @@ export const SYSTEM_ROLES = {
       'products.read', 'products.create', 'products.update', 'products.publish', 'products.archive', 'products.restore',
       'products.bulk_edit', 'products.import', 'products.export', 'products.manage_media', 'products.manage_custom_size', 'products.translate',
       'templates.manage', 'libraries.manage',
-      'categories.read', 'categories.create', 'categories.update', 'categories.reorder', 'categories.feature', 'categories.translate',
+      'categories.read',
       'orders.read', 'orders.print_documents', 'orders.note',
       'payments.read', 'payment_settings.read',
       'customers.read',

@@ -30,7 +30,9 @@ export async function catalogRoutes(app: FastifyInstance) {
   app.get('/categories', async (req, reply) => {
     const { locale } = localeQuery.parse(req.query);
     reply.header('cache-control', CACHED);
-    return { items: await catalog.categoryTree(locale) };
+    // The panel's tree as it is (round 22 K45); `partners`: show the «Від партнерів» entry (K13).
+    const [items, partners] = await Promise.all([catalog.categoryTree(locale), catalog.hasPartnerGoods(locale)]);
+    return { items, partners };
   });
 
   app.get('/products', async (req, reply) => {

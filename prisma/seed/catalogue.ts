@@ -107,7 +107,10 @@ export const CATEGORIES: CategorySpec[] = [
     ],
   },
   {
-    uk: { name: 'Подушки та постіль', slug: 'podushky-ta-postil' },
+    // Round 22 K20: «Подушки та постіль» split into «Подушки» and «Постіль». The pillow group keeps its
+    // key (and its illustration); scripts/categories-round22.ts reshapes databases seeded before.
+    key: 'podushky-ta-postil',
+    uk: { name: 'Подушки', slug: 'vsi-podushky' },
     children: [
       { uk: { name: 'Подушки вовняні', slug: 'podushky' } },
       { uk: { name: 'Подушки з вовняним наповнювачем', slug: 'podushky-z-vovnoiu' } },
@@ -115,6 +118,11 @@ export const CATEGORIES: CategorySpec[] = [
       { uk: { name: 'Подушки з антиалергенного волокна', slug: 'podushky-antyalerhenni' } },
       { uk: { name: 'Подушки для сну — рогалики', slug: 'podushky-rohalyky' } },
       { uk: { name: 'Подушки меблеві', slug: 'podushky-meblevi' } },
+    ],
+  },
+  {
+    uk: { name: 'Постіль', slug: 'postil' },
+    children: [
       { uk: { name: 'Наволочки', slug: 'navolochky' } },
       { uk: { name: 'Постільна білизна', slug: 'postilna-bilyzna' } },
     ],
@@ -164,16 +172,8 @@ export const CATEGORIES: CategorySpec[] = [
     ],
   },
   { uk: { name: 'Еко-чаї', slug: 'eko-chai' } },
-  {
-    // Partner goods sit in their own categories now, marked on the card (round 18 C7).
-    uk: { name: 'Від партнерів', slug: 'partnerski-vyroby' },
-    isActive: false,
-    i18n: {
-      en: { name: 'Selected Partners', slug: 'selected-partners' },
-      pl: { name: 'Wyroby partnerskie', slug: 'wyroby-partnerskie' },
-      de: { name: 'Ausgewählte Partner', slug: 'ausgewaehlte-partner' },
-    },
-  },
+  // Round 22 K13: no «Від партнерів» category. It is only the checkbox on the product; the site gathers
+  // the partner group from products with it (scripts/categories-round22.ts removes the old row).
 ];
 
 // ---------------------------------------------------------------------------------------------
@@ -324,7 +324,7 @@ export const TEMPLATES: TemplateSpec[] = [
   {
     key: 'podushka',
     typePrefix: 'Подушка',
-    category: 'lizhnyky-ta-pledy',
+    category: 'podushky-ta-postil', // round 22: the «Подушки» group (same key after the split)
     axes: ['size', 'color'],
     pricingUnits: ['PIECE'],
     requiredFields: required('size', 'color'),
@@ -352,7 +352,7 @@ export const TEMPLATES: TemplateSpec[] = [
   {
     key: 'kaptsi',
     typePrefix: 'Капці',
-    category: 'shkarpetky-ta-kaptsi',
+    category: 'kaptsi', // round 22: «Тапочки» under «Взуття»
     axes: ['size', 'color'],
     pricingUnits: ['PIECE'],
     requiredFields: required('size', 'color'),
@@ -420,7 +420,10 @@ export const TEMPLATES: TemplateSpec[] = [
 const keyOf = (spec: CategorySpec) => spec.key ?? spec.uk.slug;
 
 async function ensureCategory(tx: Tx, spec: CategorySpec, parentId: string | null, sortOrder: number, n: { created: number }) {
-  const found = await tx.categoryTranslation.findUnique({
+  // By key first, so a slug changed in the panel (or by a later round) never brings a second copy back;
+  // deleted rows count as found, so a category deleted in the panel stays deleted.
+  const byKey = await tx.category.findUnique({ where: { key: keyOf(spec) }, select: { id: true } });
+  const found = byKey ? { categoryId: byKey.id } : await tx.categoryTranslation.findUnique({
     where: { locale_slug: { locale: 'uk', slug: spec.uk.slug } },
     select: { categoryId: true },
   });

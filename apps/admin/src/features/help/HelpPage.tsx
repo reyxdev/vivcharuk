@@ -5,10 +5,21 @@ import { PageHeader } from '@/components/ui';
 import { MORE_DAILY, MORE_SETUP } from '@/components/sections';
 
 // Round 20 #44, #95–96, #180, #280, #295: one short page. Each part has the id of its section's path,
-// so the «?» in the header opens /help#orders, /help#mail and so on. Steps carry places for
-// screenshots (computer and phone separately); they are added after the visit.
+// so the «?» in the header opens /help#orders, /help#mail and so on. Steps carry screenshots (computer
+// and phone separately, taken from the panel on test data, 2026-10-02); a tap opens the full picture.
+// A step without a file keeps the dashed placeholder.
 
-function Shot({ what, phone }: { what: string; phone?: boolean }) {
+function Shot({ what, phone, src }: { what: string; phone?: boolean; src?: string }) {
+  if (src) {
+    return (
+      <figure className={`flex flex-col gap-1 ${phone ? 'w-36' : 'w-full'}`}>
+        <a href={`/admin/help/${src}`} target="_blank" rel="noopener" className={`block overflow-hidden border border-border-hairline bg-bg-alt ${phone ? 'rounded-2xl' : 'rounded-lg'}`}>
+          <img src={`/admin/help/${src}`} alt={`Знімок екрана${phone ? ' телефона' : ''}: ${what}`} loading="lazy" decoding="async" className="block h-auto w-full" />
+        </a>
+        <figcaption className="text-caption text-text-muted">{what}</figcaption>
+      </figure>
+    );
+  }
   return (
     <figure className={`flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border-control bg-bg-alt px-3 text-center text-caption text-text-muted ${phone ? 'aspect-[9/16] w-32' : 'aspect-video w-full max-w-64'}`}>
       <ImageIcon size={16} className="shrink-0" /> Знімок екрана{phone ? ' телефона' : ''}: {what}
@@ -21,13 +32,13 @@ function Topic({ id, title, children, shots }: { id: string; title: string; chil
     <section id={id} className="scroll-mt-20 rounded-xl border border-border-hairline bg-bg-surface p-4 target:ring-2 target:ring-accent">
       <h2 className="mb-2 text-h3 font-semibold text-text-primary">{title}</h2>
       <div className="flex flex-col gap-2 text-body text-text-body [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-1.5 [&_b]:text-text-primary">{children}</div>
-      {shots && <div className="mt-3 flex flex-wrap gap-2">{shots}</div>}
+      {shots && <div className="mt-3 grid items-start gap-3 sm:grid-cols-[1fr_9rem]">{shots}</div>}
     </section>
   );
 }
 
 const OTHER: Record<string, string> = {
-  '/categories': 'Порядок змінюється перетягуванням за ⋮⋮. Зірочка — категорія в колах на головній. Нова категорія спершу прихована.',
+  '/categories': 'Дві сходинки: група і підкатегорія. Порядок — перетягуванням за ⋮⋮ або стрілками. Зірочка — категорія в колах на головній. Нова категорія спершу прихована. Видаляєте категорію з товарами — панель спитає, куди їх перенести.',
   '/collections': 'Товар додається в колекцію галочкою в його редакторі; тут — порядок товарів (перетягуванням) і текст сторінки.',
   '/media': 'Усі фото й відео. Натисніть на фото — побачите, де воно використане. Нові фото додаються в редакторі товару.',
   '/blog': 'Напишіть статтю, як лист: заголовок, «Коротко» і текст. Зберігається саме; на сайт — кнопкою «Опублікувати».',
@@ -54,7 +65,7 @@ export function HelpPage() {
         ))}
       </nav>
 
-      <Topic id="orders" title="Як прийняти замовлення" shots={<><Shot what="список «Нові»" /><Shot what="кнопка внизу замовлення" phone /></>}>
+      <Topic id="orders" title="Як прийняти замовлення" shots={<><Shot what="список «Нові»" src="orders-new.webp" /><Shot what="кнопка внизу замовлення" phone src="order-phone.webp" /></>}>
         <ol>
           <li>Відкрийте <b>Замовлення</b> → вкладка <b>Нові</b>. Нове замовлення ще й дзенькне та прийде в Telegram.</li>
           <li>Натисніть на замовлення. Зателефонуйте покупцю — кнопки дзвінка, Viber і Telegram поруч з його іменем.</li>
@@ -65,7 +76,7 @@ export function HelpPage() {
         <p id="quick-orders" className="scroll-mt-20">«Купити в 1 клік» — окрема вкладка в Замовленнях: передзвоніть людині й натисніть «Створити замовлення».</p>
       </Topic>
 
-      <Topic id="products" title="Як додати товар з фото" shots={<><Shot what="крок «Категорія»" /><Shot what="додавання фото з камери" phone /></>}>
+      <Topic id="products" title="Як додати товар з фото" shots={<><Shot what="крок «Категорія»" src="product-category.webp" /><Shot what="фото з камери чи галереї" phone src="product-photo-phone.webp" /></>}>
         <ol>
           <li><b>Товари</b> → <b>«Додати»</b>. Спершу оберіть категорію — назва, розміри й опис підставляться самі.</li>
           <li>Фото: перетягніть кілька з комп'ютера або на телефоні натисніть камеру чи галерею. Перше фото — головне; порядок змінюється перетягуванням. Фото можна додати й пізніше — тоді товар лишиться чернеткою.</li>
@@ -75,7 +86,7 @@ export function HelpPage() {
         <p>Ціну й кількість вже готового товару можна змінити прямо в таблиці: впишіть і натисніть Enter.</p>
       </Topic>
 
-      <Topic id="mail" title="Як відповісти на лист" shots={<><Shot what="лист і кнопка «Відповісти»" /><Shot what="мікрофон на клавіатурі" phone /></>}>
+      <Topic id="mail" title="Як відповісти на лист" shots={<><Shot what="лист і відповідь" src="mail-reply.webp" /><Shot what="відповідь з телефона" phone src="mail-phone.webp" /></>}>
         <ol>
           <li>Відкрийте <b>Пошту</b> → вкладка <b>Нові</b> → натисніть на лист.</li>
           <li>Натисніть <b>«Відповісти»</b>. Можна вставити готовий шаблон і змінити його.</li>
@@ -84,7 +95,7 @@ export function HelpPage() {
         <p className="flex items-start gap-2 rounded-lg bg-bg-alt p-3"><Mic size={18} className="mt-0.5 shrink-0 text-accent-text" /><span>Не хочеться друкувати? На телефоні натисніть <b>мікрофон</b> на клавіатурі й говоріть — текст напишеться сам. Потім лише перевірте розділові знаки.</span></p>
       </Topic>
 
-      <Topic id="shop-sale" title="Продаж у магазині" shots={<><Shot what="каса з плитками товарів" /><Shot what="нижня смужка «Продати»" phone /></>}>
+      <Topic id="shop-sale" title="Продаж у магазині" shots={<><Shot what="каса з плитками товарів" src="shop-till.webp" /><Shot what="нижня смужка «Продати»" phone src="shop-phone.webp" /></>}>
         <ol>
           <li>Відкрийте <b>Магазин</b> (або кнопку «Продаж у магазині» на головній).</li>
           <li>Натискайте на плитки товарів — кожне натискання додає 1 штуку. Якщо в товару є розміри, панель спершу запитає розмір.</li>
@@ -94,13 +105,13 @@ export function HelpPage() {
         <p>Помилились? Того ж дня продаж можна скасувати — товар повернеться на склад.</p>
       </Topic>
 
-      <Topic id="print" title="Друк" shots={<Shot what="перегляд аркуша перед друком" />}>
+      <Topic id="print" title="Друк" shots={<Shot what="перегляд аркуша перед друком" src="print-preview.webp" />}>
         <p>У замовленні чи в списку (позначте кілька) натисніть <b>«Друк»</b> і оберіть: пакувальний лист, рахунок для оплати на IBAN або цінники (8 на аркуш A4). Спершу відкриється перегляд аркуша, потім — <b>«Друкувати»</b>.</p>
         <p>На телефоні замість принтера можна зберегти PDF або надіслати його кнопкою «Поділитися».</p>
         <p>Наклейки Нової пошти поки друкуються в застосунку Нової пошти.</p>
       </Topic>
 
-      <Topic id="account" title="Вхід, пароль і Authenticator" shots={<><Shot what="поле для коду" phone /><Shot what="Google Authenticator з кодом" phone /></>}>
+      <Topic id="account" title="Вхід, пароль і Authenticator">
         <ol>
           <li>Впишіть свою пошту й пароль.</li>
           <li>Панель попросить шість цифр. <b>Відкрийте Google Authenticator, скопіюйте код, вставте</b> його в поле (або наберіть). Код змінюється кожні 30 секунд — якщо не підійшов, візьміть новий.</li>

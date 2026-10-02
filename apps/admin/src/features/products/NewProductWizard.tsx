@@ -11,7 +11,8 @@ import {
   UNIT_LABEL, useLibraries, useProduct, useRefreshProducts, useTemplates,
 } from './api';
 import { areaM2, axisValues, blankVariant, buildMatrix, fillDescription, fillName, pickedFrom, priceFromRate } from './model';
-import { AddValue, CompositionEditor, inputCls, labelCls, ProductPreview, ReadinessLine, ValuePicker } from './parts';
+import { categoryTree } from './CategoryPicker';
+import { AddValue, CHIP_ON, CompositionEditor, inputCls, labelCls, ProductPreview, ReadinessLine, ValuePicker } from './parts';
 import { PhotoGrid, UploadProgress, usePhotoUploads } from './photos';
 import { NumCell, VariantGrid } from './VariantGrid';
 
@@ -28,12 +29,18 @@ const blankDoc = (): ProductDoc => ({
   composition: [], attributes: [], variants: [],
 });
 
-/** Category tiles (#154–155): each top category with the templates whose default category it is. */
+/**
+ * Category tiles (#154–155): each top category with the templates whose default category it is.
+ * Round 22 K15: every active top category gets a tile; one no template points at offers all of them
+ * in «Що саме?». «Від партнерів» is a checkbox, not a category (K13).
+ */
 function tilesOf(templates: Template[], libs: Libraries) {
   const visible = templates.filter((t) => !t.isHidden);
   const topOf = (id: string | null) => { const c = libs.categories.find((x) => x.id === id); return c?.parentId ?? c?.id ?? null; };
-  const tiles = libs.categories.filter((c) => !c.parentId && c.isActive).map((c) => ({ category: c as LibCategory | null, templates: visible.filter((t) => topOf(t.defaultCategoryId) === c.id), key: c.id, name: c.name }))
-    .filter((x) => x.templates.length > 0);
+  const tiles = libs.categories.filter((c) => !c.parentId && c.isActive && c.name !== 'Від партнерів').map((c) => {
+    const own = visible.filter((t) => topOf(t.defaultCategoryId) === c.id);
+    return { category: c as LibCategory | null, templates: own.length ? own : visible, key: c.id, name: c.name };
+  });
   for (const t of visible) if (!tiles.some((x) => x.templates.includes(t))) tiles.push({ category: null, templates: [t], key: `t:${t.key}`, name: TEMPLATE_LABEL[t.key] ?? t.key });
   return tiles;
 }
@@ -101,6 +108,8 @@ function Wizard({ templates, libs, existing }: { templates: Template[]; libs: Li
   const [basePrice, setBasePrice] = useState(existing?.document.variants[0]?.priceMinor ?? 0);
   const tiles = useMemo(() => tilesOf(templates, libs), [templates, libs]);
   const tileNow = tiles.find((x) => x.key === tile);
+  const subs = categoryTree(libs.categories).find((x) => x.group.id === tileNow?.category?.id)?.kids ?? [];
+  const needSub = subs.length > 0 && !subs.some((c) => doc.categoryIds.includes(c.id));
   const [rate, setRate] = useState<number | null>(() => (firstTemplate?.draft.ratePerSqmMinor ?? libs.categories.find((c) => c.id === topOf(existing?.document.categoryIds[0]))?.ratePerSqmMinor ?? null));
   const mtoDays = doc.variants.find((v) => v.madeToOrderDays)?.madeToOrderDays ?? null;
 
@@ -252,13 +261,14 @@ function Wizard({ templates, libs, existing }: { templates: Template[]; libs: Li
                 </div>
               </div>
             )}
-            {tileNow?.category && libs.categories.some((c) => c.parentId === tileNow.category!.id) && (
+            {/* Round 22 K03, K13: a group with subcategories needs one of them; «Від партнерів» is never offered. */}
+            {subs.length > 0 && (
               <div className="flex flex-col gap-2">
-                <span className="text-body-sm text-text-muted">Підкатегорія (можна не обирати)</span>
+                <span className="text-body-sm text-text-muted">Підкатегорія — оберіть одну</span>
                 <div className="flex flex-wrap gap-2">
-                  {libs.categories.filter((c) => c.parentId === tileNow.category!.id).map((c) => {
+                  {subs.map((c) => {
                     const on = doc.categoryIds[0] === c.id;
-                    return <button key={c.id} type="button" aria-pressed={on} onClick={() => patch({ categoryIds: on ? [] : [c.id] })} className={`min-h-10 rounded-full border px-3 text-body-sm ${on ? 'border-accent bg-accent/10 font-medium' : 'border-border-control text-text-body'}`}>{c.name}</button>;
+                    return <button key={c.id} type="button" aria-pressed={on} onClick={() => patch({ categoryIds: on ? [] : [c.id] })} className={`min-h-10 rounded-full border px-3 text-left text-body-sm ${on ? CHIP_ON : 'border-border-control text-text-body'}`}>{c.name}</button>;
                   })}
                 </div>
               </div>
@@ -411,7 +421,7 @@ function Wizard({ templates, libs, existing }: { templates: Template[]; libs: Li
           {step > 0 && <GhostButton icon={ChevronLeft} onClick={() => void jump(step - 1)} disabled={busy}>Назад</GhostButton>}
           <span className="flex-1" />
           {step < 5 && (
-            <PrimaryButton onClick={() => void next()} disabled={busy || (step === 0 && !t) || (step === 2 && doc.name.trim().length < 2)}>
+            <PrimaryButton onClick={() => void next()} disabled={busy || (step === 0 && (!t || needSub)) || (step === 2 && doc.name.trim().length < 2)}>
               {step === 1 && !photos.length && !uploads.items.length ? 'Пропустити' : 'Далі'}<ChevronRight size={18} />
             </PrimaryButton>
           )}

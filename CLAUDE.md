@@ -32,7 +32,8 @@ the application is built (launch planned 2026-10-03).
 ## Authority chain — highest first
 
 ```
-docs/00-client-decisions-21.md   client-confirmed, round 21 (newest — staff Telegram bot)
+docs/00-client-decisions-22.md   client-confirmed, round 22 (newest — categories in the panel, product card)
+docs/00-client-decisions-21.md   round 21 (staff Telegram bot)
 docs/00-client-decisions-20.md   round 20 (admin panel interface, 300 answers)
 docs/00-client-decisions-19.md   round 19 (mail in the panel, newsletters)
 docs/00-client-decisions-18.md   round 18 (answers from the owner's visit)

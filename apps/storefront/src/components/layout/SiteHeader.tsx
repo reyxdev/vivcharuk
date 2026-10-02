@@ -4,7 +4,7 @@ import type { CategoryNode, Locale } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
 import { useBusiness } from '@/lib/business';
 import { t } from '@/lib/i18n';
-import { path } from '@/lib/segments';
+import { PARTNERS_NAME, PARTNERS_SLUG, path } from '@/lib/segments';
 import { HeaderSearch } from '@/features/search/HeaderSearch';
 import { MegaMenu } from './MegaMenu';
 import { useUi } from '@/stores/uiStore';
@@ -37,7 +37,7 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
-export function SiteHeader({ locale, categories }: { locale: Locale; categories: CategoryNode[] }) {
+export function SiteHeader({ locale, categories, partners }: { locale: Locale; categories: CategoryNode[]; partners: boolean }) {
   const biz = useBusiness();
   const phoneHref = `tel:${biz.phones[0].replace(/[^+\d]/g, '')}`;
   const drawerOpen = useUi((s) => s.menuOpen);
@@ -65,7 +65,7 @@ export function SiteHeader({ locale, categories }: { locale: Locale; categories:
     <header className={`sticky top-0 z-(--z-header) has-[[role=region]:not([hidden])]:z-(--z-overlay) border-b border-border-hairline bg-bg-page transition-shadow duration-(--dur-base) ${scrolled ? 'shadow-md' : ''}`}>
       <div className="mx-auto grid h-16 max-w-(--container-wide) grid-cols-[1fr_auto_1fr] grid-rows-[4rem] items-center px-4 lg:px-12">
         <nav aria-label={t(locale, 'nav.catalog')} className="flex items-center gap-6 max-lg:hidden">
-          <MegaMenu locale={locale} categories={categories} label={t(locale, 'nav.catalog')} className={navLink} chevron={<IconChevron />} />
+          <MegaMenu locale={locale} categories={categories} partners={partners} label={t(locale, 'nav.catalog')} className={navLink} chevron={<IconChevron />} />
           {links.map((l) => <NavLink key={l.to} to={l.to} className={navLink}>{l.label}</NavLink>)}
         </nav>
         <button type="button" className="lg:hidden text-text-primary" aria-label={t(locale, 'nav.menu')} aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}><MenuIcon open={false} /></button>
@@ -105,6 +105,7 @@ export function SiteHeader({ locale, categories }: { locale: Locale; categories:
           <button type="button" className="mb-4 flex h-8 items-center text-text-primary" aria-label={t(locale, 'nav.close')} onClick={() => setDrawerOpen(false)}><MenuIcon open /></button>
           <nav className="vk-seq flex flex-col gap-1">
             {categories.map((c) => <Link key={c.id} to={path.category(locale, c.slug)} className="py-2 text-h4 text-text-primary" onClick={() => setDrawerOpen(false)}>{c.name}</Link>)}
+            {partners && <Link to={path.category(locale, PARTNERS_SLUG)} className="py-2 text-h4 text-text-primary" onClick={() => setDrawerOpen(false)}>{PARTNERS_NAME}</Link>}
             <hr className="my-3 border-border-hairline" />
             {links.map((l) => <Link key={l.to} to={l.to} className="py-2 text-body text-text-primary" onClick={() => setDrawerOpen(false)}>{l.label}</Link>)}
           </nav>

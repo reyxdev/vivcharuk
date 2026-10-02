@@ -33,6 +33,13 @@ export const SEGMENTS = {
 
 export type SegmentKey = keyof typeof SEGMENTS;
 
+/**
+ * Round 22 K13: «Від партнерів» is not a category; the site gathers partner goods by their origin on
+ * this page (a category-shaped address, served by routes/category.tsx).
+ */
+export const PARTNERS_SLUG = 'vid-partneriv';
+export const PARTNERS_NAME = 'Від партнерів';
+
 export const path = {
   home: (l: Locale) => `/${l}/`,
   seg: (l: Locale, key: SegmentKey) => `/${l}/${SEGMENTS[key][l]}`,

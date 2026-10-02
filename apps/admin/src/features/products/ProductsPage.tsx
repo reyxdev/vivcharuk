@@ -11,7 +11,7 @@ import { DataTable, type Column } from '@/components/DataTable';
 import { FilterButton, FilterChips, filtersToQuery, type FilterGroup, type FilterState } from '@/components/Filters';
 import { DotsMenu, EmptyState, PageHeader, PrimaryButton, Sheet, Tabs, useStored, useToast } from '@/components/ui';
 import { LIST_KEY, type ListTab, PRODUCT_STATUS, type ProductRow, useLibraries, useProduct, useProductList, useTemplates } from './api';
-import { CategorySheet, PriceSheet, useBulk } from './BulkBar';
+import { CategorySheet, categoryTree, PriceSheet, useBulk } from './BulkBar';
 import { ExcelPanel } from './ExcelPanel';
 import { priceText, variantLabel } from './model';
 import { useProductActions } from './parts';
@@ -174,9 +174,9 @@ export function ProductsPage() {
 
   const groups: FilterGroup[] = useMemo(() => {
     if (!libs) return [];
-    const tops = libs.categories.filter((c) => !c.parentId);
     return [
-      { key: 'category', label: 'Категорія', kind: 'options', options: tops.flatMap((c) => [{ value: c.id, label: c.name }, ...libs.categories.filter((x) => x.parentId === c.id).map((x) => ({ value: x.id, label: `— ${x.name}` }))]) },
+      // Round 22 K42: a tree; a checked group takes its subcategories with it (the API expands it).
+      { key: 'category', label: 'Категорія', kind: 'tree', options: categoryTree(libs).map((c) => ({ value: c.id, label: c.name, children: c.children.map((x) => ({ value: x.id, label: x.name })) })) },
       ...(libs.collections.length ? [{ key: 'collection', label: 'Колекція', kind: 'options' as const, options: libs.collections.map((c) => ({ value: c.id, label: c.name })) }] : []),
       { key: 'price', label: 'Ціна', kind: 'range', unit: '₴' },
       { key: 'color', label: 'Колір', kind: 'options', options: libs.colors.filter((c) => !c.isHidden).map((c) => ({ value: c.id, label: c.label })) },
@@ -189,6 +189,7 @@ export function ProductsPage() {
 
   const columns: Array<Column<ProductRow>> = [
     { key: 'photo', header: 'Фото', cell: (r) => <Thumb src={r.thumb} />, className: 'w-14' },
+    // Round 22 K43: under the name, the main category only.
     { key: 'name', header: 'Назва', sortKey: 'name', cell: (r) => <span className="flex min-w-0 flex-col"><span className="line-clamp-1 font-medium text-text-primary">{r.name || 'Без назви'}</span>{r.category && <span className="truncate text-caption text-text-muted">{r.category}</span>}</span> },
     { key: 'sku', header: 'Артикул', sortKey: 'sku', cell: (r) => <span className="whitespace-nowrap font-mono text-caption text-text-muted">{r.sku}</span> },
     { key: 'price', header: 'Ціна', sortKey: 'price', align: 'right', cell: (r) => <InlineNumber row={r} field="price" can={canPrice} onMany={setMany} /> },
@@ -203,6 +204,7 @@ export function ProductsPage() {
       <Thumb src={r.thumb} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="line-clamp-2 text-body-sm font-medium text-text-primary">{r.name || 'Без назви'}</span>
+        {r.category && <span className="truncate text-caption text-text-muted">{r.category}</span>}
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm">
           <InlineNumber row={r} field="price" can={canPrice} onMany={setMany} />
           <span className="flex items-center gap-1 text-text-muted">залишок <InlineNumber row={r} field="stock" can={canStock} onMany={setMany} /></span>
@@ -224,7 +226,7 @@ export function ProductsPage() {
   const bulkActions = [
     ...(can('products.manage_price') ? [{ label: 'Ціна на %', icon: Percent, onClick: (ids: string[]) => setSheet({ kind: 'price', ids }) }] : []),
     ...(can('products.archive') ? [{ label: 'Сховати', icon: EyeOff, onClick: (ids: string[]) => void bulk.hide(ids) }, { label: 'Показати', icon: Eye, onClick: (ids: string[]) => void bulk.show(ids) }] : []),
-    { label: 'Категорія', icon: FolderInput, onClick: (ids: string[]) => setSheet({ kind: 'category', ids }) },
+    ...(can('products.update') ? [{ label: 'Змінити категорію', icon: FolderInput, onClick: (ids: string[]) => setSheet({ kind: 'category', ids }) }] : []),
     { label: 'Цінники', icon: Tag, onClick: (ids: string[]) => openPriceTags(ids) },
     ...(can('products.delete') ? [{ label: 'Видалити', icon: Trash2, danger: true, onClick: (ids: string[]) => void bulk.remove(ids) }] : []),
   ];
@@ -259,7 +261,7 @@ export function ProductsPage() {
       />
 
       {sheet?.kind === 'price' && <PriceSheet ids={sheet.ids} onClose={() => setSheet(null)} onDone={() => setSelected(new Set())} />}
-      {sheet?.kind === 'category' && libs && <CategorySheet ids={sheet.ids} libs={libs} onClose={() => setSheet(null)} onPick={(id) => { const ids = sheet.ids; setSheet(null); void bulk.move(ids, id); }} />}
+      {sheet?.kind === 'category' && libs && <CategorySheet ids={sheet.ids} libs={libs} onClose={() => setSheet(null)} onPick={(id, mode) => { const ids = sheet.ids; setSheet(null); void bulk.category(ids, id, mode); }} />}
       {many && <QuickSheet row={many} canPrice={canPrice} canStock={canStock} onClose={() => setMany(null)} />}
     </div>
   );

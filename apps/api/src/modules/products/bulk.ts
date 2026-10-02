@@ -20,8 +20,10 @@ export const bulkOperation = z.discriminatedUnion('op', [
   z.object({ op: z.literal('archive') }),
   z.object({ op: z.literal('restore') }),
   z.object({ op: z.literal('set_handmade'), value: z.boolean() }),
-  // Round 20 #123: «Перенести в категорію» replaces the categories; «Видалити» (products.delete, never ordered).
-  z.object({ op: z.literal('move_category'), categoryId: z.string() }),
+  // Round 22 K44 (replaces round 20 #123 «Перенести в категорію»): the category becomes the main one
+  // (the additional ones stay, up to two) or is added as an additional one (three in all, K02). Only a
+  // subcategory or a group without subcategories (K03). «Видалити» (products.delete, never ordered).
+  z.object({ op: z.literal('set_category'), categoryId: z.string().max(40), mode: z.enum(['main', 'additional']) }),
   z.object({ op: z.literal('delete') }),
 ]);
 export type BulkOperation = z.infer<typeof bulkOperation>;
@@ -40,6 +42,11 @@ export async function runBulk(input: z.infer<typeof bulkRequest>, actor: Actor) 
   if (op.op === 'price_adjust' && !actor.permissions.has('products.manage_price')) throw forbidden();
   if ((op.op === 'archive' || op.op === 'restore') && !actor.permissions.has('products.archive')) throw forbidden();
   if (op.op === 'delete' && !actor.permissions.has('products.delete')) throw forbidden();
+  if (op.op === 'set_category') {
+    if (!actor.permissions.has('products.update')) throw forbidden();
+    const c = await prisma.category.findFirst({ where: { id: op.categoryId, deletedAt: null }, select: { _count: { select: { children: { where: { deletedAt: null } } } } } });
+    if (!c || c._count.children) throw new AppError(422, 'VALIDATION_FAILED', 'CATEGORY_NOT_CHOOSABLE');
+  }
   const products = await prisma.product.findMany({
     where: { id: { in: input.ids }, deletedAt: null },
     include: { variants: { where: { deletedAt: null } }, categories: { orderBy: { sortOrder: 'asc' } }, translations: { where: { locale: 'uk' }, select: { name: true } } },
@@ -79,12 +86,20 @@ export async function runBulk(input: z.infer<typeof bulkRequest>, actor: Actor) 
         if (p.status !== 'ARCHIVED') { skip('Не в архіві'); break; }
         changes.push({ p, before: { status: 'ARCHIVED' }, after: { status: p.publishedAt ? 'ACTIVE' : 'DRAFT' } });
         break;
-      case 'move_category': {
-        // A never-published draft keeps its categories in the draft document.
+      case 'set_category': {
+        // A never-published draft keeps its categories in the draft document (index 0 = main).
         const draft = !p.publishedAt ? (p.draftDocument as unknown as ProductDoc | null) : null;
         const current = draft ? draft.categoryIds : p.categories.map((c) => c.categoryId);
-        if (current.length === 1 && current[0] === op.categoryId) { skip('Вже в цій категорії'); break; }
-        changes.push({ p, before: { categoryIds: current }, after: { categoryIds: [op.categoryId] } });
+        let next: string[];
+        if (op.mode === 'main') {
+          if (current[0] === op.categoryId) { skip('Вже основна категорія'); break; }
+          next = [op.categoryId, ...current.slice(1).filter((x) => x !== op.categoryId).slice(0, 2)];
+        } else {
+          if (current.includes(op.categoryId)) { skip('Вже в цій категорії'); break; }
+          if (current.length >= 3) { skip('Вже три категорії'); break; }
+          next = [...current, op.categoryId]; // no category yet: it becomes the main one
+        }
+        changes.push({ p, before: { categoryIds: current }, after: { categoryIds: next } });
         break;
       }
       case 'delete':

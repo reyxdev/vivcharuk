@@ -38,7 +38,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   // D39: a translated locale that is switched off sends the visitor to the same page in Ukrainian.
   if (!isEnabledLocale(params.locale)) throw redirect(await ukTarget(new URL(request.url), params.locale), 302);
   const [{ data }, ann, settings] = await Promise.all([
-    apiGet<{ items: CategoryNode[] }>('/categories', params.locale),
+    apiGet<{ items: CategoryNode[]; partners?: boolean }>('/categories', params.locale),
     apiGet<{ seasonal: { text: string; linkUrl: string | null } | null }>('/site/announcement', params.locale).catch(() => ({ data: { seasonal: null } })),
     apiGetCached<SiteSettings>('/site/settings', 'uk').catch(() => null),
   ]);
@@ -49,7 +49,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     ...(settings?.ticker ?? DEFAULT_TICKER.filter((t) => !t.cardOnly)).map((t) => ({ text: t.text, href: t.linkUrl })),
   ];
   // Absolute URLs for canonical and hreflang (29 §29.3 rule 4).
-  return { locale: params.locale, categories: data.items, strip, contact: settings?.contact ?? null, origin: (process.env.SITE_URL ?? 'http://127.0.0.1:5173').replace(/\/$/, '') };
+  return { locale: params.locale, categories: data.items, partners: !!data.partners, strip, contact: settings?.contact ?? null, origin: (process.env.SITE_URL ?? 'http://127.0.0.1:5173').replace(/\/$/, '') };
 }
 
 /** D28: the live hours, phone and e-mail for every component below (useBusiness). */
@@ -59,14 +59,14 @@ function Business({ contact, children }: { contact: SiteContact | null; children
 }
 
 export default function LocaleLayout() {
-  const { locale, categories, origin, strip, contact } = useLoaderData<typeof loader>();
+  const { locale, categories, partners, origin, strip, contact } = useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   return (
     <Business contact={contact}>
     <div className="flex min-h-dvh flex-col max-md:pb-16">
       <SeoHead origin={origin} locale={locale} />
       <AnnouncementStrip messages={strip} />
-      <SiteHeader locale={locale} categories={categories} />
+      <SiteHeader locale={locale} categories={categories} partners={partners} />
       <PageMotion />
       {/* The new page rises as the stitch finishes (#53); keyed by path so it replays per page. */}
       <main key={pathname} className="vk-page flex-1"><Outlet /></main>
@@ -88,7 +88,7 @@ export function ErrorBoundary() {
   return (
     <Business contact={data?.contact ?? null}>
     <div className="flex min-h-dvh flex-col max-md:pb-16">
-      {data && <SiteHeader locale={locale} categories={data.categories} />}
+      {data && <SiteHeader locale={locale} categories={data.categories} partners={data.partners} />}
       <main className="flex-1">
         {missing ? <NotFound locale={locale} /> : (
           <div className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-20 text-center">

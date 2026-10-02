@@ -5,9 +5,11 @@ import { AppError, forbidden } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
 import { requirePermission } from '../../plugins/staffAuth';
 import { audit } from '../audit/audit.service';
+import { photoUrl } from '../products/media';
+import { deleteCategory, productCategories } from './categories.service';
 
 const FEATURED_MAX = 6; // {{FEATURED_CATEGORY_MAX}} default (23 §23.7)
-const MAX_DEPTH = 3;
+const MAX_DEPTH = 2; // round 22 K27: group → subcategory, nothing deeper
 
 async function depthOf(id: string | null): Promise<number> {
   let d = 0;
@@ -24,20 +26,23 @@ async function uniqueSlug(base: string, exceptCategoryId?: string) {
   throw new AppError(409, 'VALIDATION_FAILED', 'SLUG_TAKEN');
 }
 
-/** Categories module (23 §23.7): the tree, order, «★ на головній», SEO text and slugs with redirects. */
+/**
+ * Categories module (23 §23.7): the tree, order, «★ на головній», SEO text and slugs with redirects.
+ * Round 22: two levels (K27), a picture only for top groups (K46), deleting moves the products (K25).
+ */
 export async function adminCategoryRoutes(app: FastifyInstance) {
   app.addHook('onSend', async (_req, reply) => { reply.header('cache-control', 'no-store'); });
 
   app.get('/admin/categories', { preHandler: requirePermission('categories.read') }, async () => {
     const [rows, counts] = await Promise.all([
-      prisma.category.findMany({ where: { deletedAt: null }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }], include: { translations: { where: { locale: 'uk' } } } }),
-      prisma.productCategory.findMany({ where: { product: { deletedAt: null } }, select: { categoryId: true, productId: true } }),
+      prisma.category.findMany({ where: { deletedAt: null }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }], include: { translations: { where: { locale: 'uk' } }, heroMedia: { select: { publicId: true } } } }),
+      productCategories(),
     ]);
     // Distinct products in the category and all its descendants (a product may sit in both).
     const kids = new Map<string | null, string[]>();
     for (const c of rows) kids.set(c.parentId, [...(kids.get(c.parentId) ?? []), c.id]);
     const direct = new Map<string, Set<string>>();
-    for (const l of counts) direct.set(l.categoryId, (direct.get(l.categoryId) ?? new Set()).add(l.productId));
+    for (const p of counts) for (const id of p.categoryIds) direct.set(id, (direct.get(id) ?? new Set()).add(p.productId));
     const all = (id: string): Set<string> => new Set([...(direct.get(id) ?? []), ...(kids.get(id) ?? []).flatMap((k) => [...all(k)])]);
     return {
       featuredMax: FEATURED_MAX,
@@ -47,6 +52,7 @@ export async function adminCategoryRoutes(app: FastifyInstance) {
           id: c.id, key: c.key, parentId: c.parentId, sortOrder: c.sortOrder, isActive: c.isActive, isFeatured: c.isFeatured, hiddenLocales: c.hiddenLocales,
           name: t?.name ?? c.key ?? c.id, slug: t?.slug ?? '', description: t?.description ?? null, metaTitle: t?.metaTitle ?? null, metaDescription: t?.metaDescription ?? null,
           defaultCustomSizeRatePerSqmMinor: c.defaultCustomSizeRatePerSqmMinor, products: all(c.id).size, directProducts: direct.get(c.id)?.size ?? 0,
+          heroMediaId: c.heroMediaId, heroThumb: c.heroMedia ? photoUrl(c.heroMedia.publicId) : null,
         };
       }),
     };
@@ -54,7 +60,9 @@ export async function adminCategoryRoutes(app: FastifyInstance) {
 
   app.post('/admin/categories', { preHandler: requirePermission('categories.create') }, async (req, reply) => {
     const b = z.object({ name: z.string().trim().min(2).max(80), parentId: z.string().nullable().default(null) }).parse(req.body);
-    if (b.parentId && (await depthOf(b.parentId)) >= MAX_DEPTH - 1) throw new AppError(422, 'VALIDATION_FAILED', 'MAX_DEPTH');
+    if (b.parentId && !(await prisma.category.findFirst({ where: { id: b.parentId, deletedAt: null }, select: { id: true } }))) throw new AppError(404, 'NOT_FOUND');
+    // depthOf(parent) is the parent's level (1 = a top group): a child of a subcategory would be level 3.
+    if (b.parentId && (await depthOf(b.parentId)) >= MAX_DEPTH) throw new AppError(422, 'VALIDATION_FAILED', 'MAX_DEPTH');
     const slug = await uniqueSlug(slugify(b.name));
     const last = await prisma.category.findFirst({ where: { parentId: b.parentId }, orderBy: { sortOrder: 'desc' }, select: { sortOrder: true } });
     const c = await prisma.$transaction(async (tx) => {
@@ -77,9 +85,12 @@ export async function adminCategoryRoutes(app: FastifyInstance) {
       isFeatured: z.boolean().optional(),
       hiddenLocales: z.array(locale.exclude(['uk'])).max(3).optional(),
       defaultCustomSizeRatePerSqmMinor: z.number().int().min(0).nullable().optional(),
+      heroMediaId: z.string().nullable().optional(),
     }).parse(req.body);
     const c = await prisma.category.findUnique({ where: { id: req.params.id }, include: { translations: { where: { locale: 'uk' } } } });
-    if (!c) throw new AppError(404, 'NOT_FOUND');
+    if (!c || c.deletedAt) throw new AppError(404, 'NOT_FOUND');
+    // K46: a picture only for the top groups.
+    if (b.heroMediaId && (c.parentId || !(await prisma.media.findFirst({ where: { id: b.heroMediaId, kind: 'IMAGE' }, select: { id: true } })))) throw new AppError(422, 'VALIDATION_FAILED', c.parentId ? 'IMAGE_TOP_ONLY' : 'NOT_FOUND');
     // The rate follows the money, not the table (23 §23.7).
     if (b.defaultCustomSizeRatePerSqmMinor !== undefined && !req.staff!.permissions.has('products.manage_price')) throw forbidden();
     if (b.isFeatured !== undefined && !req.staff!.permissions.has('categories.feature')) throw forbidden();
@@ -93,6 +104,7 @@ export async function adminCategoryRoutes(app: FastifyInstance) {
           ...(b.isActive !== undefined ? { isActive: b.isActive } : {}), ...(b.isFeatured !== undefined ? { isFeatured: b.isFeatured } : {}),
           ...(b.hiddenLocales ? { hiddenLocales: b.hiddenLocales } : {}),
           ...(b.defaultCustomSizeRatePerSqmMinor !== undefined ? { defaultCustomSizeRatePerSqmMinor: b.defaultCustomSizeRatePerSqmMinor } : {}),
+          ...(b.heroMediaId !== undefined ? { heroMediaId: b.heroMediaId } : {}),
         },
       });
       if (t && (b.name || newSlug || b.description !== undefined || b.metaTitle !== undefined || b.metaDescription !== undefined)) {
@@ -124,14 +136,14 @@ export async function adminCategoryRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 
-  // Deletion is blocked while products or subcategories are attached (23 §23.7).
+  // Subcategories block deletion; products move to `?moveTo=<id>` (23 §23.7, round 22 K25).
   app.delete<{ Params: { id: string } }>('/admin/categories/:id', { preHandler: requirePermission('categories.delete') }, async (req, reply) => {
-    const c = await prisma.category.findUnique({ where: { id: req.params.id }, include: { _count: { select: { products: true, children: true } }, translations: { where: { locale: 'uk' }, select: { name: true } } } });
+    const { moveTo } = z.object({ moveTo: z.string().min(1).optional() }).parse(req.query);
+    const c = await prisma.category.findUnique({ where: { id: req.params.id }, select: { id: true, translations: { where: { locale: 'uk' }, select: { name: true } } } });
     if (!c) throw new AppError(404, 'NOT_FOUND');
-    if (c._count.products || c._count.children) throw new AppError(409, 'VALIDATION_FAILED', 'CATEGORY_NOT_EMPTY', { products: c._count.products, children: c._count.children });
     await prisma.$transaction(async (tx) => {
-      await tx.category.update({ where: { id: c.id }, data: { deletedAt: new Date(), isActive: false, isFeatured: false } });
-      await audit({ actorId: req.staff!.id, actorEmail: req.staff!.email, action: 'category.deleted', resourceType: 'Category', resourceId: c.id, resourceLabel: c.translations[0]?.name ?? null }, tx);
+      const { moved } = await deleteCategory(tx, c.id, moveTo ?? null);
+      await audit({ actorId: req.staff!.id, actorEmail: req.staff!.email, action: 'category.deleted', resourceType: 'Category', resourceId: c.id, resourceLabel: c.translations[0]?.name ?? null, ...(moveTo ? { after: { movedTo: moveTo, products: moved } } : {}) }, tx);
     });
     return reply.status(204).send();
   });

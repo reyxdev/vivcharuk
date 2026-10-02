@@ -431,8 +431,11 @@ function attrData(dataType: string, value: string) {
  */
 export async function publish(id: string, actor: Actor) {
   const p = await load(id);
-  const doc = p.draftDocument ? productDoc.parse(p.draftDocument) : null;
-  if (!doc) throw new AppError(409, 'VALIDATION_FAILED', 'NOTHING_TO_PUBLISH');
+  const draft = p.draftDocument ? productDoc.parse(p.draftDocument) : null;
+  if (!draft) throw new AppError(409, 'VALIDATION_FAILED', 'NOTHING_TO_PUBLISH');
+  // A category deleted while the draft was open (or kept in a reverted revision) never goes live (round 22).
+  const live = new Set((await prisma.category.findMany({ where: { id: { in: draft.categoryIds }, deletedAt: null }, select: { id: true } })).map((c) => c.id));
+  const doc = { ...draft, categoryIds: draft.categoryIds.filter((c) => live.has(c)) };
   const r = readiness(doc, p.template.requiredFields, p.media.length, await requiredAttrs(p.templateId));
   if (r.missing.length) throw new AppError(422, 'VALIDATION_FAILED', 'NOT_READY', { missing: r.missing });
 

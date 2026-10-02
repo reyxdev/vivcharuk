@@ -1,31 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { ArrowLeft, Copy, Eye, EyeOff, Tag, Trash2, Undo2 } from 'lucide-react';
+import { ArrowLeft, Copy, Eye, EyeOff, Gem, Hand, Handshake, RotateCcw, Tag, Trash2, Undo2 } from 'lucide-react';
 import { api, ApiError, post } from '@/lib/api';
 import { messageFor } from '@/lib/messages';
 import { dateTime, uah } from '@/lib/format';
 import { useMe } from '@/features/auth/useSession';
-import { DotsMenu, GhostButton, Hint, PageHeader, PrimaryButton, Sheet, SkeletonRows, useConfirm, useToast, useUnsavedGuard } from '@/components/ui';
+import { Switch } from '@/features/settings/parts';
+import { DotsMenu, GhostButton, PageHeader, PrimaryButton, Sheet, SkeletonRows, useConfirm, useToast, useUnsavedGuard } from '@/components/ui';
 import {
   type Libraries, type Photo, PRODUCT_STATUS, type ProductDetail, type ProductDoc, type Readiness, STAGE_LABEL, type Template,
   UNIT_LABEL, useLibraries, useProduct, useRefreshProducts, useTemplates, type VariantDoc,
 } from './api';
 import { AXIS_LABEL, axisValues, buildMatrix, fromUah, int, pickedFrom } from './model';
-import { AddValue, CompositionEditor, inputCls, labelCls, ProductPreview, ReadinessLine, useProductActions, ValuePicker } from './parts';
+import { CategoryPicker } from './CategoryPicker';
+import { AddValue, CHIP_ON, CompositionEditor, inputCls, labelCls, ProductPreview, ReadinessLine, useProductActions, ValuePicker } from './parts';
 import { PhotoGrid, usePhotoUploads } from './photos';
 import { NumCell, VariantGrid } from './VariantGrid';
 
 // Round 20 #125: an existing product on one page with sections; a mini contents on the left (computer);
-// «Зберегти» always visible at the bottom (#25); leaving with unsaved changes warns (#86); plain words (#45).
+// changes save to the draft by themselves (round 22 K33), «Опублікувати» at the bottom (K35); plain words (#45).
 // Everything of 37 §37.4–37.5 stays: template axes, the size × colour table, composition, attributes,
 // photos, custom size, description, Google texts, «Історія виробу», versions, publish, discard, hide.
 
 const SECTIONS = [
   ['main', 'Основне'], ['photos', 'Фото'], ['variants', 'Розміри й кольори'], ['composition', 'Склад'],
-  ['price', 'Ціна й свій розмір'], ['description', 'Опис'], ['history', 'Історія змін'],
-] as const;
+  ['price', 'Ціна й свій розмір'], ['description', 'Опис'],
+] as const; // «Історія змін» lives in the ⋯ menu (round 22 K37).
+/** «Збережено 14:05» today, with the date otherwise. */
+const time = (iso: string) => (new Date(iso).toDateString() === new Date().toDateString() ? new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) : dateTime(iso));
 const box = 'flex scroll-mt-20 flex-col gap-4 rounded-xl border border-border-hairline bg-bg-surface p-4 sm:p-5';
-const chip = (on: boolean) => `min-h-9 rounded-full border px-3 text-body-sm max-md:min-h-11 ${on ? 'border-accent bg-accent/10 font-medium text-text-primary' : 'border-border-control text-text-body'}`;
+const chip = (on: boolean) => `min-h-9 rounded-full border px-3 text-body-sm max-md:min-h-11 ${on ? CHIP_ON : 'border-border-control text-text-body'}`;
 
 function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries }) {
   const nav = useNavigate();
@@ -68,31 +72,61 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
     const field = e instanceof ApiError ? e.body?.error.fieldErrors?.[0] : undefined;
     toast(prm?.missing ? `Бракує: ${prm.missing.join(', ')}` : prm?.permissions ? 'Недостатньо прав для цієї зміни' : field?.code === 'SKU_TAKEN' ? `Артикул ${String(field.params?.sku)} вже зайнятий` : messageFor(e instanceof ApiError ? e.code : ''), 'error');
   };
-  const save = async () => {
-    const json = JSON.stringify(doc);
-    const r = await api<{ savedAt: string; readiness: Readiness }>(`/admin/products/${p.id}/draft`, { method: 'PUT', body: json });
-    setSavedJson(json); setSavedAt(r.savedAt); setReadiness(r.readiness); setHasDraft(true);
-    void refresh();
+  // Saves run one after another and always send the latest document; nothing is sent when nothing changed.
+  const docRef = useRef(doc);
+  docRef.current = doc;
+  const savedRef = useRef(savedJson);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState<string | null>(null); // the document that failed to save
+  const save = () => {
+    const next = queue.current.catch(() => undefined).then(async () => {
+      const json = JSON.stringify(docRef.current);
+      if (json === savedRef.current) return;
+      setSaving(true);
+      try {
+        const r = await api<{ savedAt: string; readiness: Readiness }>(`/admin/products/${p.id}/draft`, { method: 'PUT', body: json });
+        savedRef.current = json;
+        setSavedJson(json); setSavedAt(r.savedAt); setReadiness(r.readiness); setHasDraft(true); setSaveFailed(null);
+        void refresh();
+      } finally { setSaving(false); }
+    });
+    queue.current = next;
+    return next;
   };
+  /** Lets a save already on its way land first (before a discard or a revert replaces the draft). */
+  const settled = () => queue.current.catch(() => undefined);
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setBusy(true);
     try { await fn(); if (ok) toast(ok); } catch (e) { fail(e); } finally { setBusy(false); }
   };
+  // Round 22 K33: the draft saves itself 1.5 s after the last change; one notice per failure run.
+  const json = JSON.stringify(doc);
+  useEffect(() => {
+    if (!editable || !dirty || saving || busy || uploads.pending || json === saveFailed) return;
+    const h = window.setTimeout(() => {
+      save().catch((e: unknown) => { if (saveFailed === null) fail(e); setSaveFailed(json); });
+    }, 1500);
+    return () => window.clearTimeout(h);
+  }, [json, dirty, saving, busy, uploads.pending, editable, saveFailed]); // eslint-disable-line react-hooks/exhaustive-deps
   const publish = () => run(async () => {
-    if (dirty) await save();
+    await save();
     await post(`/admin/products/${p.id}/publish`);
     await refresh(p.id);
   }, p.publishedAt ? 'Зміни на сайті' : 'Товар на сайті');
   const back = async () => {
-    if ((dirty || uploads.pending) && !(await confirm({ title: 'Вийти без збереження?', text: 'Незбережені зміни пропадуть.', ok: 'Вийти', danger: true }))) return;
+    if (uploads.pending && !(await confirm({ title: 'Фото ще надсилаються', text: 'Якщо вийти зараз, ті, що не встигли, пропадуть.', ok: 'Вийти', danger: true }))) return;
+    try { await save(); } catch {
+      if (!(await confirm({ title: 'Останні зміни не збереглися', text: 'Вийти без них?', ok: 'Вийти', danger: true }))) return;
+    }
     nav('/products');
   };
+  const [history, setHistory] = useState(false);
 
   const shown = { ...readiness, items: readiness.items.map((i) => (i.key === 'photo' ? { ...i, ok: photos.length > 0 } : i)) };
   const blocked = shown.items.some((i) => i.blocking && !i.ok);
   const canPublish = can('products.publish') && (hasDraft || dirty) && !blocked && !uploads.pending;
   const unitHint = doc.pricingUnit === 'KILOGRAM' ? ' за кг' : doc.pricingUnit === 'SKEIN' ? ' за моток' : '';
-  const tops = libs.categories.filter((c) => !c.parentId);
   const view = { id: p.id, slug: p.slug, status: p.status };
 
   return (
@@ -104,9 +138,10 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
           { label: 'Створити схожий', icon: Copy, onClick: () => void actions.similar(p.id), hidden: !can('products.create') },
           { label: p.slug && p.status === 'ACTIVE' ? 'Подивитись на сайті' : 'Подивитись, як на сайті', icon: Eye, onClick: () => (p.slug && p.status === 'ACTIVE' && !dirty ? actions.view(view) : setParams({ preview: '1' })) },
           { label: 'Цінник', icon: Tag, onClick: () => actions.priceTag(p.id) },
+          { label: 'Історія змін', icon: RotateCcw, onClick: () => setHistory(true) },
           { label: 'Скасувати неопубліковані зміни', icon: Undo2, hidden: !(hasDraft && p.publishedAt && editable), onClick: () => void (async () => {
             if (!(await confirm({ title: 'Скасувати неопубліковані зміни?', text: 'Залишиться те, що зараз на сайті.', ok: 'Скасувати зміни', danger: true }))) return;
-            await run(async () => { await api(`/admin/products/${p.id}/draft`, { method: 'DELETE' }); await refresh(p.id); }, 'Зміни скасовано');
+            await run(async () => { await settled(); await api(`/admin/products/${p.id}/draft`, { method: 'DELETE' }); await refresh(p.id); }, 'Зміни скасовано');
           })() },
           { label: 'Сховати з сайту', icon: EyeOff, hidden: p.status === 'ARCHIVED' || !can('products.archive'), onClick: () => void actions.setHidden(p.id, true) },
           { label: 'Показати на сайті', icon: Eye, hidden: p.status !== 'ARCHIVED' || !can('products.publish'), onClick: () => void actions.setHidden(p.id, false) },
@@ -115,7 +150,8 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
       />
       <ReadinessLine r={shown} />
 
-      <div className="grid gap-5 lg:grid-cols-[10rem_1fr]">
+      {/* Round 22 K38: on a wide computer screen the live «як на сайті» sits beside the editor. */}
+      <div className="grid gap-5 lg:grid-cols-[10rem_minmax(0,1fr)] min-[90rem]:grid-cols-[10rem_minmax(0,1fr)_22rem]">
         <nav aria-label="Розділи товару" className="hidden lg:block">
           <ul className="sticky top-20 flex flex-col gap-0.5 text-body-sm">
             {SECTIONS.map(([id, label]) => <li key={id}><a href={`#${id}`} className="block rounded-md px-2 py-1.5 text-text-body hover:bg-bg-alt">{label}</a></li>)}
@@ -127,32 +163,19 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
             <h2 className="text-h4 font-semibold text-text-primary">Основне</h2>
             <label className={labelCls}>Назва<input value={doc.name} onChange={(e) => patch({ name: e.target.value })} className={inputCls} maxLength={160} /></label>
             {p.slug && <p className="-mt-2 text-caption text-text-muted">Адреса на сайті: /uk/tovar/{p.slug} — не змінюється</p>}
-            <div className="flex flex-col gap-2">
-              <span className="flex items-center gap-1.5 text-body-sm text-text-muted">Категорії <Hint text="Перша позначена категорія — основна: за нею товар стоїть у меню сайту." /></span>
-              {tops.map((c) => (
-                <div key={c.id} className="flex flex-wrap items-center gap-1.5">
-                  {[c, ...libs.categories.filter((x) => x.parentId === c.id)].map((x) => {
-                    const on = doc.categoryIds.includes(x.id);
-                    return <button key={x.id} type="button" aria-pressed={on} onClick={() => patch({ categoryIds: on ? doc.categoryIds.filter((y) => y !== x.id) : [...doc.categoryIds, x.id] })} className={`${chip(on)} ${x.id === c.id ? 'font-semibold' : ''}`}>{x.name}{on && doc.categoryIds[0] === x.id ? ' · основна' : ''}</button>;
-                  })}
+            <CategoryPicker categories={libs.categories} value={doc.categoryIds} onChange={(categoryIds) => patch({ categoryIds })} />
+            {/* Round 22 K29: the three product marks as switches in their own block. */}
+            <div className="flex flex-col gap-2.5 rounded-lg border border-border-hairline p-3">
+              {([
+                [Handshake, 'Від партнерів', doc.origin === 'PARTNER_MANUFACTURE', (v: boolean) => patch({ origin: v ? 'PARTNER_MANUFACTURE' : 'OWN_MANUFACTURE', isHandmade: v ? false : doc.isHandmade }), !can('products.manage_origin'), false],
+                [Hand, 'Ручна робота', doc.isHandmade, (v: boolean) => patch({ isHandmade: v }), false, doc.origin !== 'OWN_MANUFACTURE'],
+                [Gem, 'Єдиний екземпляр', doc.isUniquePiece, (v: boolean) => patch({ isUniquePiece: v }), false, false],
+              ] as const).filter((x) => !x[5]).map(([Icon, label, on, set, off]) => (
+                <div key={label} className="flex items-center gap-2.5">
+                  <Icon size={18} strokeWidth={1.75} className={on ? 'text-accent-text' : 'text-text-muted'} aria-hidden="true" />
+                  <Switch on={on} onChange={set} label={label} disabled={off || !editable} />
                 </div>
               ))}
-            </div>
-            {libs.collections.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <span className="text-body-sm text-text-muted">Колекції</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {libs.collections.map((c) => { const on = doc.collectionIds.includes(c.id); return <button key={c.id} type="button" aria-pressed={on} onClick={() => patch({ collectionIds: on ? doc.collectionIds.filter((x) => x !== c.id) : [...doc.collectionIds, c.id] })} className={chip(on)}>{c.name}</button>; })}
-                </div>
-              </div>
-            )}
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <label className="flex items-center gap-2 text-body-sm text-text-primary">
-                <input type="checkbox" className="size-5 accent-[var(--accent)]" disabled={!can('products.manage_origin')} checked={doc.origin === 'PARTNER_MANUFACTURE'}
-                  onChange={(e) => patch({ origin: e.target.checked ? 'PARTNER_MANUFACTURE' : 'OWN_MANUFACTURE', isHandmade: e.target.checked ? false : doc.isHandmade })} />Від партнерів
-              </label>
-              {doc.origin === 'OWN_MANUFACTURE' && <label className="flex items-center gap-2 text-body-sm text-text-primary"><input type="checkbox" className="size-5 accent-[var(--accent)]" checked={doc.isHandmade} onChange={(e) => patch({ isHandmade: e.target.checked })} />Ручна робота</label>}
-              <label className="flex items-center gap-2 text-body-sm text-text-primary"><input type="checkbox" className="size-5 accent-[var(--accent)]" checked={doc.isUniquePiece} onChange={(e) => patch({ isUniquePiece: e.target.checked })} />Єдиний екземпляр</label>
             </div>
             {doc.origin === 'PARTNER_MANUFACTURE' && (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -170,6 +193,18 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
                 <input defaultValue={doc.searchSynonyms.join(', ')} onBlur={(e) => patch({ searchSynonyms: e.target.value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 20) })} className={inputCls} placeholder="коц, покривало" />
               </label>
             </div>
+            {/* Round 22 K28: «Колекції» folded under «Додатково». */}
+            {libs.collections.length > 0 && (
+              <details className="rounded-lg border border-border-hairline px-3 py-2">
+                <summary className="cursor-pointer text-body-sm font-medium text-text-primary">Додатково{doc.collectionIds.length ? ` · колекцій: ${doc.collectionIds.length}` : ''}</summary>
+                <div className="mt-3 flex flex-col gap-2">
+                  <span className="text-body-sm text-text-muted">Колекції</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {libs.collections.map((c) => { const on = doc.collectionIds.includes(c.id); return <button key={c.id} type="button" aria-pressed={on} onClick={() => patch({ collectionIds: on ? doc.collectionIds.filter((x) => x !== c.id) : [...doc.collectionIds, c.id] })} className={chip(on)}>{c.name}</button>; })}
+                  </div>
+                </div>
+              </details>
+            )}
           </section>
 
           <section id="photos" className={box}>
@@ -282,37 +317,45 @@ function Editor({ p, t, libs }: { p: ProductDetail; t: Template; libs: Libraries
               </div>
             </details>
           </section>
-
-          <section id="history" className={box}>
-            <h2 className="text-h4 font-semibold text-text-primary">Історія змін</h2>
-            {p.revisions.length === 0 && <p className="text-body-sm text-text-muted">Товар ще не публікувався.</p>}
-            <ul className="flex flex-col gap-1.5">
-              {p.revisions.map((r, n) => (
-                <li key={r.id} className="flex flex-wrap items-center gap-3 text-body-sm">
-                  <span className="text-text-body">{dateTime(r.publishedAt ?? r.createdAt)}{n === 0 ? ' · зараз на сайті' : ''}</span>
-                  {n > 0 && editable && (
-                    <button type="button" disabled={busy} className="rounded-md border border-border-control px-2.5 py-1 text-caption hover:bg-bg-alt" onClick={() => void (async () => {
-                      if (!(await confirm({ title: 'Повернути цю версію?', text: 'Вона стане чернеткою замість поточної. На сайті нічого не зміниться, доки не опублікуєте.', ok: 'Повернути' }))) return;
-                      await run(async () => { await post(`/admin/products/${p.id}/revisions/${r.id}/revert`); await refresh(p.id); }, 'Стару версію повернуто в чернетку');
-                    })()}>Повернути</button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
         </fieldset>
+
+        <aside aria-label="Як на сайті" className="hidden min-[90rem]:block">
+          <div className="sticky top-20 flex max-h-[calc(100dvh-6rem)] flex-col gap-3 overflow-y-auto rounded-xl border border-border-hairline bg-bg-surface p-4">
+            <span className="text-caption font-semibold uppercase tracking-wide text-text-muted">Як на сайті</span>
+            <ProductPreview doc={doc} photos={photos} libs={libs} t={t} />
+          </div>
+        </aside>
       </div>
 
       {editable && (
         <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 -mx-4 flex items-center gap-2 border-t border-border-hairline bg-bg-surface/95 px-4 py-2.5 backdrop-blur md:bottom-3 md:mx-0 md:rounded-xl md:border md:shadow-lg">
           <span className="min-w-0 flex-1 truncate text-body-sm text-text-muted" aria-live="polite">
-            {uploads.pending ? 'Надсилаю фото…' : dirty ? 'Є незбережені зміни' : savedAt ? `Збережено ${dateTime(savedAt)}` : ''}
+            {uploads.pending ? 'Надсилаю фото…' : saveFailed !== null && json === saveFailed ? 'Не вдалося зберегти' : dirty || saving ? 'Зберігаю…' : savedAt ? `Збережено ${time(savedAt)}` : ''}
           </span>
-          <GhostButton disabled={!dirty || busy} onClick={() => void run(save, 'Збережено')}>Зберегти</GhostButton>
+          {saveFailed !== null && json === saveFailed && <GhostButton disabled={busy || saving} onClick={() => void save().catch(fail)}>Повторити</GhostButton>}
           {can('products.publish') && <PrimaryButton disabled={!canPublish || busy} onClick={() => void publish()}>{p.publishedAt ? 'Опублікувати зміни' : 'Опублікувати'}</PrimaryButton>}
         </div>
       )}
-      {!can('products.publish') && editable && <p className="text-caption text-text-muted">Ви зберігаєте чернетку; на сайт її публікує Іван або адміністратор.</p>}
+      {!can('products.publish') && editable && <p className="text-caption text-text-muted">Зміни зберігаються в чернетку самі; на сайт її публікує Іван або адміністратор.</p>}
+
+      {history && (
+        <Sheet title="Історія змін" onClose={() => setHistory(false)}>
+          {p.revisions.length === 0 && <p className="text-body-sm text-text-muted">Товар ще не публікувався.</p>}
+          <ul className="flex flex-col gap-1.5">
+            {p.revisions.map((r, n) => (
+              <li key={r.id} className="flex flex-wrap items-center gap-3 text-body-sm">
+                <span className="text-text-body">{dateTime(r.publishedAt ?? r.createdAt)}{n === 0 ? ' · зараз на сайті' : ''}</span>
+                {n > 0 && editable && (
+                  <button type="button" disabled={busy} className="rounded-md border border-border-control px-2.5 py-1 text-caption hover:bg-bg-alt" onClick={() => void (async () => {
+                    if (!(await confirm({ title: 'Повернути цю версію?', text: 'Вона стане чернеткою замість поточної. На сайті нічого не зміниться, доки не опублікуєте.', ok: 'Повернути' }))) return;
+                    await run(async () => { await settled(); await post(`/admin/products/${p.id}/revisions/${r.id}/revert`); await refresh(p.id); }, 'Стару версію повернуто в чернетку');
+                  })()}>Повернути</button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Sheet>
+      )}
 
       {params.get('preview') && (
         <Sheet title="Як це виглядатиме на сайті" wide onClose={() => setParams({}, { replace: true })}>

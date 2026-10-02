@@ -20,7 +20,7 @@ const DID: Record<string, string> = {
   'product.deleted': 'видалив товар', 'product.photo_removed': 'прибрав фото товару', 'product.photos_reordered': 'змінив порядок фото товару',
   'product.quick_edit': 'змінив у списку ціну чи залишок товару', 'product.sku_changed': 'змінив артикул товару',
   'product.photo_added': 'додав фото товару', 'product.photo_replaced': 'замінив фото товару',
-  'product.bulk.move_category': 'переніс товари в іншу категорію', 'product.bulk.delete': 'видалив кілька товарів',
+  'product.bulk.move_category': 'переніс товари в іншу категорію', 'product.bulk.set_category': 'змінив категорію кільком товарам', 'product.bulk.delete': 'видалив кілька товарів',
   'mail.sender_block_on': 'заблокував відправника', 'mail.sender_block_off': 'розблокував відправника',
   'quick_order.status_changed': 'опрацював заявку «Купити в 1 клік»',
   'product.created': 'створив товар', 'product.published': 'опублікував товар', 'product.draft_discarded': 'скасував чернетку товару', 'product.reverted': 'повернув попередню версію товару',

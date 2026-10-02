@@ -12,6 +12,8 @@ import { ROLE_LABEL, int } from './model';
 
 export const inputCls = 'w-full rounded-lg border border-border-control bg-bg-input px-3 py-2 text-body text-text-primary disabled:opacity-60 max-md:py-2.5';
 export const labelCls = 'flex flex-col gap-1.5 text-body-sm text-text-muted';
+/** A chosen chip: filled with the accent in both themes, not only outlined (round 22 K30). */
+export const CHIP_ON = 'border-accent bg-accent font-medium text-white';
 
 /** Colour circles (round 20 #159) or ticks for sizes and patterns (#158). */
 export function ValuePicker({ values, picked, onToggle, round = false, disabled = false }: { values: LibValue[]; picked: string[]; onToggle: (id: string) => void; round?: boolean; disabled?: boolean }) {
@@ -39,8 +41,8 @@ export function ValuePicker({ values, picked, onToggle, round = false, disabled 
         const on = picked.includes(v.id);
         return (
           <button key={v.id} type="button" disabled={disabled} aria-pressed={on} onClick={() => onToggle(v.id)}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-body-sm max-md:min-h-11 ${on ? 'border-accent bg-accent/10 font-medium text-text-primary' : 'border-border-control text-text-body'}`}>
-            {on && <Check size={15} strokeWidth={2.5} className="text-accent-text" />}{v.label}
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-body-sm max-md:min-h-11 ${on ? CHIP_ON : 'border-border-control text-text-body'}`}>
+            {on && <Check size={15} strokeWidth={2.5} />}{v.label}
           </button>
         );
       })}
@@ -118,7 +120,7 @@ export function CompositionEditor({ value, onChange, libs, disabled = false }: {
 /** What is still missing; only the round 20 #126 items stop publishing, the rest is advice. */
 export function ReadinessLine({ r }: { r: Readiness }) {
   const missing = r.items.filter((i) => !i.ok);
-  if (!missing.length) return <p className="text-body-sm text-accent-text">Усе готово до публікації</p>;
+  if (!missing.length) return null; // Round 22 K34: only while something is missing.
   return (
     <ul className="flex flex-wrap items-center gap-1.5">
       <li className="text-caption text-text-muted">Бракує:</li>
@@ -139,7 +141,8 @@ export function ProductPreview({ doc, photos, libs, t }: { doc: ProductDoc; phot
   const material = (id: string) => libs.materials.find((m) => m.id === id)?.name ?? '';
   const photo = photos[main] ?? photos[0];
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    // Container-sized (round 22 K38): two columns in the wide sheet, one in the narrow side column.
+    <div className="@container"><div className="grid gap-5 @xl:grid-cols-2">
       <div className="flex flex-col gap-2">
         <div className="aspect-[4/5] overflow-hidden rounded-xl bg-bg-alt">
           {photo?.large ? <img src={photo.large} alt="" className="size-full object-cover" /> : <div className="grid size-full place-items-center text-body-sm text-text-muted">Без фото</div>}
@@ -160,7 +163,7 @@ export function ProductPreview({ doc, photos, libs, t }: { doc: ProductDoc; phot
         {doc.description && <div className="flex flex-col gap-2 text-body text-text-body">{doc.description.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}</div>}
         {doc.composition.length > 0 && <p className="text-body-sm text-text-muted">Склад: {doc.composition.map((c) => `${material(c.materialId)} ${c.percent} %`).join(', ')}</p>}
       </div>
-    </div>
+    </div></div>
   );
 }
 

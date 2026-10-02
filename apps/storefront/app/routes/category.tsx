@@ -3,7 +3,7 @@ import type { CategoryNode, Locale, ProductListResponse } from '@vivcharyk/schem
 import type { Route } from './+types/category';
 import { alternatesFor, apiGet, ApiError, redirectOr404 } from '@/lib/api.server';
 import { t } from '@/lib/i18n';
-import { path } from '@/lib/segments';
+import { PARTNERS_NAME, PARTNERS_SLUG, path } from '@/lib/segments';
 import { Listing } from '@/features/catalog/components/Listing';
 import type { loader as layoutLoader } from './locale-layout';
 
@@ -18,6 +18,15 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
   // Price fields are typed in hryvnias; the API takes kopecks.
   for (const k of ['priceMin', 'priceMax']) if (query[k]) query[k] = String(Math.round(Number(query[k].replace(',', '.')) * 100) || '');
+  // Round 22 K13: «Від партнерів» is every product with the partner checkbox, not a category.
+  if (params.category === PARTNERS_SLUG && !params.sub) {
+    const { data } = await apiGet<ProductListResponse>('/products', locale, { ...query, origin: 'PARTNER_MANUFACTURE' });
+    const noindex = data.items.length === 0 || data.appliedFilters.length > 0 || !!query.inStock || !!query.priceMin || !!query.priceMax;
+    return {
+      data: { ...data, facets: data.facets.filter((f) => f.key !== 'origin') }, slug: PARTNERS_SLUG, parentSlug: PARTNERS_SLUG, partners: true,
+      seo: { alternates: { [locale]: path.category(locale, PARTNERS_SLUG) }, ...(noindex ? { robots: 'noindex,follow' } : {}) },
+    };
+  }
   try {
     const slug = params.sub ?? params.category!;
     const [{ data }, alternates] = await Promise.all([
@@ -26,7 +35,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     ]);
     // Filtered or empty listings are `noindex, follow` (29 §29.7); sort and page never change indexability.
     const noindex = data.items.length === 0 || data.appliedFilters.length > 0 || !!query.origin || !!query.inStock || !!query.priceMin || !!query.priceMax;
-    return { data, slug, parentSlug: params.category!, seo: { alternates, ...(noindex ? { robots: 'noindex,follow' } : {}) } };
+    return { data, slug, parentSlug: params.category!, partners: false, seo: { alternates, ...(noindex ? { robots: 'noindex,follow' } : {}) } };
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) await redirectOr404(request);
     throw e;
@@ -34,6 +43,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export function meta({ data }: Route.MetaArgs) {
+  if (data?.partners) return [{ title: `${PARTNERS_NAME} — Вівчарик` }];
   const c = data?.data.category;
   return [
     ...(c ? [{ title: c.metaTitle ?? `${c.name} — Вівчарик` }, ...(c.metaDescription ? [{ name: 'description', content: c.metaDescription }] : [])] : []),
@@ -49,12 +59,12 @@ function findNode(nodes: CategoryNode[], slug: string): CategoryNode | undefined
 }
 
 export default function CategoryPage() {
-  const { data, slug, parentSlug } = useLoaderData<typeof loader>();
+  const { data, slug, parentSlug, partners } = useLoaderData<typeof loader>();
   const layout = useRouteLoaderData<typeof layoutLoader>('routes/locale-layout');
   const locale = (layout?.locale ?? 'uk') as Locale;
   const origin = layout?.origin ?? '';
   const tree = layout?.categories ?? [];
-  const node = findNode(tree, slug);
+  const node = partners ? { id: PARTNERS_SLUG, slug, name: PARTNERS_NAME, children: [] } : findNode(tree, slug);
   const parent = findNode(tree, parentSlug);
 
   return (
@@ -69,7 +79,7 @@ export default function CategoryPage() {
         <span className="text-body text-text-muted">{t(locale, 'catalog.count', { n: data.page.total ?? data.items.length })}</span>
       </div>
 
-      <Listing data={data} locale={locale} countBase={{ category: slug }} before={parent && parent.children.length > 0 && (
+      <Listing data={data} locale={locale} countBase={partners ? { origin: 'PARTNER_MANUFACTURE' } : { category: slug }} before={parent && parent.children.length > 0 && (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-body font-semibold text-text-primary">Тип</legend>
           {parent.children.map((c) => (

@@ -14,6 +14,8 @@ import * as repo from './catalog.repository';
 // reads our own database; a `OneKnightCatalogSource` can replace it by config later.
 export interface CatalogSource {
   categoryTree(locale: Locale): Promise<CategoryNode[]>;
+  /** Whether any partner product is on sale (round 22 K13: the site gathers the partner group by origin). */
+  hasPartnerGoods(locale: Locale): Promise<boolean>;
   listProducts(q: ProductListQuery, filters: Record<string, string[]>): Promise<ProductListResponse & { fallback: boolean }>;
   featured(locale: Locale, limit: number): Promise<ProductListItem[]>;
   productBySlug(slug: string, locale: Locale): Promise<ProductDetail>;
@@ -74,6 +76,10 @@ export class LocalCatalogSource implements CatalogSource {
   async categoryTree(locale: Locale) {
     const strip = (n: CategoryNode): CategoryNode => ({ id: n.id, key: n.key ?? null, slug: n.slug, name: n.name, isFeatured: !!n.isFeatured, children: n.children.map(strip) });
     return (await categoryIndex(locale)).roots.map(strip);
+  }
+
+  async hasPartnerGoods(locale: Locale) {
+    return (await repo.countPartnerProducts(locale)) > 0;
   }
 
   async listProducts(q: ProductListQuery, filters: Record<string, string[]>) {

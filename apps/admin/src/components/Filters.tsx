@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 
 // Round 20 #49, #62–66, #207, #269: one «Фільтри · N» button. It opens a list of filter groups; a group
 // opens its own list; nothing applies until «Показати». Chosen filters show as chips with ✕ under the
@@ -7,10 +7,13 @@ import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 
 export type FilterGroup =
   | { key: string; label: string; kind: 'options'; options: Array<{ value: string; label: string }>; single?: boolean }
+  // Round 22 K42: groups with their children indented; a checked group stands for all its children.
+  | { key: string; label: string; kind: 'tree'; options: TreeOption[] }
   | { key: string; label: string; kind: 'date' }
   | { key: string; label: string; kind: 'range'; unit?: string }
   | { key: string; label: string; kind: 'toggle' };
 
+export interface TreeOption { value: string; label: string; children: Array<{ value: string; label: string }> }
 export type FilterValue = string[] | { from?: string; to?: string } | boolean;
 export type FilterState = Record<string, FilterValue | undefined>;
 
@@ -31,6 +34,7 @@ export const activeCount = (s: FilterState) => Object.values(s).filter(isActive)
 function chipText(g: FilterGroup, v: FilterValue) {
   if (g.kind === 'toggle') return g.label;
   if (g.kind === 'options') return `${g.label}: ${(v as string[]).map((x) => g.options.find((o) => o.value === x)?.label ?? x).join(', ')}`;
+  if (g.kind === 'tree') { const all = g.options.flatMap((o) => [o, ...o.children]); return `${g.label}: ${(v as string[]).map((x) => all.find((o) => o.value === x)?.label ?? x).join(', ')}`; }
   const r = v as { from?: string; to?: string };
   if (g.kind === 'date') { const p = PRESETS.find(([, f]) => { const x = f(); return x.from === r.from && x.to === r.to; }); return `${g.label}: ${p ? p[0] : `${fmtDate(r.from)} – ${fmtDate(r.to)}`}`; }
   return `${g.label}: ${r.from ?? '…'} – ${r.to ?? '…'}${g.unit ? ` ${g.unit}` : ''}`;
@@ -89,6 +93,7 @@ export function FilterButton({ groups, value, onApply, resultCount }: { groups: 
                 </label>
               );
             })}
+            {g?.kind === 'tree' && <TreeList options={g.options} value={(draft[g.key] as string[] | undefined) ?? []} onChange={(v) => set(g.key, v)} />}
             {g?.kind === 'toggle' && (
               <label className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-body hover:bg-bg-alt">
                 <input type="checkbox" checked={!!draft[g.key]} onChange={(e) => set(g.key, e.target.checked)} className="size-5 accent-[var(--accent)]" /> Лише такі
@@ -122,6 +127,48 @@ export function FilterButton({ groups, value, onApply, resultCount }: { groups: 
         </div>
       )}
     </div>
+  );
+}
+
+/** Folded groups, except those holding a checked item; checking a group drops its separately checked children. */
+function TreeList({ options, value, onChange }: { options: TreeOption[]; value: string[]; onChange: (v: string[]) => void }) {
+  const [open, setOpen] = useState(() => new Set(options.filter((o) => value.includes(o.value) || o.children.some((c) => value.includes(c.value))).map((o) => o.value)));
+  const row = 'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm hover:bg-bg-alt max-md:py-3.5 max-md:text-body';
+  const box = 'size-4 shrink-0 accent-[var(--accent)] max-md:size-5';
+  return (
+    <ul className="flex flex-col">
+      {options.map((o) => {
+        const on = value.includes(o.value);
+        const unfolded = open.has(o.value);
+        const kids = new Set(o.children.map((c) => c.value));
+        return (
+          <li key={o.value}>
+            <div className="flex items-center">
+              <label className={`${row} min-w-0 flex-1 font-medium text-text-primary`}>
+                <input type="checkbox" checked={on} className={box} onChange={() => onChange(on ? value.filter((x) => x !== o.value) : [...value.filter((x) => !kids.has(x)), o.value])} />
+                {o.label}
+              </label>
+              {o.children.length > 0 && (
+                <button type="button" aria-expanded={unfolded} aria-label={unfolded ? `Згорнути «${o.label}»` : `Розгорнути «${o.label}»`}
+                  onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(o.value)) n.delete(o.value); else n.add(o.value); return n; })}
+                  className="rounded-full p-2 text-text-muted hover:bg-bg-alt">
+                  {unfolded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
+              )}
+            </div>
+            {unfolded && o.children.map((c) => {
+              const cOn = on || value.includes(c.value);
+              return (
+                <label key={c.value} className={`${row} pl-9 text-text-body ${on ? 'cursor-default opacity-60' : ''}`}>
+                  <input type="checkbox" checked={cOn} disabled={on} className={box} onChange={() => onChange(cOn ? value.filter((x) => x !== c.value) : [...value, c.value])} />
+                  {c.label}
+                </label>
+              );
+            })}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

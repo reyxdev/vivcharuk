@@ -135,6 +135,8 @@ npx prisma migrate deploy
 # Production seed: permissions, roles, categories, the Owner. No demo products.
 # On the very first run it prints a ONE-TIME OWNER PASSWORD: write it down.
 npx tsx --env-file=.env prisma/seed/index.ts
+# Round 22 category tree (split «Подушки та постіль», drop the «Від партнерів» category); runs once, repeatable.
+npx tsx --env-file=.env scripts/categories-round22.ts
 # Product batches and production-stage videos (their files come in media/ with the code); repeatable.
 for batch in scripts/data/products/*.json; do
   case "$batch" in *.media.json) continue ;; esac

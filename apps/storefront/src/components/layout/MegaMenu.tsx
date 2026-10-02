@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { CategoryNode, Locale, ProductListItem } from '@vivcharyk/schemas';
 import { formatRange } from '@/lib/money';
-import { path } from '@/lib/segments';
+import { PARTNERS_NAME, PARTNERS_SLUG, path } from '@/lib/segments';
 import { categoryArt } from '@/features/home/categoryArt';
 import { useIdle } from '@/lib/motion';
 
@@ -12,13 +12,9 @@ import { useIdle } from '@/lib/motion';
  * URLs stay reachable, part 3 #14) and best sellers. Opens on hover after ~150 ms of intent, on
  * click, and from the keyboard; Escape closes it. The promo banner slot waits for §23.12.
  */
-// Under «Подушки та постіль» the item «Подушки вовняні» reads «Вовняні»: the group already says it.
-const short = (child: string, parent: string) => {
-  const [first, ...rest] = child.split(' ');
-  return rest.length && first === parent.split(' ')[0] ? rest.join(' ').replace(/^./, (c) => c.toUpperCase()) : child;
-};
-
-export function MegaMenu({ locale, categories, label, className, chevron }: { locale: Locale; categories: CategoryNode[]; label: string; className: string; chevron: React.ReactNode }) {
+// Round 22 K45: the same tree and names as the panel, no renaming here. K13: «Від партнерів» is gathered
+// from the products' origin and closes the list while there are partner goods.
+export function MegaMenu({ locale, categories, partners, label, className, chevron }: { locale: Locale; categories: CategoryNode[]; partners: boolean; label: string; className: string; chevron: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [hits, setHits] = useState<ProductListItem[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -52,10 +48,10 @@ export function MegaMenu({ locale, categories, label, className, chevron }: { lo
           {/* Round 18: eleven groups, so six compact columns with small illustrations instead of four wide ones. */}
           <div className="mx-auto grid max-w-(--container-wide) gap-8 px-12 py-7 xl:grid-cols-[1fr_17rem]">
             <ul className="vk-seq grid grid-cols-4 gap-x-5 gap-y-6 xl:grid-cols-6">
-              {categories.map((c, i) => (
+              {[...categories, ...(partners ? [{ id: 'partners', key: 'partnerski-vyroby', slug: PARTNERS_SLUG, name: PARTNERS_NAME, children: [] }] : [])].map((c, i, all) => (
                 // With 7–11 groups the second row leaves its last slot empty: the sixth group (the longest
-                // list, «Подушки та постіль») runs down into it instead of pushing the second row lower.
-                <li key={c.id} className={`flex min-w-0 flex-col gap-1.5 ${i === 5 && categories.length > 6 && categories.length < 12 ? 'xl:row-span-2' : ''}`}>
+                // list) runs down into it instead of pushing the second row lower.
+                <li key={c.id} className={`flex min-w-0 flex-col gap-1.5 ${i === 5 && all.length > 6 && all.length < 12 ? 'xl:row-span-2' : ''}`}>
                   <Link to={path.category(locale, c.slug)} onClick={close} className="group flex items-center gap-2.5">
                     {/* The same illustrations as the homepage circles (round 11 U3); a dashed slot for a category without one. */}
                     {categoryArt(c.key)
@@ -66,7 +62,7 @@ export function MegaMenu({ locale, categories, label, className, chevron }: { lo
                   {c.children.length > 0 && (
                     <ul className="flex flex-col gap-0.5 pl-1">
                       {c.children.map((ch) => (
-                        <li key={ch.id}><Link to={path.category(locale, c.slug, ch.slug)} onClick={close} className="text-caption leading-snug text-text-body hover:underline">{short(ch.name, c.name)}</Link></li>
+                        <li key={ch.id}><Link to={path.category(locale, c.slug, ch.slug)} onClick={close} className="text-caption leading-snug text-text-body hover:underline">{ch.name}</Link></li>
                       ))}
                     </ul>
                   )}

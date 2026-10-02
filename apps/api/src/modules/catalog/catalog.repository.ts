@@ -30,6 +30,11 @@ const mediaSelect = (locales: Locale[]) =>
   }) satisfies Prisma.Product$mediaArgs;
 
 /** Candidate rows for a listing scope, with just enough to filter, facet and sort in memory. */
+/** Live partner goods (round 22 K13: the site's «Від партнерів» entry shows only while there are some). */
+export function countPartnerProducts(locale: Locale) {
+  return prisma.product.count({ where: { ...PUBLIC_PRODUCT, ...productVisibleIn(locale), origin: 'PARTNER_MANUFACTURE' } });
+}
+
 export function loadListingScope(categoryIds: string[] | null, locales: Locale[]) {
   return prisma.product.findMany({
     where: { ...PUBLIC_PRODUCT, ...productVisibleIn(locales[0]!), ...(categoryIds ? { categories: { some: { categoryId: { in: categoryIds } } } } : {}) },
