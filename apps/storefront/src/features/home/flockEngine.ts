@@ -17,6 +17,9 @@ const K: any[] = [...sym.children];
 const partOf = (root: Element, n: string): Element => root.querySelector('[data-part="' + n + '"]') as Element;
 const el = (tag: string, at: Record<string, any>, par?: Element): any => { const e = doc.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (par) par.appendChild(e); return e; };
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+// Round 23 perf: a value is written only when it changed. Every write, even of the same value, costs a style
+// recalculation and an SVG relayout; idle sheep keep most of theirs from frame to frame.
+const put = (e: any, k: string, v: string) => { const c = e.__vk || (e.__vk = {}); if (c[k] !== v) { c[k] = v; e.setAttribute(k, v); } };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 const rot = (R: number, x: number, y: number): [number, number] => { const r = R * Math.PI / 180, c = Math.cos(r), s = Math.sin(r); return [x * c - y * s, x * s + y * c]; };
@@ -124,15 +127,15 @@ function drawSheep(a: any) {
   let tr;
   if (a.mode === 'ground' || a.mode === 'land') {
     const S = sS(a), lift = a.lift || 0;
-    tr = 'translate(' + (a.x).toFixed(1) + ',' + (a.b - lift).toFixed(1) + ') rotate(' + a.R.toFixed(2) + ') scale(' + (S * fd).toFixed(4) + ',' + (S * a.sy).toFixed(4) + ') translate(-95,' + (-legY).toFixed(1) + ')';
+    tr = 'translate(' + (a.x).toFixed(1) + ',' + (a.b - lift).toFixed(1) + ') rotate(' + a.R.toFixed(2) + ') scale(' + (S * fd).toFixed(3) + ',' + (S * a.sy).toFixed(3) + ') translate(-95,' + (-legY).toFixed(1) + ')';
   } else {
-    tr = 'translate(' + (a.cx + a.sway).toFixed(1) + ',' + a.cy.toFixed(1) + ') rotate(' + a.R.toFixed(2) + ') scale(' + (a.s * fd).toFixed(4) + ',' + (a.s * a.sy).toFixed(4) + ') translate(-92,-70)';
+    tr = 'translate(' + (a.cx + a.sway).toFixed(1) + ',' + a.cy.toFixed(1) + ') rotate(' + a.R.toFixed(2) + ') scale(' + (a.s * fd).toFixed(3) + ',' + (a.s * a.sy).toFixed(3) + ') translate(-92,-70)';
   }
-  a.g.setAttribute('transform', tr);
-  a.legs.forEach((lg: any, k: any) => { const [hx, hy] = HIPS[k]; lg.setAttribute('transform', 'rotate(' + a.la[k].toFixed(1) + ' ' + hx + ' ' + hy + ') translate(' + hx + ' ' + hy + ') scale(1 ' + a.ls.toFixed(3) + ') translate(' + (-hx) + ' ' + (-hy) + ')'); });
-  if (a.bite > 0.02) { a.grass.style.display = ''; a.grass.setAttribute('transform', 'translate(177 66) rotate(' + (7 * Math.sin(performance.now() / 1000 * 13 + a.i)).toFixed(1) + ') scale(' + a.bite.toFixed(2) + ')'); }
+  put(a.g, 'transform', tr);
+  a.legs.forEach((lg: any, k: any) => { const [hx, hy] = HIPS[k]; put(lg, 'transform', 'rotate(' + a.la[k].toFixed(1) + ' ' + hx + ' ' + hy + ') translate(' + hx + ' ' + hy + ') scale(1 ' + a.ls.toFixed(3) + ') translate(' + (-hx) + ' ' + (-hy) + ')'); });
+  if (a.bite > 0.02) { if (a.grass.style.display) a.grass.style.display = ''; put(a.grass, 'transform', 'translate(177 66) rotate(' + (7 * Math.sin(performance.now() / 1000 * 13 + a.i)).toFixed(1) + ') scale(' + a.bite.toFixed(2) + ')'); }
   else if (a.grass.style.display !== 'none') a.grass.style.display = 'none';
-  a.head.setAttribute('transform', 'rotate(' + a.hr.toFixed(1) + ' 148 58)' + (a.lamb ? ' translate(148 58) scale(1.25) translate(-148 -58)' : ''));
+  put(a.head, 'transform', 'rotate(' + a.hr.toFixed(1) + ' 148 58)' + (a.lamb ? ' translate(148 58) scale(1.25) translate(-148 -58)' : ''));
 }
 
 // ---------- shepherd ----------
@@ -205,16 +208,16 @@ const shLocal = (wx: number, wy: number): [number, number] => { const [ox, oy] =
 function setAnchor(lx: number, ly: number) { const w = shWorld(lx, ly); sh.anc = [lx, ly]; sh.aw = w; }
 function drawShep() {
   if (sh.mode === 'stand' || sh.onGround) { sh.aw = [sh.x, sh.b]; sh.anc = [150, 506 - (1 - sh.legS) * 174]; }
-  shG.setAttribute('transform', 'translate(' + sh.aw[0].toFixed(1) + ',' + sh.aw[1].toFixed(1) + ') rotate(' + sh.R.toFixed(2) + ') scale(' + S0 + ') translate(' + (-sh.anc[0]).toFixed(1) + ',' + (-sh.anc[1]).toFixed(1) + ')');
-  const leg = (g: any, a: number, hx: number) => g.setAttribute('transform', 'rotate(' + a.toFixed(1) + ' ' + hx + ' 332) translate(' + hx + ' 332) scale(1 ' + sh.legS.toFixed(3) + ') translate(' + (-hx) + ' -332)');
+  put(shG, 'transform', 'translate(' + sh.aw[0].toFixed(1) + ',' + sh.aw[1].toFixed(1) + ') rotate(' + sh.R.toFixed(2) + ') scale(' + S0 + ') translate(' + (-sh.anc[0]).toFixed(1) + ',' + (-sh.anc[1]).toFixed(1) + ')');
+  const leg = (g: any, a: number, hx: number) => put(g, 'transform', 'rotate(' + a.toFixed(1) + ' ' + hx + ' 332) translate(' + hx + ' 332) scale(1 ' + sh.legS.toFixed(3) + ') translate(' + (-hx) + ' -332)');
   leg(legL, sh.lL, 130); leg(legR, sh.lR, 170);
-  armL.setAttribute('transform', 'rotate(' + sh.aL.toFixed(1) + ' 106 182)');
-  armR.setAttribute('transform', 'rotate(' + sh.aR.toFixed(1) + ' 196 178)');
-  headG.setAttribute('transform', 'rotate(' + sh.hR.toFixed(1) + ' 150 160)');
+  put(armL, 'transform', 'rotate(' + sh.aL.toFixed(1) + ' 106 182)');
+  put(armR, 'transform', 'rotate(' + sh.aR.toFixed(1) + ' 196 178)');
+  put(headG, 'transform', 'rotate(' + sh.hR.toFixed(1) + ' 150 160)');
   // A seated hat turns with the head (same neck pivot); a lifted or held hat does not.
   const seat = clamp(1 - Math.hypot(sh.hat[0], sh.hat[1]) / 12, 0, 1);
-  hatG.setAttribute('transform', 'rotate(' + (sh.hR * seat).toFixed(1) + ' 150 160) translate(' + sh.hat[0].toFixed(1) + ' ' + sh.hat[1].toFixed(1) + ') rotate(' + sh.hatR.toFixed(1) + ' 150 75)');
-  hair.style.display = sh.hat[1] < -6 || Math.abs(sh.hat[0]) > 6 ? '' : 'none';
+  put(hatG, 'transform', 'rotate(' + (sh.hR * seat).toFixed(1) + ' 150 160) translate(' + sh.hat[0].toFixed(1) + ' ' + sh.hat[1].toFixed(1) + ') rotate(' + sh.hatR.toFixed(1) + ' 150 75)');
+  const hd = sh.hat[1] < -6 || Math.abs(sh.hat[0]) > 6 ? '' : 'none'; if (hair.style.display !== hd) hair.style.display = hd;
 }
 hatG.addEventListener('pointerdown', (e: any) => down(e, { kind: 'hat' }));
 
@@ -224,28 +227,29 @@ hatG.addEventListener('pointerdown', (e: any) => down(e, { kind: 'hat' }));
 // fainter the higher it is; a shepherd lying down casts a long one; a sheep in his arms shares his.
 const shadeG = el('g', { 'pointer-events': 'none' }); groundSvg.insertBefore(shadeG, ground);
 land.querySelectorAll('[data-shadow]').forEach((e: any) => { e.style.display = 'none'; });
-const shade = () => el('ellipse', { fill: 'url(#vk-ground-shadow)' }, shadeG);
+// A unit ellipse placed and stretched by one transform: changing cx/cy/rx/ry rebuilt its geometry and its
+// gradient every frame (round 23 perf); a transform does neither.
+const shade = () => el('ellipse', { cx: 0, cy: 0, rx: 1, ry: 1, fill: 'url(#vk-ground-shadow)' }, shadeG);
 flock.forEach((a: any) => { a.shade = shade(); });
 const shepShade = shade(), hatShade = shade();
 function putShade(e: any, x: number, y: number, rx: number, ry: number, up: number) {
   const k = clamp(1 - up / 420, 0.25, 1);
-  e.setAttribute('cx', (x - rx * 0.08).toFixed(1)); e.setAttribute('cy', y.toFixed(1));
-  e.setAttribute('rx', (rx * (0.55 + 0.45 * k)).toFixed(1)); e.setAttribute('ry', (ry * (0.55 + 0.45 * k)).toFixed(1));
-  e.setAttribute('fill-opacity', k.toFixed(2));
+  put(e, 'transform', 'translate(' + (x - rx * 0.08).toFixed(1) + ' ' + y.toFixed(1) + ') scale(' + (rx * (0.55 + 0.45 * k)).toFixed(1) + ' ' + (ry * (0.55 + 0.45 * k)).toFixed(1) + ')');
+  put(e, 'fill-opacity', k.toFixed(2));
 }
 // Shoulders, hips, feet and head of the shepherd, in the drawing's units: their spread on the ground is his shadow.
 const SHADE_PTS: Array<[number, number]> = [[96, 506], [204, 506], [150, 332], [106, 182], [196, 178], [150, 100]];
 function drawShades() {
   flock.forEach((a: any) => {
     if (a.mode === 'ground' || a.mode === 'land') { const S = sS(a); putShade(a.shade, a.x, a.b, 64 * S, 12 * S, a.lift || 0); }
-    else if (a.mode === 'caught') a.shade.setAttribute('fill-opacity', '0');
+    else if (a.mode === 'caught') put(a.shade, 'fill-opacity', '0');
     else putShade(a.shade, a.cx + a.sway, a.homeB, 64 * a.s, 12 * a.s, Math.max(0, a.homeB - (a.cy + 57 * a.s)));
   });
   const pts = SHADE_PTS.map(([x, y]) => shWorld(x, y)), xs = pts.map((q) => q[0]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), low = Math.max(...pts.map((q) => q[1]));
   putShade(shepShade, (x0 + x1) / 2, BASE, Math.max((x1 - x0) / 2 + 20 * S0, 78 * S0), 15 * S0, Math.max(0, BASE - low));
   if (sh.hatW) putShade(hatShade, sh.hatW.x, BASE, 30 * S0, 5 * S0, Math.max(0, BASE - 26 * S0 - sh.hatW.y));
-  else hatShade.setAttribute('fill-opacity', '0');
+  else put(hatShade, 'fill-opacity', '0');
 }
 
 // ---------- input ----------

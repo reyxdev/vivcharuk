@@ -41,6 +41,29 @@ const WAVES = (() => {
 // A needle leads the thread: its eye sits at the end of the drawn thread, it turns with the curve and
 // passes in front of or behind the letters together with the thread. Thread and needle are driven by
 // one clock, so they never drift apart; afterwards the needle rests at the end of the thread.
+/**
+ * Round 23 perf: once the flock has taken its sheep and smoke out of the landscape, the landscape never
+ * changes again. Its ~3,800 SVG nodes were still walked by the browser on every frame the flock moved;
+ * shown as one picture (the same SVG, serialized) it costs a single image draw. The inline SVG stays in
+ * place, hidden, because the meadow path and the flock measure it.
+ */
+function freezeLandscape(still: HTMLElement) {
+  const svg = still.querySelector<SVGSVGElement>('svg[data-land]');
+  if (!svg || still.querySelector('img[data-land-still]')) return;
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
+  const img = new Image();
+  img.alt = ''; img.decoding = 'async'; img.setAttribute('aria-hidden', 'true'); img.dataset.landStill = '';
+  img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+  img.src = url;
+  img.decode().then(() => {
+    still.prepend(img);
+    svg.style.visibility = 'hidden';
+    // Only the path group is still measured (alignPathEdge); everything else leaves layout and paint.
+    const path = svg.querySelector('[data-path]');
+    for (const c of svg.children) if (c.tagName !== 'defs' && !(path && c.contains(path))) (c as SVGElement).style.display = 'none';
+  }, () => {}).finally(() => URL.revokeObjectURL(url));
+}
+
 /** Round 23 S24: a thread runs down from the buttons, inviting to scroll on; it fades once the page moves. */
 function ScrollCue() {
   const [gone, setGone] = useState(false);
@@ -182,7 +205,7 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
     const art = still.firstElementChild ? Promise.resolve() : fetch(heroUrl).then((r) => r.text()).then((t) => { if (!cancelled) still.innerHTML = t; });
     // Loaded after the hero is on screen, so it never competes with first paint (§36.3.6 guards).
     void Promise.all([art, import('./flockEngine')]).then(([, { startFlock }]) => {
-      if (!cancelled) { stop = startFlock(root, layer, groundHost); alignPathEdge(root); }
+      if (!cancelled) { stop = startFlock(root, layer, groundHost); alignPathEdge(root); freezeLandscape(still); }
     });
     // Round 23 perf: once the hero is off screen its endless CSS loops (chimney smoke, the scroll
     // thread) pause, so they cost no frames while the rest of the page is read.
