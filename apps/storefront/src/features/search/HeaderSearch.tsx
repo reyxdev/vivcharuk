@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
+import { t } from '@/lib/i18n';
 import { formatRange } from '@/lib/money';
 import { path } from '@/lib/segments';
 import { mediaUrl } from '@/lib/media';
@@ -52,9 +53,9 @@ export function HeaderSearch({ locale, icon, label }: { locale: Locale; icon: Re
         <div className="vk-drop absolute inset-x-0 top-full z-(--z-dropdown) border-b border-border-hairline bg-bg-page shadow-lg">
           <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
             <form role="search" onSubmit={submit} className="flex gap-2">
-              <input autoFocus type="search" value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} placeholder="Ліжник, пряжа, капці…" aria-label={label}
+              <input autoFocus type="search" value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} placeholder={t(locale, 'search.placeholder')} aria-label={label}
                 className="w-full rounded-lg border border-border-control bg-bg-surface px-4 py-3 text-body-lg text-text-primary" />
-              <button type="submit" className="rounded-lg bg-bg-inverted px-5 text-body font-semibold text-text-on-inverted">Знайти</button>
+              <button type="submit" className="rounded-lg bg-bg-inverted px-5 text-body font-semibold text-text-on-inverted">{t(locale, 'search.submit')}</button>
             </form>
             {res && (
               <div className="flex flex-col gap-1" aria-live="polite">
@@ -63,9 +64,9 @@ export function HeaderSearch({ locale, icon, label }: { locale: Locale; icon: Re
                     <span className="flex items-center gap-3"><span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-sm bg-bg-alt">{p.media && <img src={mediaUrl(p.media.publicId, 160)} alt="" className="size-full object-cover" />}</span>{p.name}</span><span className="shrink-0 text-text-muted">{formatRange(p.priceMinMinor, p.priceMaxMinor, locale)}</span>
                   </Link>
                 ))}
-                {res.total === 0 && <p className="px-2 text-body text-text-muted">Нічого не знайшли. Спробуйте інше слово.</p>}
+                {res.total === 0 && <p className="px-2 text-body text-text-muted">{t(locale, 'search.nothing')}</p>}
                 {res.total > res.products.length && (
-                  <button type="button" onClick={submit as never} className="self-start px-2 py-1.5 text-body text-text-primary underline">Усі результати ({res.total})</button>
+                  <button type="button" onClick={submit as never} className="self-start px-2 py-1.5 text-body text-text-primary underline">{t(locale, 'search.all', { n: res.total })}</button>
                 )}
               </div>
             )}

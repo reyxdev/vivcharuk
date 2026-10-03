@@ -1,38 +1,43 @@
-import { createHash } from 'node:crypto';
-import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { promisify } from 'node:util';
 import { z } from 'zod';
 import type { ProductDoc } from '@vivcharyk/schemas';
 import { config } from '../../config';
 import { AppError } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
 import { audit } from '../audit/audit.service';
+import sharp from 'sharp';
+import { photoUrl, photoWords, writePhotoSet as write } from './photoSet';
 
-// Product photos stored by the site itself (round 18, before Cloudinary): <path>-480.webp, -960.webp,
-// -1600.webp under MEDIA_DIR, the same layout scripts/import-products.ts writes. The panel compresses
-// on the phone (round 20 #271–272) and sends all three widths; when the browser could not make WebP
-// (Safari) and ImageMagick is on the server, the server converts; otherwise the files are kept as sent
-// (browsers read the picture by its content, not by the name).
-
-export const WIDTHS = [480, 960, 1600] as const;
+// Product photos: the files are made in ./photoSet.ts (round 24, G030–G035); here they meet the database.
+export { WIDTHS, isPhotoSet, photoUrl, photoWords, type PhotoWidth } from './photoSet';
 type Actor = { id: string; email: string };
-const run = promisify(execFile);
 
-// ImageMagick 7 is `magick`; Ubuntu/Debian packages ship ImageMagick 6 as `convert` with the same arguments here.
-let magickBin: Promise<string | null> | undefined;
-const findMagick = () => (magickBin ??= run('magick', ['-version']).then(() => 'magick', () => run('convert', ['-version']).then(() => 'convert', () => null)));
-const hasMagick = () => findMagick().then(Boolean);
-const isWebp = (b: Buffer) => b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP';
+/** Writes the whole set for one photo under MEDIA_DIR (see photoSet.ts). */
+export const writePhotoSet = (source: Buffer, base: string) => write(source, base, config.media.dir);
 
-export const photoUrl = (publicId: string, w: (typeof WIDTHS)[number] = 480) =>
-  publicId.startsWith('local:') ? `/media/${publicId.slice('local:'.length)}-${w}.webp` : null;
+/** The words of a product's photo names: its Ukrainian slug and, when it comes in one size only, that size. */
+export async function productPhotoBase(productId: string, optionValueId?: string | null) {
+  const p = await prisma.product.findUniqueOrThrow({
+    where: { id: productId },
+    select: {
+      sku: true, translations: { where: { locale: 'uk' }, select: { slug: true, name: true } },
+      variants: { where: { isActive: true, deletedAt: null }, select: { options: { select: { optionValue: { select: { dimensions: true } } } } } },
+    },
+  });
+  const sizes = new Set(p.variants.flatMap((v) => v.options.flatMap((o) => {
+    const d = o.optionValue.dimensions as { widthCm?: number; lengthCm?: number } | null;
+    return d?.widthCm && d.lengthCm ? [`${d.widthCm}x${d.lengthCm}`] : [];
+  })));
+  const colour = optionValueId ? (await prisma.optionValue.findUnique({ where: { id: optionValueId }, select: { colorFamily: true } }))?.colorFamily : null;
+  const t = p.translations[0];
+  const words = photoWords(t?.slug || t?.name || p.sku, sizes.size === 1 ? [...sizes][0] : null, colour);
+  return `photos/${p.sku.toLowerCase().replace(/[^a-z0-9-]/g, '')}/${words}`;
+}
 
 const b64 = z.string().min(10).max(8_000_000);
 export const uploadBody = z.object({
-  files: z.object({ '480': b64, '960': b64, '1600': b64 }),
+  // The panel compresses on the phone and sends only its 1600 px file (round 24): the server makes every
+  // width itself (photoSet.ts). '480' and '960' are still accepted, and ignored, from a panel loaded earlier.
+  files: z.object({ '1600': b64, '480': b64.optional(), '960': b64.optional() }),
   width: z.number().int().min(50).max(4000),
   height: z.number().int().min(50).max(4000),
   replaces: z.string().max(40).optional(), // an edited (rotated, cropped) photo takes the old one's place
@@ -54,30 +59,18 @@ export async function listPhotos(productId: string) {
 
 export async function uploadPhoto(productId: string, input: z.infer<typeof uploadBody>, actor: Actor) {
   const p = await product(productId);
-  const bufs = WIDTHS.map((w) => Buffer.from(input.files[String(w) as '480'], 'base64'));
-  const big = bufs[2]!;
-  const rel = `products/${p.sku.toLowerCase().replace(/[^a-z0-9-]/g, '')}/${createHash('sha1').update(big).digest('hex').slice(0, 12)}`;
-  const publicId = `local:${rel}`;
-  const file = (w: number) => path.join(config.media.dir, `${rel}-${w}.webp`);
+  // The largest file the phone made is the source; any format the server can read (HEIC from an iPhone too).
+  const big = Buffer.from(input.files['1600'], 'base64');
+  if (!(await sharp(big).metadata().then((m) => !!m.width, () => false))) throw new AppError(422, 'VALIDATION_FAILED', 'PHOTO_UNREADABLE');
+  const set = await writePhotoSet(big, await productPhotoBase(productId));
 
-  let media = await prisma.media.findFirst({ where: { provider: 'local', publicId }, select: { id: true } });
+  let media = await prisma.media.findFirst({ where: { provider: 'local', publicId: set.publicId }, select: { id: true } });
   if (!media) {
-    await mkdir(path.dirname(file(480)), { recursive: true });
-    if (bufs.every(isWebp) || !(await hasMagick())) {
-      await Promise.all(WIDTHS.map((w, i) => writeFile(file(w), bufs[i]!)));
-    } else {
-      const tmp = await mkdtemp(path.join(tmpdir(), 'vk-photo-'));
-      try {
-        const src = path.join(tmp, 'src');
-        await writeFile(src, big);
-        for (const w of WIDTHS) await run((await findMagick())!, [src, '-auto-orient', '-strip', '-resize', `${w}x>`, '-quality', '80', file(w)]);
-      } finally { await rm(tmp, { recursive: true, force: true }); }
-    }
     const draft = p.draftDocument as ProductDoc | null;
     const alt = (draft?.name || p.translations[0]?.name || p.sku).slice(0, 160);
     media = await prisma.media.create({
       data: {
-        provider: 'local', publicId, format: 'webp', width: input.width, height: input.height, bytes: (await stat(file(1600))).size, kind: 'IMAGE',
+        provider: 'local', publicId: set.publicId, format: 'webp', width: set.width, height: set.height, bytes: set.bytes, kind: 'IMAGE',
         uploadedById: actor.id, translations: { create: { locale: 'uk', alt } },
       },
       select: { id: true },

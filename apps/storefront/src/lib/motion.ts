@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Round 11 #53 is a transition *between* pages: the first page of a visit is shown at once, never risen
+// in (36 §36.5: the LCP element is never animated in; round 24 G039). Set by LocaleLayout, in the browser
+// only, as soon as the visitor has moved to another page; the rise of the page and of its cards keys off it.
+let navigated = false;
+export const markNavigated = () => { navigated = true; };
+export const hasNavigated = () => navigated;
+
 /** True for a moment after `value` grows — e.g. the cart count (round 11 #37), never on first render. */
 export function useBump(value: number, ms = 400) {
   const prev = useRef(value);

@@ -7,10 +7,47 @@
 __DOMAIN__ {
 	encode zstd gzip
 
-	# The API and the admin panel are one process; everything else is the storefront.
+	# Round 24 G013–G015: security headers on every response. `defer` applies them after the upstream
+	# answered, so they replace the API's own (helmet) values instead of doubling them.
+	# HSTS preload (G015): one month after launch, once every subdomain is on HTTPS, add `; preload` here
+	# and submit the domain at hstspreload.org.
+	header {
+		defer
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+
+	# The site's pages. CSP is built from what the storefront really loads: own scripts, styles, fonts and
+	# media; inline scripts (React Router's hydration data, JSON-LD) and inline styles; data: and blob:
+	# images (inline SVG art, the hero picture made with URL.createObjectURL); Google Analytics only after
+	# cookie consent (G025); the WayForPay payment window (script, frame, form). Nova Poshta is called by
+	# the API, never by the browser.
+	# Report-only for the first week (G014): violations go to POST /api/v1/csp-report and the API log
+	# (`journalctl -u vivcharyk-api | grep "csp violation"`). To enforce after a clean week: rename the
+	# header to Content-Security-Policy and add `upgrade-insecure-requests;` to it, then `caddy reload`.
+	@site not path /api/* /admin /admin/* /media/* /feed/*
+	header @site {
+		defer
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), usb=(), payment=(self \"https://secure.wayforpay.com\")"
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://secure.wayforpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self' data:; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; media-src 'self' blob:; frame-src https://secure.wayforpay.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://secure.wayforpay.com; frame-ancestors 'self'; report-uri /api/v1/csp-report; report-to csp"
+		Reporting-Endpoints "csp=\"/api/v1/csp-report\""
+	}
+	# The panel is on the same host: its TTN scanner needs the camera (round 20).
+	@panel path /admin /admin/*
+	header @panel {
+		defer
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), usb=(), payment=()"
+		X-Robots-Tag "noindex, nofollow"
+	}
+
+	# The API and the admin panel are one process; everything else is the storefront. /feed/* is the
+	# Merchant Center feed (round 24 G124), served by the API.
 	# lb_try_*: while a service restarts (an update), a request that cannot connect is retried for up
 	# to 15 s instead of failing, so visitors see a short wait, not an error page.
-	@api path /api/* /admin /admin/* /media/*
+	@api path /api/* /admin /admin/* /media/* /feed/*
 	handle @api {
 		reverse_proxy 127.0.0.1:3000 {
 			lb_try_duration 15s
@@ -22,6 +59,7 @@ __DOMAIN__ {
 		# Site lock before launch (D13): basic auth + noindex on the storefront only, written by
 		# vivcharyk-unlock-site (deploy/unlock-site.sh). /api, /admin and /media stay open.
 		import /etc/caddy/site-lock.caddy
+		# Pages for anonymous visitors are kept 60 s by the storefront itself (server.mjs, G041).
 		reverse_proxy 127.0.0.1:3001 {
 			lb_try_duration 15s
 			lb_try_interval 250ms
@@ -30,5 +68,6 @@ __DOMAIN__ {
 }
 
 www.__DOMAIN__ {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	redir https://__DOMAIN__{uri} permanent
 }

@@ -17,3 +17,4 @@ media/
 mail-outbox/
 # Mail originals and attachments read by the panel (round 19); on the server in MAIL_DIR
 mail-store/
+seo-snapshot.json

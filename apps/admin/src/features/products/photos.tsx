@@ -5,11 +5,10 @@ import { DotsMenu, useConfirm, useToast } from '@/components/ui';
 import type { Photo } from './api';
 
 // Round 20 #128, #271–272: camera or several from the gallery; every photo is compressed on the phone
-// (≈1600 px long side, WebP where the browser can, else JPEG) into the three widths the site serves,
-// then sent one after another in the background while the person carries on. First photo = main.
+// (≈1600 px long side, WebP where the browser can, else JPEG) and sent one after another in the
+// background while the person carries on. First photo = main.
 
 export type Crop = 'none' | 'square' | '4:5';
-const WIDTHS = [480, 960, 1600] as const;
 let webp: boolean | undefined;
 const canWebp = () => (webp ??= document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'));
 
@@ -38,17 +37,8 @@ async function prepare(src: Blob, rotate: number, crop: Crop) {
     const f = document.createElement('canvas');
     f.width = cw; f.height = ch;
     f.getContext('2d')!.drawImage(r, (r.width - cw) / 2, (r.height - ch) / 2, cw, ch, 0, 0, cw, ch);
-    const files = {} as Record<'480' | '960' | '1600', string>;
-    for (const target of WIDTHS) {
-      const k = Math.min(1, target / f.width);
-      const c = document.createElement('canvas');
-      c.width = Math.round(f.width * k); c.height = Math.round(f.height * k);
-      const ctx = c.getContext('2d')!;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(f, 0, 0, c.width, c.height);
-      files[String(target) as '480'] = await toBase64(await toBlob(c));
-    }
-    return { files, width: f.width, height: f.height };
+    // Round 24: only the 1600 px file goes up; the server makes every width the site serves from it.
+    return { files: { '1600': await toBase64(await toBlob(f)) }, width: f.width, height: f.height };
   } finally { URL.revokeObjectURL(url); }
 }
 

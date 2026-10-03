@@ -1,11 +1,13 @@
 import { contactLinks } from '@vivcharyk/schemas';
 import { useBusiness } from '@/lib/business';
+import { useLocale } from '@/lib/i18n';
 import { BRAND } from './brandIcons';
 
 // Viber, Telegram, WhatsApp on the messenger number (round 9 part 5 #18, #5), each with its logo
 // beside the name (2026-10-02). Shown dashed and inert while the number is still a placeholder.
 export function Messengers({ tone = 'page', compact = false }: { tone?: 'page' | 'inverted'; compact?: boolean }) {
   const biz = useBusiness();
+  const locale = useLocale();
   const l = contactLinks(biz.messengerPhone);
   const items = [['Viber', l?.viber], ['Telegram', l?.telegram], ['WhatsApp', l?.whatsapp]] as const;
   // Filled, raised, with hover and press states, so they read as buttons on the page and in the footer.
@@ -23,7 +25,7 @@ export function Messengers({ tone = 'page', compact = false }: { tone?: 'page' |
       {items.map(([label, href]) => href
         ? <a key={label} href={href} target={href.startsWith('https') ? '_blank' : undefined} rel="noreferrer" className={`inline-flex cursor-pointer items-center rounded-lg border ${look} ${size} font-semibold transition active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2`}>{mark(label)}{label}</a>
         // Dashed and not bold marks "not set yet"; no opacity, so the text keeps AA contrast (axe, 2026-10-01).
-        : <span key={label} className={`inline-flex items-center rounded-lg border border-dashed ${border} ${size}`} title="Номер ще не вказано">{mark(label)}{label}</span>)}
+        : <span key={label} className={`inline-flex items-center rounded-lg border border-dashed ${border} ${size}`} title={locale === 'en' ? 'Number not added yet' : 'Номер ще не вказано'}>{mark(label)}{label}</span>)}
     </div>
   );
 }

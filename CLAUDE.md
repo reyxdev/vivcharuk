@@ -32,7 +32,8 @@ the application is built (launch planned 2026-10-03).
 ## Authority chain — highest first
 
 ```
-docs/00-client-decisions-23.md   client-confirmed, round 23 (newest — smooth scroll on the site)
+docs/00-client-decisions-24.md   client-confirmed, round 24 (newest — SEO/GEO after the audit; English at launch)
+docs/00-client-decisions-23.md   round 23 (smooth scroll on the site)
 docs/00-client-decisions-22.md   round 22 (categories in the panel, product card)
 docs/00-client-decisions-21.md   round 21 (staff Telegram bot)
 docs/00-client-decisions-20.md   round 20 (admin panel interface, 300 answers)
@@ -66,6 +67,7 @@ Canonical for their domain: `09-color-palette.md` (colour), `10-typography.md` (
 
 ## Facts that are easy to get wrong
 
+- Owner: **Іван Федорович Гондурак**, in the craft since 1972; the business is called «Вівчарик» since after 1991 (history on «Про нас», round 24).
 - The business is **Вівчарик**, in **с. Яворів, Косівський район**. `fabryka-shkur.com.ua` / the
   Prom shop (BOTEY) is run by Іван's wife — **the same firm** (round 13 N1). The old site stays online but stops selling; no redirects (round 14 F8).
   Its reviews (3–5 ★) are imported labelled «Prom.ua · перенесено»; its other facts (Вербовець

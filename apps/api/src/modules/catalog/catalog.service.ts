@@ -23,6 +23,12 @@ export interface CatalogSource {
 
 const BRAND = 'Вівчарик' as const;
 const NEW_DAYS = 30;
+/**
+ * Round 24 G079: «Новинка» marks what came after the catalogue opened. The opening catalogue was
+ * imported in one go (publishedAt is the first publish, all on the same days), so nothing published
+ * before the site opened counts as new.
+ */
+const CATALOGUE_OPENED = new Date('2026-10-03T00:00:00+03:00');
 
 type Tr<T> = T & { locale: Locale };
 /** Requested locale first, `uk` as the fallback (26 §26.6). */
@@ -39,7 +45,7 @@ const mediaOut = (m: MediaRow | undefined, locale: Locale, fallbackAlt: string) 
 
 function badgesFor(p: { publishedAt: Date | null; badgeOverride: unknown; variants: Array<{ compareAtMinor: number | null; priceMinor: number }> }) {
   const set = new Set<'NEW' | 'SALE' | 'HIT'>();
-  if (p.publishedAt && Date.now() - p.publishedAt.getTime() < NEW_DAYS * 86_400_000) set.add('NEW');
+  if (p.publishedAt && p.publishedAt >= CATALOGUE_OPENED && Date.now() - p.publishedAt.getTime() < NEW_DAYS * 86_400_000) set.add('NEW');
   if (p.variants.some((v) => v.compareAtMinor !== null && v.compareAtMinor > v.priceMinor)) set.add('SALE');
   const o = (p.badgeOverride ?? {}) as { add?: string[]; remove?: string[] };
   for (const b of o.add ?? []) if (b === 'NEW' || b === 'SALE' || b === 'HIT') set.add(b);
@@ -74,8 +80,17 @@ function descendants(node: CategoryNode): string[] {
 
 export class LocalCatalogSource implements CatalogSource {
   async categoryTree(locale: Locale) {
-    const strip = (n: CategoryNode): CategoryNode => ({ id: n.id, key: n.key ?? null, slug: n.slug, name: n.name, isFeatured: !!n.isFeatured, children: n.children.map(strip) });
-    return (await categoryIndex(locale)).roots.map(strip);
+    const [{ roots }, links] = await Promise.all([categoryIndex(locale), repo.loadPublicCategoryLinks(locale)]);
+    const own = new Map<string, Set<string>>();
+    for (const l of links) (own.get(l.categoryId) ?? own.set(l.categoryId, new Set()).get(l.categoryId)!).add(l.productId);
+    // productCount: distinct products in the category and its descendants — the listing's own scope.
+    const strip = (n: CategoryNode): CategoryNode & { ids: Set<string> } => {
+      const children = n.children.map(strip);
+      const ids = new Set([...(own.get(n.id) ?? []), ...children.flatMap((c) => [...c.ids])]);
+      return { id: n.id, key: n.key ?? null, slug: n.slug, name: n.name, isFeatured: !!n.isFeatured, productCount: ids.size, children, ids };
+    };
+    const drop = ({ ids: _ids, children, ...n }: CategoryNode & { ids?: Set<string> }): CategoryNode => ({ ...n, children: children.map(drop) });
+    return roots.map(strip).map(drop);
   }
 
   async hasPartnerGoods(locale: Locale) {
@@ -212,7 +227,7 @@ export class LocalCatalogSource implements CatalogSource {
           label: q.locale === 'uk' ? 'Походження' : 'Origin',
           values: (['OWN_MANUFACTURE', 'PARTNER_MANUFACTURE'] as const)
             .filter((o) => originCounts.has(o))
-            .map((o) => ({ key: o, label: o === 'OWN_MANUFACTURE' ? 'Власне виробництво' : 'Від партнерів', count: originCounts.get(o)!, selected: q.origin === o })),
+            .map((o) => ({ key: o, label: o === 'OWN_MANUFACTURE' ? (q.locale === 'uk' ? 'Власне виробництво' : 'Made in our workshop') : (q.locale === 'uk' ? 'Від партнерів' : 'From our partners'), count: originCounts.get(o)!, selected: q.origin === o })),
         },
         ...facets,
       ],
@@ -225,7 +240,14 @@ export class LocalCatalogSource implements CatalogSource {
   /** Homepage rails: hard-filtered to own manufacture in the handler (26 §26.10.1, D3.5). */
   async featured(locale: Locale, limit: number) {
     const res = await this.listProducts({ locale, sort: 'popularity', page: 1, perPage: 48, origin: 'OWN_MANUFACTURE' }, {});
-    return res.items.filter((i) => i.origin === 'OWN_MANUFACTURE').slice(0, limit);
+    const own = res.items.filter((i) => i.origin === 'OWN_MANUFACTURE');
+    // Round 24 G084: the rail mixes categories — one from each in turn, by each product's first category.
+    const firstCat = await repo.firstCategoryOf(own.map((i) => i.id));
+    const queues = new Map<string, ProductListItem[]>();
+    for (const i of own) { const k = firstCat.get(i.id) ?? ''; queues.set(k, [...(queues.get(k) ?? []), i]); }
+    const out: ProductListItem[] = [];
+    while (out.length < limit && [...queues.values()].some((q) => q.length)) for (const q of queues.values()) if (q.length && out.length < limit) out.push(q.shift()!);
+    return out;
   }
 
   async productBySlug(slug: string, locale: Locale): Promise<ProductDetail> {
@@ -238,6 +260,9 @@ export class LocalCatalogSource implements CatalogSource {
     if (t.fellBack) fallback.push('name', 'description');
     const name = t.row?.name ?? '';
 
+    // Round 24 G080: «Залишилось мало» only for stock somebody has counted — a variant whose stock was
+    // ever set in the panel, the Excel import or the till (the first catalogue import wrote 1 everywhere).
+    const counted = await repo.countedVariants(p.variants.map((v) => v.id));
     const variants = p.variants.map((v) => {
       const options: Record<string, { key: string; label: string; hex: string | null }> = {};
       for (const o of v.options) {
@@ -246,7 +271,7 @@ export class LocalCatalogSource implements CatalogSource {
       }
       const madeToOrderDays = v.madeToOrderDays ?? null;
       const stockHint =
-        v.stockQty > 0 ? (v.stockQty <= v.lowStockAt ? 'FEW_LEFT' : 'IN_STOCK') : madeToOrderDays ? 'MADE_TO_ORDER' : 'OUT_OF_STOCK';
+        v.stockQty > 0 ? (v.stockQty <= v.lowStockAt && !madeToOrderDays && counted.has(v.id) ? 'FEW_LEFT' : 'IN_STOCK') : madeToOrderDays ? 'MADE_TO_ORDER' : 'OUT_OF_STOCK';
       return { id: v.id, sku: v.sku, priceMinor: v.priceMinor, compareAtMinor: v.compareAtMinor, inStock: v.stockQty > 0, stockHint, madeToOrderDays, options } as const;
     });
 

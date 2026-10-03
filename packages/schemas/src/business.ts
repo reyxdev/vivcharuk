@@ -1,4 +1,5 @@
-import { z } from 'zod';
+// Round 24 (G039): no zod here, so the site's pages do not ship it; the schemas are in businessSchemas.ts.
+import type { DayHours, SiteContact, TickerItem } from './businessSchemas';
 
 // Business facts shown on the site. Values marked PLACEHOLDER are unresolved client facts
 // ({{TOKEN}} in the blueprint). They are filled in at the end of the build — never invent them.
@@ -30,8 +31,24 @@ export const BUSINESS = {
   googleReviewUrl: '[Google-відгук — заглушка]', // {{GOOGLE_REVIEW_URL}}
   googleRating: '[рейтинг]', // {{GOOGLE_RATING}}, from the profile once it exists
   googleReviewCount: '[кількість]', // {{GOOGLE_REVIEW_COUNT}}
-  // «Прокласти маршрут» until the Google profile link exists (contacts page, homepage S9).
-  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Яворів, Косівський район, Івано-Франківська область')}`,
+  // «Прокласти маршрут» until the Google profile link exists (contacts page, homepage S9): the exact
+  // address, not the village (round 24 G116).
+  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('вул. Петруші, 1, Яворів, Косівський район, Івано-Франківська область, 78644')}`,
+} as const;
+
+/**
+ * Round 24 G093: English is served at launch. The brand in Latin script (KMU 2010 transliteration, the
+ * Wikidata label in docs/seo-owner-guides-round24.md) and the facts an English page writes differently.
+ * The village is always named with its district and region: Google confuses it with Yavoriv, Lviv region.
+ */
+export const BRAND_LATIN = 'Vivcharyk';
+export const BUSINESS_EN = {
+  brand: BRAND_LATIN,
+  tagline: 'For over 30 years we have been making natural wool goods in the Carpathians.',
+  locality: 'Yavoriv village, Kosiv district, Ivano-Frankivsk region',
+  factoryAddress: '1 Petrushi St, Yavoriv village, Kosiv district, Ivano-Frankivsk region, 78644, Ukraine',
+  street: '1 Petrushi St',
+  legalEntityName: 'Sole proprietor (FOP) Liubov Yuriivna Hondurak',
 } as const;
 
 export const isPlaceholder = (v: string) => v.startsWith('[');
@@ -55,30 +72,13 @@ export const SITE_TICKER_KEY = 'site.ticker';
 /** Monday first, as ISO weeks and schema.org list them. */
 export const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 export const WEEK_DAYS_UK = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'] as const;
-
-const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Час у форматі 11:00');
-export const dayHours = z.object({ open: z.boolean(), opens: hhmm, closes: hhmm })
-  .refine((d) => !d.open || d.opens < d.closes, { path: ['closes'], message: 'Кінець роботи має бути пізніше за початок' });
-export type DayHours = z.infer<typeof dayHours>;
+const WEEK_DAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 /** «+380679973450» → «+38 067 997 34 50», the way the site writes the number. */
 export const formatPhoneUa = (e164: string) => {
   const d = e164.replace(/\D/g, '');
   return `+38 ${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10, 12)}`;
 };
-
-export const siteContactSchema = z.object({
-  hoursText: z.string().trim().min(10, 'Напишіть години роботи реченням, як на сайті').max(200, 'Не довше 200 знаків')
-    .refine((v) => !/[\r\n<>]/.test(v), 'Одним рядком, без знаків < і >'),
-  week: z.array(dayHours).length(7).refine((w) => w.some((d) => d.open), 'Хоча б один робочий день'),
-  phone: z.string().trim()
-    .transform((v) => v.replace(/[^\d+]/g, ''))
-    .transform((v) => (v.startsWith('+') ? v : v.startsWith('380') ? `+${v}` : v.startsWith('0') ? `+38${v}` : v))
-    .refine((v) => /^\+380\d{9}$/.test(v), 'Український номер, наприклад +38 067 123 45 67')
-    .transform(formatPhoneUa),
-  publicEmail: z.string().trim().toLowerCase().max(120).email('Адреса пошти, наприклад info@vivcharuk.com'),
-});
-export type SiteContact = z.output<typeof siteContactSchema>;
 
 const open = (opens: string, closes: string): DayHours => ({ open: true, opens, closes });
 const closed: DayHours = { open: false, opens: '11:00', closes: '19:00' };
@@ -89,14 +89,7 @@ export const DEFAULT_SITE_CONTACT: SiteContact = {
   publicEmail: BUSINESS.publicEmail,
 };
 
-/** A stored value that no longer validates falls back to the default rather than breaking the site. */
-export const parseSiteContact = (raw: unknown): SiteContact => {
-  const r = siteContactSchema.safeParse(raw);
-  return r.success ? r.data : DEFAULT_SITE_CONTACT;
-};
-
-/** «пн–пт, 11:00–19:00»: consecutive days with the same hours run together. */
-export function hoursShort(week: DayHours[]) {
+function openRuns(week: DayHours[]) {
   const runs: Array<{ from: number; to: number; d: DayHours }> = [];
   week.forEach((d, i) => {
     const last = runs.at(-1);
@@ -104,7 +97,20 @@ export function hoursShort(week: DayHours[]) {
     if (last && last.to === i - 1 && last.d.opens === d.opens && last.d.closes === d.closes) last.to = i;
     else runs.push({ from: i, to: i, d });
   });
-  return runs.map((r) => `${WEEK_DAYS_UK[r.from]}${r.to > r.from ? `–${WEEK_DAYS_UK[r.to]}` : ''}, ${r.d.opens}–${r.d.closes}`).join('; ');
+  return runs;
+}
+
+/** «пн–пт, 11:00–19:00» (English: «Mon–Fri, 11:00–19:00»): consecutive days with the same hours run together. */
+export function hoursShort(week: DayHours[], days: readonly string[] = WEEK_DAYS_UK) {
+  return openRuns(week).map((r) => `${days[r.from]}${r.to > r.from ? `–${days[r.to]}` : ''}, ${r.d.opens}–${r.d.closes}`).join('; ');
+}
+
+/** The English sentence for the hours (the panel's own sentence is Ukrainian): «We are open Monday to Friday, 11:00–19:00; Saturday and Sunday are days off.» */
+export function hoursTextEn(week: DayHours[]) {
+  const runs = openRuns(week).map((r) => `${WEEK_DAYS[r.from]}${r.to > r.from ? ` ${r.to - r.from > 1 ? 'to' : 'and'} ${WEEK_DAYS[r.to]}` : ''}, ${r.d.opens}–${r.d.closes}`);
+  const off = WEEK_DAYS.filter((_, i) => !week[i]?.open);
+  const offText = off.length ? `; ${off.length > 1 ? `${off.slice(0, -1).join(', ')} and ${off.at(-1)} are days off` : `${off[0]} is a day off`}` : '';
+  return `We are open ${runs.join('; ')}${offText}.`;
 }
 
 /** schema.org openingHoursSpecification: one entry per distinct pair of hours. */
@@ -117,16 +123,21 @@ export function openingHoursSpecification(week: DayHours[]) {
   });
 }
 
-/** BUSINESS with the owner's current hours, phone and e-mail in place of the code defaults. */
-export function liveBusiness(c: SiteContact) {
+/**
+ * BUSINESS with the owner's current hours, phone and e-mail in place of the code defaults. An English
+ * page (G093) gets the English brand, address and an hours sentence built from the same working days.
+ */
+export function liveBusiness(c: SiteContact, locale: 'uk' | 'en' | 'pl' | 'de' = 'uk') {
+  const en = locale !== 'uk';
   return {
     ...BUSINESS,
-    hours: hoursShort(c.week),
-    hoursText: c.hoursText,
+    ...(en ? BUSINESS_EN : {}) as Partial<Record<keyof typeof BUSINESS_EN, string>>,
+    hours: en ? hoursShort(c.week, WEEK_DAYS_EN) : hoursShort(c.week),
+    hoursText: en ? hoursTextEn(c.week) : c.hoursText,
     week: c.week,
     phones: [c.phone] as const,
     messengerPhone: c.phone,
-    contactPeople: [{ name: BUSINESS.contactPeople[0].name, phone: c.phone }] as const,
+    contactPeople: [{ name: en ? 'Ivan' : BUSINESS.contactPeople[0].name as string, phone: c.phone }] as const,
     publicEmail: c.publicEmail,
   };
 }
@@ -134,22 +145,18 @@ export type LiveBusiness = ReturnType<typeof liveBusiness>;
 
 // ---------- The top ticker (developer decision D29, round 20 #229) ----------
 
-export const tickerItem = z.object({
-  text: z.string().trim().min(3, 'Щонайменше 3 знаки').max(120, 'Не довше 120 знаків'),
-  linkUrl: z.string().trim().max(300).regex(/^\/[a-z]{2}\/[^\s]*$|^$/, 'Адреса сторінки нашого сайту, наприклад /uk/pro-nas')
-    .transform((v) => v || null).nullable().default(null),
-  isActive: z.boolean().default(true),
-  // «Огляд перед оплатою» is true only while card-type payments are live (round 14): such a phrase
-  // shows only then, whatever its switch says.
-  cardOnly: z.boolean().default(false),
-});
-export const tickerSchema = z.array(tickerItem).max(12);
-export type TickerItem = z.output<typeof tickerItem>;
-
 /** Exactly the phrases the strip carried before they became editable (round 11). */
 export const DEFAULT_TICKER: TickerItem[] = [
   { text: 'Відправляємо по Україні за 2–4 дні', linkUrl: '/uk/dostavka-i-oplata', isActive: true, cardOnly: false },
   { text: 'Огляд перед оплатою на пошті', linkUrl: '/uk/dostavka-i-oplata', isActive: true, cardOnly: true },
   { text: BUSINESS.tagline.replace(/\.$/, ''), linkUrl: null, isActive: true, cardOnly: false },
   { text: 'Зроблено в Яворові', linkUrl: '/uk/vyrobnytstvo', isActive: true, cardOnly: false },
+];
+
+/** G093: the strip on English pages. The owner's phrases are Ukrainian, so English pages carry these. */
+export const DEFAULT_TICKER_EN: TickerItem[] = [
+  { text: 'We ship across Ukraine in 2–4 days', linkUrl: '/en/delivery-and-payment', isActive: true, cardOnly: false },
+  { text: 'Inspect your parcel before you pay at the post office', linkUrl: '/en/delivery-and-payment', isActive: true, cardOnly: true },
+  { text: BUSINESS_EN.tagline.replace(/\.$/, ''), linkUrl: null, isActive: true, cardOnly: false },
+  { text: 'Made in Yavoriv, Kosiv district', linkUrl: '/en/production', isActive: true, cardOnly: false },
 ];

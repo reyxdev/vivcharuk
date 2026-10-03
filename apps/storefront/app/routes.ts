@@ -28,6 +28,8 @@ const productRoutes = [
   ...each(SEGMENTS.collections, '/:slug', 'routes/collection.tsx', 'collection'),
   ...each(SEGMENTS.journal, '', 'routes/journal.tsx', 'journal'),
   ...each(SEGMENTS.journal, '/:slug', 'routes/article.tsx', 'article'),
+  // Round 24 G095: one glossary page, the same segment in every locale.
+  route('slovnyk', 'routes/glossary.tsx', { id: 'glossary' }),
   // One route file for the information pages; the key travels in the route id (info_<key>-<seg>).
   ...(['delivery', 'returns', 'faq', 'care', 'terms', 'privacy', 'cookies'] as const).flatMap((k) => each(SEGMENTS[k], '', 'routes/info.tsx', `info_${k}`)),
 ];
@@ -36,6 +38,13 @@ const productRoutes = [
 export default [
   index('routes/root-redirect.tsx'),
   route('robots.txt', 'routes/robots.ts'),
+  // Root files (round 24 G011–G012): before `:locale`, which would otherwise redirect them into /uk/.
+  // The IndexNow key file /<INDEXNOW_KEY>.txt is answered by server.mjs.
+  route('llms.txt', 'routes/root-files.ts', { id: 'root-llms' }),
+  route('humans.txt', 'routes/root-files.ts', { id: 'root-humans' }),
+  route('manifest.webmanifest', 'routes/root-files.ts', { id: 'root-manifest' }),
+  route('.well-known/security.txt', 'routes/root-files.ts', { id: 'root-security' }),
+  route('.well-known/*', 'routes/not-found.tsx', { id: 'well-known-404' }),
   route('sitemap.xml', 'routes/sitemap.ts', { id: 'sitemap-index' }),
   ...(['pages', 'categories', 'products', 'posts'] as const).flatMap((t) => (['uk', 'en', 'pl', 'de'] as const).map((l) => route(`sitemap-${t}-${l}.xml`, 'routes/sitemap.ts', { id: `sitemap-${t}-${l}` }))),
   route(':locale', 'routes/locale-layout.tsx', [

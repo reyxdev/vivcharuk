@@ -6,6 +6,7 @@ import type { Route } from './+types/reviews';
 import { apiGet } from '@/lib/api.server';
 import { path } from '@/lib/segments';
 import { mediaUrl } from '@/lib/media';
+import { localeOf, originOf, pageMeta, titled } from '@/lib/seo';
 
 interface ReviewItem {
   id: string; author: string; rating: number; title: string | null; body: string; date: string; source: 'SITE' | 'PROM';
@@ -35,48 +36,77 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   ]);
   return {
     locale, source, pageN: page, summary: data.summary, items: data.items, info: data.page, about,
-    // The review-request link is a personal entry point, not a page of its own for search engines.
-    ...(slug ? { seo: { robots: 'noindex,follow' } } : {}),
+    // The review-request link is a personal entry point, not a page of its own for search engines;
+    // the page itself is indexed once it has reviews (G100).
+    ...(slug || data.page.total === 0 ? { seo: { robots: 'noindex,follow' } } : {}),
   };
 }
 
-export function meta() {
-  const title = `Відгуки — ${BUSINESS.brand}`;
-  return [{ title }, { name: 'description', content: 'Відгуки покупців Вівчарика: на сайті та перенесені з нашого магазину на Prom.ua.' }, { property: 'og:title', content: title }];
+export function meta({ matches }: Route.MetaArgs) {
+  const locale = localeOf(matches);
+  if (locale === 'en') return pageMeta({ title: titled('Customer reviews', locale), description: 'What Vivcharyk customers say about our lizhnyks and wool goods: reviews left on this site and imported from our shop on Prom.ua.', origin: originOf(matches), locale });
+  return pageMeta({ title: titled('Відгуки покупців'), description: 'Відгуки покупців Вівчарика про ліжники та вовняні вироби: на сайті та перенесені з нашого магазину на Prom.ua.', origin: originOf(matches) });
 }
 
-function Stars({ n, size = 'text-body' }: { n: number; size?: string }) {
-  return <span className={`${size} tracking-wider text-accent`} role="img" aria-label={`${n} з 5`}>{'★'.repeat(n)}<span className="text-border-control">{'★'.repeat(5 - n)}</span></span>;
+// Round 24 G093: the interface in English; the reviews themselves stay as their authors wrote them.
+const COPY = {
+  uk: {
+    of5: (n: number) => `${n} з 5`, prom: 'Prom.ua · перенесено', verified: 'Підтверджена покупка', aboutShop: 'Відгук про магазин', reply: 'Відповідь Вівчарика',
+    pickRating: 'Оберіть оцінку.', gone: 'Цей товар уже не продається на сайті — напишіть відгук про магазин.', tooMany: 'Забагато спроб. Спробуйте пізніше.',
+    check: 'Перевірте поля: ім’я, email і текст щонайменше з 10 символів.', thanks: 'Дякуємо! Відгук з’явиться на сайті після перевірки.', write: 'Залишити відгук',
+    about: 'Відгук про:', aboutWhole: 'Написати про магазин загалом', rating: 'Оцінка', name: 'Ім’я', email: 'Email (не публікується)', body: 'Відгук',
+    wait: 'Зачекайте…', send: 'Надіслати', note: 'Усі відгуки перевіряємо перед публікацією. Показуємо ім’я та першу літеру прізвища.',
+    h1: 'Відгуки', siteRating: 'Оцінка на сайті', onSite: (n: number) => `${n} на сайті`, google: 'Ми в Google', rateGoogle: 'Оцінити в Google', readGoogle: 'Читати в Google',
+    filter: 'Фільтр відгуків', all: 'Усі', site: 'На сайті', fromProm: 'З Prom.ua', none: 'Відгуків тут поки немає. Будьте першими.', more: 'Показати ще',
+    promNote: 'Відгуки з позначкою «Prom.ua · перенесено» — з нашого магазину на Prom.ua, перенесені з оцінками від 3 до 5 зірок.',
+  },
+  en: {
+    of5: (n: number) => `${n} out of 5`, prom: 'Prom.ua · imported', verified: 'Verified purchase', aboutShop: 'Review of the shop', reply: 'Vivcharyk’s reply',
+    pickRating: 'Choose a rating.', gone: 'This product is no longer sold on the site — please write a review of the shop instead.', tooMany: 'Too many attempts. Please try again later.',
+    check: 'Check the fields: name, email and a review of at least 10 characters.', thanks: 'Thank you! Your review will appear on the site once we have checked it.', write: 'Leave a review',
+    about: 'Review of:', aboutWhole: 'Write about the shop in general', rating: 'Rating', name: 'Name', email: 'Email (not published)', body: 'Review',
+    wait: 'Please wait…', send: 'Send', note: 'We check every review before publishing it. We show your first name and the first letter of your surname.',
+    h1: 'Reviews', siteRating: 'Rating on this site', onSite: (n: number) => `${n} on this site`, google: 'We are on Google', rateGoogle: 'Rate us on Google', readGoogle: 'Read on Google',
+    filter: 'Filter reviews', all: 'All', site: 'On this site', fromProm: 'From Prom.ua', none: 'There are no reviews here yet. Be the first.', more: 'Show more',
+    promNote: 'Reviews marked «Prom.ua · imported» come from our shop on Prom.ua and were imported with ratings of 3 to 5 stars.',
+  },
+};
+const copyOf = (l: Locale) => COPY[l === 'en' ? 'en' : 'uk'];
+
+function Stars({ n, size = 'text-body', locale = 'uk' }: { n: number; size?: string; locale?: Locale }) {
+  return <span className={`${size} tracking-wider text-accent`} role="img" aria-label={copyOf(locale).of5(n)}>{'★'.repeat(n)}<span className="text-border-control">{'★'.repeat(5 - n)}</span></span>;
 }
 
-const date = (iso: string) => new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+const date = (iso: string, l: Locale) => new Date(iso).toLocaleDateString(l === 'en' ? 'en-GB' : 'uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
 
 function Card({ r, locale }: { r: ReviewItem; locale: Locale }) {
+  const c = copyOf(locale);
   return (
     <article className="mb-4 flex break-inside-avoid flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <Stars n={r.rating} />
+        <Stars n={r.rating} locale={locale} />
         <span className="text-body font-semibold text-text-primary">{r.author}</span>
-        <span className="text-caption text-text-muted">{date(r.date)}</span>
+        <span className="text-caption text-text-muted">{date(r.date, locale)}</span>
       </div>
       {r.source === 'PROM'
-        ? <span className="self-start rounded-full border border-border-control px-2 py-0.5 text-caption text-text-muted">Prom.ua · перенесено</span>
-        : r.isVerifiedPurchase && <span className="self-start rounded-full bg-bg-alt px-2 py-0.5 text-caption text-success">Підтверджена покупка</span>}
+        ? <span className="self-start rounded-full border border-border-control px-2 py-0.5 text-caption text-text-muted">{c.prom}</span>
+        : r.isVerifiedPurchase && <span className="self-start rounded-full bg-bg-alt px-2 py-0.5 text-caption text-success">{c.verified}</span>}
       {r.title && <h3 className="text-h4 text-text-primary">{r.title}</h3>}
       <p className="whitespace-pre-line text-body text-text-body">{r.body}</p>
       {r.product
         ? <Link to={path.product(locale, r.product.slug)} className="self-start text-body-sm text-text-primary underline">{r.product.name}</Link>
-        : <span className="text-body-sm text-text-muted">Відгук про магазин</span>}
+        : <span className="text-body-sm text-text-muted">{c.aboutShop}</span>}
       {r.reply && (
         <div className="rounded-md bg-bg-alt p-3 text-body-sm text-text-body">
-          <span className="block font-semibold text-text-primary">Відповідь Вівчарика</span>{r.reply}
+          <span className="block font-semibold text-text-primary">{c.reply}</span>{r.reply}
         </div>
       )}
     </article>
   );
 }
 
-function ReviewForm({ about }: { about: AboutProduct | null }) {
+function ReviewForm({ about, locale }: { about: AboutProduct | null; locale: Locale }) {
+  const c = copyOf(locale);
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [rating, setRating] = useState(0);
   const [err, setErr] = useState('');
@@ -92,7 +122,7 @@ function ReviewForm({ about }: { about: AboutProduct | null }) {
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    if (!rating) { setErr('Оберіть оцінку.'); return; }
+    if (!rating) { setErr(c.pickRating); return; }
     setState('sending'); setErr('');
     const res = await fetch('/api/v1/reviews', {
       method: 'POST', headers: { 'content-type': 'application/json' },
@@ -100,39 +130,39 @@ function ReviewForm({ about }: { about: AboutProduct | null }) {
     }).catch(() => null);
     if (res && res.status === 202) setState('sent');
     else if (res?.status === 422 && about && ((await res.json().catch(() => null)) as { error?: { fieldErrors?: Array<{ path: string }> } } | null)?.error?.fieldErrors?.some((x) => x.path === 'productSlug')) {
-      setState('error'); setErr('Цей товар уже не продається на сайті — напишіть відгук про магазин.');
-    } else { setState('error'); setErr(res?.status === 429 ? 'Забагато спроб. Спробуйте пізніше.' : 'Перевірте поля: ім’я, email і текст щонайменше з 10 символів.'); }
+      setState('error'); setErr(c.gone);
+    } else { setState('error'); setErr(res?.status === 429 ? c.tooMany : c.check); }
   };
 
-  if (state === 'sent') return <p id="napysaty" role="status" className="scroll-mt-24 rounded-xl border border-success bg-bg-surface p-5 text-body text-text-primary">Дякуємо! Відгук з’явиться на сайті після перевірки.</p>;
+  if (state === 'sent') return <p id="napysaty" role="status" className="scroll-mt-24 rounded-xl border border-success bg-bg-surface p-5 text-body text-text-primary">{c.thanks}</p>;
   return (
     <form id="napysaty" onSubmit={submit} className="flex scroll-mt-24 flex-col gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5" noValidate>
-      <h2 ref={heading} tabIndex={-1} className="text-h3 text-text-primary outline-none">Залишити відгук</h2>
+      <h2 ref={heading} tabIndex={-1} className="text-h3 text-text-primary outline-none">{c.write}</h2>
       {about && (
         <div className="flex items-center gap-3 rounded-lg bg-bg-alt p-3">
           {about.photo
-            ? <img src={mediaUrl(about.photo.publicId, 480)} alt="" width={56} height={56} className="size-14 shrink-0 rounded-md object-cover" />
+            ? <img src={mediaUrl(about.photo.publicId, 160)} alt="" width={56} height={56} className="size-14 shrink-0 rounded-md object-cover" />
             : <span className="size-14 shrink-0 rounded-md bg-bg-surface" aria-hidden="true" />}
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-body-sm text-text-muted">Відгук про:</span>
+            <span className="text-body-sm text-text-muted">{c.about}</span>
             <span className="text-body font-semibold text-text-primary">{about.name}</span>
-            <Link to="?" preventScrollReset className="self-start text-caption text-text-muted underline">Написати про магазин загалом</Link>
+            <Link to="?" preventScrollReset className="self-start text-caption text-text-muted underline">{c.aboutWhole}</Link>
           </span>
         </div>
       )}
       <fieldset className="flex items-center gap-1">
-        <legend className="mb-1 text-body-sm text-text-muted">Оцінка</legend>
+        <legend className="mb-1 text-body-sm text-text-muted">{c.rating}</legend>
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" aria-label={`${n} з 5`} aria-pressed={rating === n} onClick={() => setRating(n)} className={`text-h3 ${n <= rating ? 'text-accent' : 'text-border-control'}`}>★</button>
+          <button key={n} type="button" aria-label={c.of5(n)} aria-pressed={rating === n} onClick={() => setRating(n)} className={`text-h3 ${n <= rating ? 'text-accent' : 'text-border-control'}`}>★</button>
         ))}
       </fieldset>
-      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">Ім’я<input name="name" required minLength={2} maxLength={60} autoComplete="given-name" className={input} /></label>
-      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">Email (не публікується)<input name="email" type="email" required autoComplete="email" className={input} /></label>
-      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">Відгук<textarea name="body" required minLength={10} maxLength={3000} rows={5} className={input} /></label>
+      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">{c.name}<input name="name" required minLength={2} maxLength={60} autoComplete="given-name" className={input} /></label>
+      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">{c.email}<input name="email" type="email" required autoComplete="email" className={input} /></label>
+      <label className="flex flex-col gap-1.5 text-body-sm text-text-muted">{c.body}<textarea name="body" required minLength={10} maxLength={3000} rows={5} className={input} /></label>
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
       {err && <p role="alert" className="text-body-sm text-danger">{err}</p>}
-      <button type="submit" disabled={state === 'sending'} aria-busy={state === 'sending'} className={`self-start rounded-lg bg-bg-inverted px-6 py-3 text-body font-semibold text-text-on-inverted disabled:opacity-50 ${state === 'sending' ? 'vk-busy disabled:opacity-100' : ''}`}>{state === 'sending' ? 'Зачекайте…' : 'Надіслати'}</button>
-      <p className="text-caption text-text-muted">Усі відгуки перевіряємо перед публікацією. Показуємо ім’я та першу літеру прізвища.</p>
+      <button type="submit" disabled={state === 'sending'} aria-busy={state === 'sending'} className={`self-start rounded-lg bg-bg-inverted px-6 py-3 text-body font-semibold text-text-on-inverted disabled:opacity-50 ${state === 'sending' ? 'vk-busy disabled:opacity-100' : ''}`}>{state === 'sending' ? c.wait : c.send}</button>
+      <p className="text-caption text-text-muted">{c.note}</p>
     </form>
   );
 }
@@ -144,17 +174,18 @@ export default function Reviews() {
   const google = !isPlaceholder(BUSINESS.googleProfileUrl);
   const filter = (s: string) => { const p = new URLSearchParams(params); if (s === 'all') p.delete('source'); else p.set('source', s); p.delete('page'); return `?${p}`; };
   const more = () => { const p = new URLSearchParams(params); p.set('page', String(page + 1)); return `?${p}`; };
+  const c = copyOf(locale);
 
   return (
     <div className="mx-auto flex max-w-(--container-wide) flex-col gap-8 px-4 py-(--section-y-sm) lg:px-12">
-      <h1 className="text-h1 text-text-primary">Відгуки</h1>
+      <h1 className="text-h1 text-text-primary">{c.h1}</h1>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <section aria-label="Оцінка на сайті" className="flex flex-wrap items-center gap-6 rounded-xl border border-border-hairline bg-bg-surface p-5">
+      <div className={`grid gap-4 ${google ? 'md:grid-cols-2' : ''}`}>
+        <section aria-label={c.siteRating} className="flex flex-wrap items-center gap-6 rounded-xl border border-border-hairline bg-bg-surface p-5">
           <div className="flex flex-col items-center gap-1">
-            <span className="text-display-md text-text-primary">{summary.average?.toLocaleString('uk-UA') ?? '—'}</span>
-            {summary.average && <Stars n={Math.round(summary.average)} />}
-            <span className="text-caption text-text-muted">{summary.count} на сайті</span>
+            <span className="text-display-md text-text-primary">{summary.average?.toLocaleString(locale === 'en' ? 'en-GB' : 'uk-UA') ?? '—'}</span>
+            {summary.average && <Stars n={Math.round(summary.average)} locale={locale} />}
+            <span className="text-caption text-text-muted">{c.onSite(summary.count)}</span>
           </div>
           <ul className="flex min-w-48 flex-1 flex-col gap-1">
             {summary.distribution.map((d) => (
@@ -166,21 +197,20 @@ export default function Reviews() {
             ))}
           </ul>
         </section>
-        <section aria-label="Ми в Google" className="flex flex-col justify-center gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5">
-          <h2 className="text-h4 text-text-primary">Ми в Google</h2>
-          <div className="flex flex-wrap gap-2">
-            {google ? (
-              <>
-                <a href={BUSINESS.googleReviewUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-bg-inverted px-4 py-2.5 text-body-sm font-semibold text-text-on-inverted">Оцінити в Google</a>
-                <a href={BUSINESS.googleProfileUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-border-control px-4 py-2.5 text-body-sm font-semibold text-text-primary">Читати в Google</a>
-              </>
-            ) : <span className="text-body-sm text-text-muted">{BUSINESS.googleProfileUrl}</span>}
-          </div>
-        </section>
+        {/* G075: the Google block appears once the profile exists. */}
+        {google && (
+          <section aria-label={c.google} className="flex flex-col justify-center gap-3 rounded-xl border border-border-hairline bg-bg-surface p-5">
+            <h2 className="text-h4 text-text-primary">{c.google}</h2>
+            <div className="flex flex-wrap gap-2">
+              {!isPlaceholder(BUSINESS.googleReviewUrl) && <a href={BUSINESS.googleReviewUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-bg-inverted px-4 py-2.5 text-body-sm font-semibold text-text-on-inverted">{c.rateGoogle}</a>}
+              <a href={BUSINESS.googleProfileUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-border-control px-4 py-2.5 text-body-sm font-semibold text-text-primary">{c.readGoogle}</a>
+            </div>
+          </section>
+        )}
       </div>
 
-      <nav aria-label="Фільтр відгуків" className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
-        {([['all', 'Усі'], ['site', 'На сайті'], ['prom', 'З Prom.ua']] as const).filter(([k]) => k !== 'prom' || summary.promCount > 0).map(([k, label]) => (
+      <nav aria-label={c.filter} className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+        {([['all', c.all], ['site', c.site], ['prom', c.fromProm]] as const).filter(([k]) => k !== 'prom' || summary.promCount > 0).map(([k, label]) => (
           <Link key={k} to={filter(k)} preventScrollReset aria-current={source === k ? 'true' : undefined}
             className={`shrink-0 rounded-full border px-4 py-1.5 text-body-sm ${source === k ? 'border-accent bg-bg-raised font-semibold text-text-primary' : 'border-border-control text-text-body'}`}>{label}</Link>
         ))}
@@ -188,19 +218,19 @@ export default function Reviews() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div>
-          {items.length === 0 && <p className="text-body text-text-muted">Відгуків тут поки немає. Будьте першими.</p>}
+          {items.length === 0 && <p className="text-body text-text-muted">{c.none}</p>}
           <div className="columns-1 gap-4 md:columns-2">
             {items.map((r) => <Card key={r.id} r={r} locale={locale} />)}
           </div>
-          {info.hasMore && page < 5 && <Link to={more()} preventScrollReset className="mt-2 inline-block rounded-lg border border-border-control px-6 py-3 text-body font-semibold text-text-primary">Показати ще</Link>}
+          {info.hasMore && page < 5 && <Link to={more()} preventScrollReset className="mt-2 inline-block rounded-lg border border-border-control px-6 py-3 text-body font-semibold text-text-primary">{c.more}</Link>}
         </div>
         <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-          <ReviewForm key={about?.slug ?? ''} about={about} />
+          <ReviewForm key={about?.slug ?? ''} about={about} locale={locale} />
         </aside>
       </div>
 
       {/* Round 13 N2: the filtered import is disclosed, which keeps it lawful and credible. */}
-      {summary.promCount > 0 && <p className="text-body-sm text-text-muted">Відгуки з позначкою «Prom.ua · перенесено» — з нашого магазину на Prom.ua, перенесені з оцінками від 3 до 5 зірок.</p>}
+      {summary.promCount > 0 && <p className="text-body-sm text-text-muted">{c.promNote}</p>}
     </div>
   );
 }

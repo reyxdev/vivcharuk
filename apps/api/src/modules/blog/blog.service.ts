@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { AppError } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
 import { audit } from '../audit/audit.service';
+import { indexNowPost } from '../seo/indexnow';
 
 type Actor = { id: string; email: string };
 
@@ -147,6 +148,7 @@ export async function publishPost(id: string, when: Date | null, actor: Actor) {
     await tx.post.update({ where: { id }, data: future ? { status: 'SCHEDULED', scheduledFor: when } : { status: 'PUBLISHED', publishedAt: p.publishedAt ? undefined : new Date(), scheduledFor: null } });
     await audit({ actorId: actor.id, actorEmail: actor.email, action: future ? 'post.scheduled' : pending ? 'post.changes_published' : 'post.published', resourceType: 'Post', resourceId: id, resourceLabel: p.title, after: future ? { scheduledFor: when!.toISOString() } : undefined }, tx);
   });
+  void indexNowPost(id); // round 24 G022 (a scheduled article is pinged again when it goes live)
   return getPost(id);
 }
 
@@ -164,6 +166,6 @@ export async function setPostStatus(id: string, status: 'DRAFT' | 'ARCHIVED', ac
 /** Job `posts.publishScheduled` (26 §26.17, every 5 min). */
 export async function publishDue() {
   const due = await prisma.post.findMany({ where: { status: 'SCHEDULED', scheduledFor: { lte: new Date() }, deletedAt: null }, select: { id: true, publishedAt: true } });
-  for (const p of due) await prisma.post.update({ where: { id: p.id }, data: { status: 'PUBLISHED', publishedAt: p.publishedAt ?? new Date(), scheduledFor: null } });
+  for (const p of due) { await prisma.post.update({ where: { id: p.id }, data: { status: 'PUBLISHED', publishedAt: p.publishedAt ?? new Date(), scheduledFor: null } }); void indexNowPost(p.id); }
   return due.length;
 }

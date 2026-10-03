@@ -104,3 +104,5 @@ export type OrderView = z.infer<typeof orderView>;
 
 /** Round 19 D2: the exact consent text, stored with every subscriber. */
 export const NEWSLETTER_CONSENT_TEXT = 'Хочу отримувати листи про акції та новинки Вівчарика';
+/** G093: the same checkbox on the English site; the text the buyer saw is what the consent record keeps. */
+export const NEWSLETTER_CONSENT_TEXT_EN = 'I would like to receive e-mails about Vivcharyk offers and new pieces';

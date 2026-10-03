@@ -55,8 +55,10 @@ const categories = new Map((await db.categoryTranslation.findMany({ where: { loc
 
 let created = 0, skipped = 0;
 for (const p of products) {
-  const media = p.photos.map((ph) => ({ ...photo(ph.file, p.sku), alt: ph.alt }));
+  // An imported product is skipped before its photos are looked at: scripts/regenerate-photos.ts --prune
+  // removes the converted files listed in the lock once the photos are remade (round 24 G033).
   if (await db.product.findUnique({ where: { sku: p.sku }, select: { id: true } })) { skipped++; continue; }
+  const media = p.photos.map((ph) => ({ ...photo(ph.file, p.sku), alt: ph.alt }));
   const categoryId = categories.get(p.category);
   if (!categoryId) throw new Error(`${p.sku}: category ${p.category} not found`);
   const price = p.priceUah * 100;

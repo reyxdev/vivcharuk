@@ -2,8 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { BUSINESS } from '@vivcharyk/schemas';
+import { useT } from '@/lib/i18n';
+import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
-import { heroServerMarkup, heroUrl } from './heroMarkup';
+import { heroLayers } from './heroMarkup';
+import { heroPath } from './heroPath';
+import type { Flock } from './flockEngine';
 import { Needle } from './Needle';
 import { heroSound } from './heroSound';
 import { scrollToY } from '@/lib/smoothScroll';
@@ -43,29 +47,45 @@ const WAVES = (() => {
 // one clock, so they never drift apart; afterwards the needle rests at the end of the thread.
 /**
  * Round 23 perf: once the flock has taken its sheep and smoke out of the landscape, the landscape never
- * changes again. Its ~3,800 SVG nodes were still walked by the browser on every frame the flock moved;
- * shown as one picture (the same SVG, serialized) it costs a single image draw. The inline SVG stays in
- * place, hidden, because the meadow path and the flock measure it.
+ * changes again; shown as one picture (the same SVG, serialized) it costs a single image draw. Round 24:
+ * only the two live layers (hut, front) are inline, so only they are frozen. The inline SVG stays in
+ * place, hidden, because the meadow path is measured on it and its <defs> fill the flock's shadows.
  */
 function freezeLandscape(still: HTMLElement) {
-  const svg = still.querySelector<SVGSVGElement>('svg[data-land]');
-  if (!svg || still.querySelector('img[data-land-still]')) return;
-  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
-  const img = new Image();
-  img.alt = ''; img.decoding = 'async'; img.setAttribute('aria-hidden', 'true'); img.dataset.landStill = '';
-  img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
-  img.src = url;
-  img.decode().then(() => {
-    still.prepend(img);
-    svg.style.visibility = 'hidden';
-    // Only the path group is still measured (alignPathEdge); everything else leaves layout and paint.
-    const path = svg.querySelector('[data-path]');
-    for (const c of svg.children) if (c.tagName !== 'defs' && !(path && c.contains(path))) (c as SVGElement).style.display = 'none';
-  }, () => {}).finally(() => URL.revokeObjectURL(url));
+  // The firs (narrow screens only) stay inline: as a picture they would be laid out once more, the costliest part.
+  for (const host of still.querySelectorAll<HTMLElement>('[data-live="hut"], [data-live="front"]')) {
+    const svg = host.querySelector<SVGSVGElement>('svg');
+    if (!svg || host.querySelector('img')) continue;
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.alt = ''; img.decoding = 'async'; img.dataset.landStill = '';
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:bottom';
+    img.src = url;
+    img.decode().then(() => {
+      host.prepend(img);
+      svg.style.visibility = 'hidden';
+      // Only the path group is still measured (alignPathEdge); everything else leaves layout and paint.
+      const path = svg.querySelector('[data-path]');
+      for (const c of svg.children) if (c.tagName !== 'defs' && c.tagName !== 'style' && !(path && c.contains(path))) (c as SVGElement).style.display = 'none';
+    }, () => {}).finally(() => URL.revokeObjectURL(url));
+  }
 }
+
+/** G029: weak devices, Save-Data and «reduce motion» get the still picture; the flock wakes on a touch. */
+function quietDevice() {
+  const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+  return (n.hardwareConcurrency > 0 && n.hardwareConcurrency <= 4) || (!!n.deviceMemory && n.deviceMemory <= 4)
+    || !!n.connection?.saveData || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+const whenIdle = (cb: () => void) => {
+  const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined; // Safari before 18
+  if (ric) { const id = window.requestIdleCallback(cb, { timeout: 2500 }); return () => window.cancelIdleCallback(id); }
+  const id = window.setTimeout(cb, 1500); return () => window.clearTimeout(id);
+};
 
 /** Round 23 S24: a thread runs down from the buttons, inviting to scroll on; it fades once the page moves. */
 function ScrollCue() {
+  const tr = useT();
   const [gone, setGone] = useState(false);
   useEffect(() => {
     const on = () => setGone(window.scrollY > 40);
@@ -73,7 +93,7 @@ function ScrollCue() {
     return () => window.removeEventListener('scroll', on);
   }, []);
   return (
-    <button type="button" aria-label="Гортати далі" tabIndex={gone ? -1 : 0}
+    <button type="button" aria-label={tr('hero.scrollOn')} tabIndex={gone ? -1 : 0}
       onClick={(e) => { const s = e.currentTarget.closest('section'); if (s) scrollToY(s.getBoundingClientRect().bottom + window.scrollY - 64); }}
       className={`mt-1 grid place-items-center rounded-full px-3 py-1 transition-opacity duration-300 will-change-transform sm:mt-3 ${gone ? 'vk-cue-off pointer-events-none opacity-0' : ''}`}>
       {/* A cream halo under the red thread keeps it readable over the dark firs. */}
@@ -135,12 +155,14 @@ function WovenTitle({ children }: { children: React.ReactNode }) {
 }
 
 // Round 10 part 2 #6 / round 11 #76: sound is off on every visit; this button is the only way on.
+// Round 24 G165: a 46 px touch area around the 40 px circle.
 function SoundToggle() {
+  const tr = useT();
   const [on, setOn] = useState(false);
   return (
-    <button type="button" aria-pressed={on} aria-label={on ? 'Вимкнути звук' : 'Увімкнути звук'}
+    <button type="button" aria-pressed={on} aria-label={on ? tr('hero.soundOff') : tr('hero.soundOn')}
       onClick={() => { heroSound.on = !on; setOn(!on); }}
-      className="absolute right-4 top-4 z-(--z-dropdown) grid size-10 place-items-center rounded-full border border-border-hairline bg-bg-surface/95 text-text-primary shadow-sm">
+      className="absolute right-4 top-4 z-(--z-dropdown) grid size-10 place-items-center rounded-full border border-border-hairline bg-bg-surface/95 text-text-primary shadow-sm after:absolute after:-inset-[3px] after:rounded-full after:content-['']">
       <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 9v6h4l5 4V5L8 9z" />
         {on ? <path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}
@@ -158,11 +180,15 @@ function SoundToggle() {
  */
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MEADOW_CLIP = 'M0 -18H1440V30Q1300 64 1120 42T760 48T380 30T0 46Z';
+// Round 24: the copy is placed by arithmetic instead of measuring the live SVG (no forced layout), so the
+// band is drawn at once from the path shapes shipped with the script (heroPath.ts, generated from the art).
+// The hero art fills the still layer with viewBox 0 0 1440 620, «xMidYMax slice»; the path group is only
+// ever translated (by the flock engine on phones, to follow the hut).
 function alignPathEdge(root: HTMLElement) {
-  const near = root.querySelector<SVGGraphicsElement>('[data-path]');
+  const still = root.firstElementChild;
   const edge = document.querySelector<SVGPathElement>('[data-path-edge]');
-  const m = near?.getScreenCTM(), svg = edge?.ownerSVGElement;
-  if (!near || !edge || !m || !svg) return;
+  const svg = edge?.ownerSVGElement;
+  if (!still || !edge || !svg) return;
   let holder = svg.querySelector<SVGGElement>('[data-path-copy]');
   if (!holder) {
     const clip = document.createElementNS(SVG_NS, 'clipPath');
@@ -176,52 +202,122 @@ function alignPathEdge(root: HTMLElement) {
     holder.setAttribute('data-path-copy', '');
     holder.setAttribute('clip-path', 'url(#vk-meadow-clip)');
     const inner = document.createElementNS(SVG_NS, 'g');
-    inner.innerHTML = near.innerHTML;
+    inner.innerHTML = heroPath.html;
     holder.appendChild(inner);
     edge.parentNode!.insertBefore(holder, edge);
     // The earlier drawn piece is no longer used.
     for (const sel of ['[data-path-edge]', '[data-path-edge-sides]', '[data-path-edge-mid]']) svg.querySelector(sel)?.setAttribute('d', '');
   }
-  const box = svg.getBoundingClientRect();
-  if (!box.width || !box.height) return;
+  const t = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(root.querySelector('[data-path]')?.getAttribute('transform') ?? '');
+  const tx = t ? +t[1]! : heroPath.tx, ty = t ? +t[2]! : heroPath.ty;
+  const art = still.getBoundingClientRect(), box = svg.getBoundingClientRect();
+  if (!art.width || !art.height || !box.width || !box.height) return;
+  const k = Math.max(art.width / 1440, art.height / 620);
+  const ox = art.left + (art.width - 1440 * k) / 2, oy = art.bottom - 620 * k;
   const sx = 1440 / box.width, sy = 66 / box.height;
   (holder.firstElementChild as SVGGElement).setAttribute('transform',
-    `matrix(${m.a * sx} ${m.b * sy} ${m.c * sx} ${m.d * sy} ${(m.e - box.left) * sx} ${(m.f - box.top) * sy})`);
+    `matrix(${k * sx} 0 0 ${k * sy} ${(ox + k * tx - box.left) * sx} ${(oy + k * ty - box.top) * sy})`);
 }
+
+// object-fit cover + bottom is the drawing's own «xMidYMax slice», said in CSS (the picture keeps its 1440:620 ratio).
+const PIC = 'absolute inset-0 size-full max-w-none object-cover object-bottom';
 
 export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref: string }) {
   const rootRef = useRef<HTMLElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const groundRef = useRef<HTMLDivElement>(null);
   const stillRef = useRef<HTMLDivElement>(null);
+  const tr = useT();
+  const biz = useBusiness();
 
   useEffect(() => {
     const root = rootRef.current;
     const layer = layerRef.current, groundHost = groundRef.current, still = stillRef.current;
     if (!root || !layer || !groundHost || !still) return;
-    let stop: (() => void) | undefined;
+    let flock: Flock | undefined;
     let cancelled = false;
-    // Server-rendered art is already in the page; after client-side navigation it is fetched once.
-    const art = still.firstElementChild ? Promise.resolve() : fetch(heroUrl).then((r) => r.text()).then((t) => { if (!cancelled) still.innerHTML = t; });
-    // Loaded after the hero is on screen, so it never competes with first paint (§36.3.6 guards).
-    void Promise.all([art, import('./flockEngine')]).then(([, { startFlock }]) => {
-      if (!cancelled) { stop = startFlock(root, layer, groundHost); alignPathEdge(root); freezeLandscape(still); }
-    });
+    alignPathEdge(root);
+    // G028: everything live waits until the browser is idle, in small steps, so none of it competes with the
+    // first paint or the page becoming interactive. The live layers come from the browser cache (the
+    // pictures are the same files) and replace their pictures in the same frame: nothing on screen changes.
+    const step = () => new Promise<void>((r) => { setTimeout(r, 0); });
+    // After the next frame has been drawn: what was just added has been laid out in that frame.
+    const frame = () => new Promise<void>((r) => { requestAnimationFrame(() => { setTimeout(r, 0); }); });
+    const live = async (name: 'hut' | 'front' | 'firs') => {
+      const text = await fetch(heroLayers[name]).then((r) => r.text());
+      await step();
+      const host = still.querySelector<HTMLElement>(`[data-live="${name}"]`);
+      if (cancelled || !host) return;
+      if (name === 'firs') {
+        // Every fir is a <use> of a large drawing: laid out all at once they take a phone ~60 ms. They go in
+        // a few at a time (shade + fir), hidden until all are there.
+        const groups: Record<string, string[]> = {};
+        host.style.visibility = 'hidden';
+        host.innerHTML = text.replace(/(<g (data-(?:big)?firs)="">)([\s\S]*?)(<\/g>)/g, (_, open: string, key: string, body: string, close: string) => {
+          groups[key] = body.split(/(?=<ellipse)/); return open + close;
+        });
+        for (const [key, items] of Object.entries(groups)) {
+          const g = host.querySelector(`[${key}]`);
+          for (let i = 0; g && i < items.length; i += 8) {
+            g.insertAdjacentHTML('beforeend', items.slice(i, i + 8).join(''));
+            await frame();
+            if (cancelled) return;
+          }
+        }
+        host.style.visibility = '';
+      } else host.innerHTML = text;
+      const pic = still.querySelector<HTMLElement>(`[data-pic="${name}"]`);
+      if (pic) pic.style.visibility = 'hidden';
+    };
+    // The hut moves in among the firs only where the screen shows less than the left part of the scene.
+    const box = still.getBoundingClientRect();
+    const narrow = (1440 - box.width / Math.max(box.width / 1440, box.height / 620)) / 2 > 70;
+    const quiet = quietDevice();
+    let starting: Promise<void> | undefined;
+    const start = (asleep: boolean) => (starting ??= (async () => {
+      const [{ startFlock }] = await Promise.all([import('./flockEngine'), live('hut').then(() => live('front')).then(() => (narrow ? live('firs') : undefined))]);
+      await step();
+      if (cancelled) return;
+      flock = startFlock(root, layer, groundHost, { asleep });
+      alignPathEdge(root); // on phones the engine moved the path with the hut
+    })());
+    // Frozen only while the flock runs: an asleep scene has no frames to save.
+    const freeze = () => { if (!cancelled) whenIdle(() => freezeLandscape(still)); };
+    const cancelIdle = whenIdle(() => void start(quiet).then(() => { if (!quiet) freeze(); }));
+    // G029: on a quiet device the first touch in the hero wakes the flock (a second one picks a sheep up).
+    const wake = (e: PointerEvent) => {
+      root.removeEventListener('pointerdown', wake, true);
+      if (e.target instanceof Node && (layer.contains(e.target) || groundHost.contains(e.target))) e.stopPropagation();
+      void start(true).then(() => { flock?.wake(); freeze(); });
+    };
+    if (quiet) root.addEventListener('pointerdown', wake, true);
     // Round 23 perf: once the hero is off screen its endless CSS loops (chimney smoke, the scroll
     // thread) pause, so they cost no frames while the rest of the page is read.
     const seen = new IntersectionObserver(([e]) => { if (e) root.toggleAttribute('data-hero-off', !e.isIntersecting); });
     seen.observe(root);
     const onResize = () => alignPathEdge(root);
-    void art.then(() => alignPathEdge(root));
     window.addEventListener('resize', onResize);
-    return () => { cancelled = true; stop?.(); seen.disconnect(); window.removeEventListener('resize', onResize); };
+    return () => {
+      cancelled = true; cancelIdle(); flock?.stop(); seen.disconnect();
+      root.removeEventListener('pointerdown', wake, true); window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   return (
     <section ref={rootRef} data-hold-stops-scroll className="relative max-w-full h-[35rem] sm:h-[37.5rem] lg:h-auto lg:aspect-[1440/620] lg:max-h-[calc(100dvh-4rem)] lg:min-h-[38.75rem]">
       {/* The still picture is its own compositor layer, painted once; the flock moves in the layer above it. */}
-      {/* On the client the markup is '' and hydration keeps the server's art untouched (no second copy shipped). */}
-      <div ref={stillRef} className="absolute inset-0 overflow-hidden will-change-transform [contain:strict]" dangerouslySetInnerHTML={{ __html: heroServerMarkup }} suppressHydrationWarning />
+      {/* G027: the art paints as five cached pictures (layers of one drawing, same viewBox); the live ones are
+          then placed inline over their pictures for the flock (see the effect above). */}
+      <div ref={stillRef} className="pointer-events-none absolute inset-0 select-none overflow-hidden will-change-transform [contain:strict]">
+        <img src={heroLayers.back} alt="" width={1440} height={620} fetchPriority="high" decoding="async" draggable={false} className={PIC} />
+        <img src={heroLayers.hut} data-pic="hut" alt="" width={1440} height={620} decoding="async" draggable={false} className={PIC} />
+        <div data-live="hut" className={PIC} />
+        <img src={heroLayers.grass} alt="" width={1440} height={620} decoding="async" draggable={false} className={PIC} />
+        <img src={heroLayers.firs} data-pic="firs" alt="" width={1440} height={620} decoding="async" draggable={false} className={PIC} />
+        <div data-live="firs" className={PIC} />
+        <img src={heroLayers.front} data-pic="front" alt="" width={1440} height={620} decoding="async" draggable={false} className={PIC} />
+        <div data-live="front" className={PIC} />
+      </div>
       {/* Round 23 perf: the ground (hut, shepherd, smoke) and the flock below are their own compositor
           layers, so a sheep step or a puff of smoke repaints only that layer, never the whole page. */}
       <div ref={groundRef} className="pointer-events-none absolute inset-0 overflow-hidden will-change-transform [contain:strict]" />
@@ -231,10 +327,10 @@ export function HeroScene({ locale, catalogHref }: { locale: Locale; catalogHref
         <WovenTitle>
           <h1 className="relative m-0 font-wordmark text-[4.5rem] leading-none text-text-primary sm:text-[6rem] lg:text-[7rem]">{BUSINESS.brand}</h1>
         </WovenTitle>
-        <p className="max-w-[45rem] text-balance rounded-full lg:max-w-none bg-bg-page/85 px-4 py-1.5 text-body font-medium text-text-primary sm:text-body-lg lg:text-h4">{BUSINESS.tagline}</p>
+        <p className="max-w-[45rem] text-balance rounded-full lg:max-w-none bg-bg-page/85 px-4 py-1.5 text-body font-medium text-text-primary sm:text-body-lg lg:text-h4">{biz.tagline}</p>
         <div className="mt-1 flex w-full flex-col items-center gap-2 sm:mt-2 sm:w-auto sm:flex-row sm:gap-4">
-          <Link to={catalogHref} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full bg-bg-inverted sm:max-w-none px-6 py-3 text-body font-semibold text-text-on-inverted sm:w-auto sm:rounded-lg sm:px-8 sm:py-4 sm:text-body-lg">Переглянути каталог <span className="vk-arrow" aria-hidden="true">→</span></Link>
-          <Link to={path.seg(locale, 'production')} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full border-2 sm:max-w-none border-text-primary bg-bg-surface px-6 py-2.5 text-body font-semibold text-text-primary sm:w-auto sm:rounded-lg sm:px-8 sm:py-3.5 sm:text-body-lg">Як ми виробляємо</Link>
+          <Link to={catalogHref} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full bg-bg-inverted sm:max-w-none px-6 py-3 text-body font-semibold text-text-on-inverted sm:w-auto sm:rounded-lg sm:px-8 sm:py-4 sm:text-body-lg">{tr('hero.catalog')} <span className="vk-arrow" aria-hidden="true">→</span></Link>
+          <Link to={path.seg(locale, 'production')} className="w-full max-w-[17.5rem] whitespace-nowrap rounded-full border-2 sm:max-w-none border-text-primary bg-bg-surface px-6 py-2.5 text-body font-semibold text-text-primary sm:w-auto sm:rounded-lg sm:px-8 sm:py-3.5 sm:text-body-lg">{tr('hero.howWeMake')}</Link>
         </div>
         <ScrollCue />
       </div>

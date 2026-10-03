@@ -1,7 +1,11 @@
-// The hero art is ~840 KB of SVG. It is written into the server-rendered HTML only — the client bundle
-// no longer carries a second copy (it used to: ~2 MB to parse on a phone). When the home page is
-// reached by client-side navigation, the same art is fetched once as a static, long-cached file.
-import heroUrl from './art/hero.svg?url';
+// Round 24 G027: the hero art (art/hero.svg, ~620 KB) is no longer written into the HTML. It is split into
+// five layers (art/split-hero.mjs), each a hashed, long-cached file. The page paints them as pictures;
+// the live layers (hut, front; the firs on narrow screens) are then fetched again from the cache and
+// placed inline, because the flock engine reads and moves their shapes.
+import back from './art/hero-back.svg?url';
+import hut from './art/hero-hut.svg?url';
+import grass from './art/hero-grass.svg?url';
+import firs from './art/hero-firs.svg?url';
+import front from './art/hero-front.svg?url';
 
-export const heroServerMarkup: string = import.meta.env.SSR ? (await import('./art/hero.svg?raw')).default : '';
-export { heroUrl };
+export const heroLayers = { back, hut, grass, firs, front };

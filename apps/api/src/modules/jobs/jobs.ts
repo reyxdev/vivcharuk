@@ -14,6 +14,7 @@ import { sendAutoReply } from '../mail/send';
 import { purgeThreads } from '../mail/mail.routes';
 import { newsletterMail } from '../newsletter/newsletter.service';
 import { dueReviewRequests, requestReview } from '../notifications/reviewRequest';
+import { sendIndexNow } from '../seo/indexnow';
 
 // Telegram notices: composed and fanned out in ../notifications/notices.ts (docs/00-client-decisions-21.md).
 export type { Notify } from '../notifications/notices';
@@ -94,9 +95,14 @@ const HANDLERS: Partial<Record<JobName, (jobs: PgBoss.Job<never>[]) => Promise<v
   'cart.expire': async () => { await prisma.cart.deleteMany({ where: { expiresAt: { lt: new Date() } } }); },
 
   // 26 §26.17: requests closed more than eight months ago are deleted (personal data retention).
+  // Round 24 G026: speed samples are kept 90 days.
   'quickOrders.purge': async () => {
     await prisma.quickOrderRequest.deleteMany({ where: { status: { in: ['CONVERTED', 'DECLINED', 'SPAM'] }, createdAt: { lt: new Date(Date.now() - 243 * 86_400_000) } } });
+    await prisma.rumSample.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 90 * 86_400_000) } } });
   },
+
+  // Round 24 G022: changed URLs to IndexNow (queued only in production with INDEXNOW_KEY set).
+  'seo.indexnow': (jobs) => each(jobs as PgBoss.Job<{ paths: string[] }>[], async (j) => { await sendIndexNow(j.paths); }),
 
   // T31, T33: the week in counts, Monday 08:00.
   'reports.weekly': async () => { await dispatch({ kind: 'weekly' }); },

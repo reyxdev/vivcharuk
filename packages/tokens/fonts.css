@@ -1,10 +1,23 @@
 /* Self-hosted: no third-party font request, no visitor IP sent anywhere (licences in fonts/). */
-@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'e-Ukraine'; src: url('./fonts/e-ukraine-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
-@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/e-ukraine-head-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
+/* Round 24 G039: the site loads web/ subsets of the e-Ukraine files — Latin-1, Cyrillic and the punctuation,
+   currency and symbol blocks the fonts have, with the default OpenType features and the numeric ones
+   (tnum, lnum, pnum, case, zero) — about 30 % smaller. Latin Extended (U+0100–024F) is a second small file,
+   fetched only by a page that has such a letter. Every glyph of the originals is in one of the two files.
+   Remade from the originals with fontTools (pip install fonttools brotli), for each face F:
+     pyftsubset F.woff2 --unicodes="U+0000-00FF,U+0400-052F,U+2000-206F,U+20A0-20CF,U+2100-22FF" --layout-features+=tnum,lnum,pnum,case,zero --flavor=woff2 --output-file=web/F.woff2
+     pyftsubset F.woff2 --unicodes="U+0100-024F" --layout-features+=tnum,lnum,pnum,case,zero --flavor=woff2 --output-file=web/F-ext.woff2 */
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-400-ext.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-500-ext.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine'; src: url('./fonts/web/e-ukraine-700-ext.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-400-ext.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-500-ext.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-700.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'e-Ukraine Head'; src: url('./fonts/web/e-ukraine-head-700-ext.woff2') format('woff2'); font-weight: 600 700; font-style: normal; font-display: swap; unicode-range: U+0100-024F; }
 /* The wordmark only ever spells the brand, so it uses a 2 KB subset of those letters (pyftsubset, from
    marck-script-400.woff2). Small enough for Vite to inline into the CSS: no request, no fallback flash. */
 @font-face { font-family: 'Marck Script'; src: url('./fonts/marck-script-wordmark.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: block; }

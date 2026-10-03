@@ -99,15 +99,23 @@ if [ ! -f .env ]; then
       `SITE_URL=https://${d}`, `ADMIN_URL=https://${d}/admin`,
       "HOST=127.0.0.1", "PORT=3000", "WEB_PORT=3001",
       "SHIPPING_TEST_RATES=0", "PAYMENTS_STUB=0",
+      "# Languages the site serves (round 24 G093); read by the site build and the API.",
+      "VITE_ENABLED_LOCALES=uk,en",
       "# Filled in later (empty = off): NOVA_POSHTA_API_KEY, CLOUDINARY_URL, TELEGRAM_BOT_TOKEN, VITE_GA_ID",
       "NOVA_POSHTA_API_KEY=", "CLOUDINARY_URL=", "TELEGRAM_BOT_TOKEN=",
       "# Outgoing mail through Resend (round 18 C15): fill on the server, then restart vivcharyk-api.",
       "# SMTP_HOST=smtp.resend.com  SMTP_USER=resend  SMTP_PASS=<Resend API key>  MAIL_FROM=Вівчарик <no-reply@vivcharuk.com>  MAIL_REPLY_TO=info@vivcharuk.com",
       "SMTP_HOST=", "SMTP_PORT=587", "SMTP_USER=", "SMTP_PASS=", "MAIL_FROM=", "MAIL_REPLY_TO=",
       "# «Пошта» in the panel reads info@ (round 19 D1): the mailbox password from Porkbun, then restart vivcharyk-api.",
-      "MAILBOX_ADDRESS=info@" + d, "MAILBOX_PASSWORD=", "",
+      "MAILBOX_ADDRESS=info@" + d, "MAILBOX_PASSWORD=",
+      "# Round 24: security.txt contact (the developer, e.g. mailto:dev@example.com; empty = info@) and the",
+      "# IndexNow key (8-128 letters, digits or dashes; empty = off). Restart both services after filling.",
+      "SECURITY_CONTACT=", "INDEXNOW_KEY=", "",
     ].join("\n"), { mode: 0o600 });' "$DOMAIN"
 fi
+# Round 24 G093: English is on at launch. A server .env written before that gets the line once; a value
+# already there (the owner's choice) is kept. The site build reads it from this file (vite envDir).
+grep -q '^VITE_ENABLED_LOCALES=' .env || printf '\n# Languages the site serves (round 24 G093); read by the site build and the API.\nVITE_ENABLED_LOCALES=uk,en\n' >> .env
 chown vivcharyk:vivcharyk .env; chmod 600 .env
 DB_URL="$(grep -E '^DATABASE_URL=' .env | cut -d= -f2-)"
 read -r DB_USER DB_PASS DB_NAME < <(node -e 'const u=new URL(process.argv[1]);console.log(decodeURIComponent(u.username),decodeURIComponent(u.password),u.pathname.slice(1))' "$DB_URL")
@@ -146,6 +154,13 @@ for batch in scripts/data/videos/*.json; do
   case "$batch" in *.media.json) continue ;; esac
   npx tsx --env-file=.env scripts/import-stage-videos.ts "$batch"
 done
+# Round 24 G093: English catalogue texts (categories, products, options, stages, alt texts) from
+# scripts/data/translations-en.json, after the products exist; idempotent, skips anything whose Ukrainian
+# text was edited since the translation.
+npx tsx --env-file=.env scripts/translate-en-round24.ts
+# Round 24 G030–G034: every photo in the new set (WebP + AVIF, 160–1600, named with words). Idempotent; with the
+# photos already uploaded from the developer's machine it only updates the database rows. Old files stay (no --prune).
+npx tsx --env-file=.env scripts/regenerate-photos.ts
 
 # 7. Build into fresh directories. Nothing the running site reads is touched until the switch below:
 #    - admin:      vite builds straight into releases/admin-<ts>; the API serves apps/admin/dist,

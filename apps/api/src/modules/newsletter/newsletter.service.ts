@@ -1,11 +1,11 @@
 import type { Locale, Prisma } from '@prisma/client';
-import { BUSINESS, NEWSLETTER_CONSENT_TEXT } from '@vivcharyk/schemas';
+import { BUSINESS, BUSINESS_EN, NEWSLETTER_CONSENT_TEXT, NEWSLETTER_CONSENT_TEXT_EN } from '@vivcharyk/schemas';
 import { config } from '../../config';
 import { randomToken } from '../../lib/crypto';
 import { enqueue } from '../../lib/jobs';
 import { type Mail } from '../../lib/mail';
 import { prisma } from '../../lib/prisma';
-import { layout, p } from '../notifications/orderMail';
+import { layout, mailLang, p } from '../notifications/orderMail';
 
 // Round 19 D2: newsletter consent. Ticking the checkout box sends a confirmation letter; only the
 // click subscribes (double opt-in). Every letter carries a one-click unsubscribe. After unsubscribing
@@ -23,10 +23,10 @@ export async function requestConsent(email: string, locale: Locale, source: { ki
   const confirmToken = randomToken();
   const row = await tx.subscriber.upsert({
     where: { email: address },
-    update: { status: 'PENDING', confirmToken, consentAt: new Date(), consentText: source.kind === 'checkout' ? NEWSLETTER_CONSENT_TEXT : source.note, source: source.kind, unsubscribedAt: null, bounceCount: 0, ...(source.kind === 'checkout' ? { orderId: source.orderId } : { createdById: source.staffId }) },
+    update: { status: 'PENDING', confirmToken, consentAt: new Date(), consentText: source.kind === 'checkout' ? (locale === 'uk' ? NEWSLETTER_CONSENT_TEXT : NEWSLETTER_CONSENT_TEXT_EN) : source.note, source: source.kind, unsubscribedAt: null, bounceCount: 0, ...(source.kind === 'checkout' ? { orderId: source.orderId } : { createdById: source.staffId }) },
     create: {
       email: address, locale, status: 'PENDING', confirmToken, unsubToken: randomToken(), consentAt: new Date(), source: source.kind,
-      consentText: source.kind === 'checkout' ? NEWSLETTER_CONSENT_TEXT : source.note,
+      consentText: source.kind === 'checkout' ? (locale === 'uk' ? NEWSLETTER_CONSENT_TEXT : NEWSLETTER_CONSENT_TEXT_EN) : source.note,
       ...(source.kind === 'checkout' ? { orderId: source.orderId } : { createdById: source.staffId }),
     },
   });
@@ -67,9 +67,21 @@ export async function newsletterMail(kind: 'confirm' | 'welcome', subscriberId: 
   const s = await prisma.subscriber.findUnique({ where: { id: subscriberId } });
   if (!s) return null;
   const unsub = newsletterPage(s.locale, `unsubscribe=${s.unsubToken}`);
+  const en = mailLang(s.locale) === 'en';
   if (kind === 'confirm') {
     if (s.status !== 'PENDING' || !s.confirmToken) return null;
     const link = newsletterPage(s.locale, `confirm=${s.confirmToken}`);
+    // G093: a subscriber from the English site is written to in English.
+    if (en) {
+      const html = layout('Please confirm your subscription', [
+        p('When ordering, you ticked that you would like e-mails about Vivcharyk offers and new pieces.'),
+        p('To subscribe, press the button below. If it was not you, simply do nothing: without confirmation we will not send a single promotional e-mail.'),
+      ], { href: link, label: 'Yes, subscribe me' }, 'en');
+      return { to: s.email, subject: `Please confirm your subscription — ${BUSINESS_EN.brand}`, html, text: `To subscribe to e-mails about Vivcharyk offers and new pieces, open this link:
+${link}
+
+If it was not you, do nothing.` };
+    }
     const html = layout('Підтвердіть підписку', [
       p('Ви позначили при замовленні, що хочете отримувати листи про акції та новинки Вівчарика.'),
       p('Щоб підписатися, натисніть кнопку нижче. Якщо це були не ви — просто нічого не робіть: без підтвердження ми не надішлемо жодного рекламного листа.'),
@@ -77,6 +89,18 @@ export async function newsletterMail(kind: 'confirm' | 'welcome', subscriberId: 
     return { to: s.email, subject: `Підтвердіть підписку — ${BUSINESS.brand}`, html, text: `Щоб підписатися на листи про акції та новинки Вівчарика, відкрийте посилання:\n${link}\n\nЯкщо це були не ви — нічого не робіть.` };
   }
   if (s.status !== 'CONFIRMED') return null;
+  if (en) {
+    const html = layout('Thank you for subscribing!', [
+      p('From now on you will be the first to hear about our offers, discounts and new pieces from the workshop in Yavoriv village, Kosiv district.'),
+      p('We write no more than once a week. You can unsubscribe at any time: the link is at the bottom of every e-mail.'),
+      p(`<a href="${unsub}" style="color:#5E594F;font-size:13px">Unsubscribe from the newsletter</a>`),
+    ], { href: `${config.siteUrl}/${s.locale}/`, label: 'Go to the catalogue' }, 'en');
+    return {
+      to: s.email, subject: 'You are subscribed to Vivcharyk news', html,
+      text: `Thank you for subscribing to Vivcharyk e-mails. We write no more than once a week.\nUnsubscribe: ${unsub}`,
+      from: `Ivan from Vivcharyk <${config.mailbox.address}>`, replyTo: config.mailbox.address, headers: unsubscribeHeaders(s.unsubToken),
+    };
+  }
   const html = layout('Дякуємо, що підписалися!', [
     p('Тепер ви першими дізнаватиметеся про наші акції, знижки й нові вироби з майстерні в Яворові.'),
     p('Пишемо не частіше одного разу на тиждень. Відписатися можна будь-коли — посилання є внизу кожного листа.'),

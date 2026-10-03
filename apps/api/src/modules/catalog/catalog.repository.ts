@@ -1,4 +1,4 @@
-import type { Locale, Prisma } from '@prisma/client';
+import { type Locale, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 
 // All Prisma access for the catalogue module (27 §27.4).
@@ -28,6 +28,11 @@ const mediaSelect = (locales: Locale[]) =>
       media: { select: { publicId: true, width: true, height: true, blurhash: true, translations: { where: { locale: { in: locales } }, select: { locale: true, alt: true } } } },
     },
   }) satisfies Prisma.Product$mediaArgs;
+
+/** Category ↔ product links of the products on sale in a locale (round 24 G004–G005: empty categories). */
+export function loadPublicCategoryLinks(locale: Locale) {
+  return prisma.productCategory.findMany({ where: { product: { ...PUBLIC_PRODUCT, ...productVisibleIn(locale) } }, select: { categoryId: true, productId: true } });
+}
 
 /** Candidate rows for a listing scope, with just enough to filter, facet and sort in memory. */
 /** Live partner goods (round 22 K13: the site's «Від партнерів» entry shows only while there are some). */
@@ -59,6 +64,29 @@ export function loadListingScope(categoryIds: string[] | null, locales: Locale[]
       },
       media: { ...mediaSelect(locales), take: 1 },
     },
+  });
+}
+
+/** Each product's first category (the order the panel keeps), for mixing the homepage rail. */
+export async function firstCategoryOf(productIds: string[]) {
+  const rows = await prisma.productCategory.findMany({ where: { productId: { in: productIds } }, orderBy: [{ productId: 'asc' }, { sortOrder: 'asc' }], select: { productId: true, categoryId: true } });
+  const out = new Map<string, string>();
+  for (const r of rows) if (!out.has(r.productId)) out.set(r.productId, r.categoryId);
+  return out;
+}
+
+/** Variants whose stock has been counted at least once (any stock movement on record). */
+export async function countedVariants(variantIds: string[]) {
+  const rows = await prisma.stockMovement.groupBy({ by: ['variantId'], where: { variantId: { in: variantIds } } });
+  return new Set(rows.map((r) => r.variantId));
+}
+
+/** The standard sizes of a template's size library (OptionValue keys «<template>-…» with dimensions). */
+export function sizeLibrary(prefix: string, locales: Locale[]) {
+  return prisma.optionValue.findMany({
+    where: { isHidden: false, key: { startsWith: `${prefix}-` }, optionType: { key: 'size' }, NOT: { dimensions: { equals: Prisma.DbNull } } },
+    orderBy: { sortKey: 'asc' },
+    select: { key: true, dimensions: true, translations: { where: { locale: { in: locales } }, select: { locale: true, label: true } } },
   });
 }
 

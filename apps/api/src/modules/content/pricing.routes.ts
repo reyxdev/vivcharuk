@@ -27,6 +27,8 @@ export async function pricingRoutes(app: FastifyInstance) {
     return {
       contact: { hours: b.hours, hoursText: b.hoursText, week: b.week, phone: b.messengerPhone, publicEmail: b.publicEmail },
       ticker: ticker.filter((t) => t.isActive && (!t.cardOnly || card)).map((t) => ({ text: t.text, linkUrl: t.linkUrl })),
+      // G093: English pages build their own strip and need to know whether the card-only phrase applies.
+      cardPayments: card,
     };
   });
 }
@@ -38,10 +40,11 @@ export async function redirectRoutes(app: FastifyInstance) {
     if (!path || path.length > 300) return reply.status(404).send();
     const r = await prisma.redirect.findUnique({ where: { fromPath: path.replace(/\/+$/, '') } });
     if (!r) {
-      // An archived product's URL leads to its category (37 §37.5), not to a dead end.
+      // An archived or deleted product's URL leads to its category (37 §37.5, round 24 G045), not to a dead
+      // end. Deleting sets ARCHIVED too; the newest such product wins when a slug was reused.
       const m = /^\/(uk|en|pl|de)\/(?:tovar|product|produkt)\/([^/]+)\/?$/.exec(path);
       if (m) {
-        const t = await prisma.productTranslation.findFirst({ where: { slug: m[2], product: { status: 'ARCHIVED', deletedAt: null } }, select: { product: { select: { categories: { orderBy: { sortOrder: 'asc' }, take: 1, select: { category: { select: { parentId: true, translations: { where: { locale: m[1] as 'uk' }, select: { slug: true } }, parent: { select: { translations: { where: { locale: m[1] as 'uk' }, select: { slug: true } } } } } } } } } } } });
+        const t = await prisma.productTranslation.findFirst({ where: { slug: m[2], locale: m[1] as 'uk', product: { status: 'ARCHIVED' } }, orderBy: { product: { updatedAt: 'desc' } }, select: { product: { select: { categories: { where: { category: { isActive: true, deletedAt: null } }, orderBy: { sortOrder: 'asc' }, take: 1, select: { category: { select: { parentId: true, translations: { where: { locale: m[1] as 'uk' }, select: { slug: true } }, parent: { select: { translations: { where: { locale: m[1] as 'uk' }, select: { slug: true } } } } } } } } } } } });
         const c = t?.product.categories[0]?.category;
         const own = c?.translations[0]?.slug, par = c?.parent?.translations[0]?.slug;
         if (own) return { toPath: par ? `/${m[1]}/${par}/${own}` : `/${m[1]}/${own}`, statusCode: 301 };

@@ -47,6 +47,11 @@ const serverEnvSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
   // Where panel links in notifications point.
   ADMIN_URL: z.string().url().default('http://127.0.0.1:3000/admin'),
+  // Round 24 G022: IndexNow key (8–128 letters, digits or dashes); empty = off. Pings only in production.
+  INDEXNOW_KEY: z.string().regex(/^[A-Za-z0-9-]{8,128}$/, '8–128 letters, digits or dashes').or(z.literal('')).optional().default(''),
+  // The locales the site serves (the storefront reads the same variable at build time, D39): the
+  // Merchant feeds and IndexNow follow it.
+  VITE_ENABLED_LOCALES: z.string().optional().default('uk'),
   // ONEKNIGHT (round 16): empty = integration off.
   ONEKNIGHT_API_URL: z.string().optional().default(''),
   ONEKNIGHT_SECRET_KEY: z.string().optional().default(''),
@@ -69,6 +74,8 @@ export const config = {
   mfaKey: Buffer.from(env.MFA_ENCRYPTION_KEY, 'base64'),
   adminBasePath: env.ADMIN_BASE_PATH,
   siteUrl: env.SITE_URL,
+  indexNowKey: env.INDEXNOW_KEY,
+  enabledLocales: [...new Set(['uk', ...env.VITE_ENABLED_LOCALES.split(',').map((x) => x.trim())])].filter((x): x is 'uk' | 'en' | 'pl' | 'de' => ['uk', 'en', 'pl', 'de'].includes(x)),
   shipping: { testRates: env.SHIPPING_TEST_RATES === '1' && env.NODE_ENV !== 'production', npApiKey: env.NOVA_POSHTA_API_KEY },
   telegram: { botToken: env.TELEGRAM_BOT_TOKEN },
   adminUrl: env.ADMIN_URL,

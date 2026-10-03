@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma';
 import { audit } from '../audit/audit.service';
 import { templateDrafts } from './drafts';
 import { listPhotos, photoUrl } from './media';
+import { indexNowProduct } from '../seo/indexnow';
 
 type Actor = { id: string; email: string; permissions: Set<string> };
 
@@ -518,6 +519,7 @@ export async function publish(id: string, actor: Actor) {
     await tx.product.update({ where: { id }, data: { liveRevisionId: rev.id } });
     await audit({ actorId: actor.id, actorEmail: actor.email, action: 'product.published', resourceType: 'Product', resourceId: id, resourceLabel: p.sku, after: { revisionId: rev.id } }, tx);
   });
+  void indexNowProduct(id); // round 24 G022
   return getProduct(id);
 }
 
@@ -535,6 +537,7 @@ export async function setArchived(id: string, archived: boolean, actor: Actor) {
     await tx.product.update({ where: { id }, data: { status } });
     await audit({ actorId: actor.id, actorEmail: actor.email, action: archived ? 'product.archived' : 'product.unarchived', resourceType: 'Product', resourceId: id, resourceLabel: p.sku, before: { status: p.status }, after: { status } }, tx);
   });
+  void indexNowProduct(id); // round 24 G022
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -612,6 +615,7 @@ export async function deleteProduct(id: string, actor: Actor, tx: Prisma.Transac
   for (const v of p.variants) await tx.productVariant.update({ where: { id: v.id }, data: { deletedAt: now, isActive: false, sku: `${v.sku}~${now.getTime()}` } });
   await tx.product.update({ where: { id }, data: { deletedAt: now, status: 'ARCHIVED' } });
   await audit({ actorId: actor.id, actorEmail: actor.email, action: 'product.deleted', resourceType: 'Product', resourceId: id, resourceLabel: p.sku, before: { status: p.status } }, tx);
+  if (p.status === 'ACTIVE') void indexNowProduct(id); // round 24 G022: the page now 301s to its category
 }
 
 /** The product SKU, editable until the first publish (round 20 #157); variant SKUs follow the new prefix. */

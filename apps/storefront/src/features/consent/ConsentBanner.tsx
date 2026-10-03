@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { path } from '@/lib/segments';
+import { t } from '@/lib/i18n';
 import { GA_ID, loadAnalytics, readConsent, writeConsent } from './consent';
 
 /**
@@ -26,15 +27,15 @@ export function ConsentBanner({ locale }: { locale: Locale }) {
   const choose = (all: boolean) => { const c = writeConsent(all, all); if (c.analytics) loadAnalytics(); setShow(false); };
   const btn = 'min-h-11 flex-1 rounded-lg border-2 border-text-primary px-5 text-body font-semibold text-text-primary sm:flex-none';
   return (
-    <div role="region" aria-label="Файли cookie" className="fixed inset-x-0 bottom-0 z-(--z-overlay) border-t border-border-hairline bg-bg-surface shadow-lg max-md:bottom-16">
+    <div role="region" aria-label={t(locale, 'consent.region')} className="fixed inset-x-0 bottom-0 z-(--z-overlay) border-t border-border-hairline bg-bg-surface shadow-lg max-md:bottom-16">
       <div className="mx-auto flex max-w-(--container-wide) flex-col gap-3 px-4 py-4 md:flex-row md:items-center lg:px-12">
         <p className="flex-1 text-body-sm text-text-body">
-          Ми використовуємо необхідні cookie, щоб працювали кошик і оформлення. Аналітику вмикаємо лише з вашої згоди.{' '}
-          <Link to={path.seg(locale, 'cookies')} className="underline">Детальніше</Link>
+          {t(locale, 'consent.text')}{' '}
+          <Link to={path.seg(locale, 'cookies')} className="underline">{t(locale, 'consent.more')}</Link>
         </p>
         <div className="flex gap-2">
-          <button type="button" onClick={() => choose(true)} className={btn}>Прийняти всі</button>
-          <button type="button" onClick={() => choose(false)} className={btn}>Лише необхідні</button>
+          <button type="button" onClick={() => choose(true)} className={btn}>{t(locale, 'consent.acceptAll')}</button>
+          <button type="button" onClick={() => choose(false)} className={btn}>{t(locale, 'consent.necessaryOnly')}</button>
         </div>
       </div>
     </div>

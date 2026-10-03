@@ -5,11 +5,13 @@ export const productOrigin = z.enum(['OWN_MANUFACTURE', 'PARTNER_MANUFACTURE']);
 export type ProductOrigin = z.infer<typeof productOrigin>;
 
 export const categoryNode: z.ZodType<CategoryNode> = z.lazy(() =>
-  z.object({ id: z.string(), key: z.string().nullable().optional(), slug: z.string(), name: z.string(), isFeatured: z.boolean().optional(), children: z.array(categoryNode) }),
+  z.object({ id: z.string(), key: z.string().nullable().optional(), slug: z.string(), name: z.string(), isFeatured: z.boolean().optional(), productCount: z.number().int().optional(), children: z.array(categoryNode) }),
 );
 // key: stable, locale-independent (the homepage circle art is picked by it).
 // isFeatured: «★ на головній» — the homepage category circles (round 10 part 2 #8).
-export interface CategoryNode { id: string; key?: string | null; slug: string; name: string; isFeatured?: boolean; children: CategoryNode[] }
+// productCount: public products in the category and its descendants (round 24 G004–G005: an empty category
+// is noindex, out of the sitemap and hidden from the menu).
+export interface CategoryNode { id: string; key?: string | null; slug: string; name: string; isFeatured?: boolean; productCount?: number; children: CategoryNode[] }
 
 export const mediaRef = z.object({
   publicId: z.string(),

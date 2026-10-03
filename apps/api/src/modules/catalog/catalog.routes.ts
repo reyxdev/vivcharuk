@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { locale, productListQuery } from '@vivcharyk/schemas';
 import { catalog } from './catalog.service';
+import { sizeLibrary } from './catalog.repository';
 import { prisma } from '../../lib/prisma';
 
 const CACHED = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400'; // 26 §26.13.1
@@ -72,6 +73,21 @@ export async function catalogRoutes(app: FastifyInstance) {
     const { locale } = localeQuery.parse(req.query);
     reply.header('cache-control', CACHED);
     return { items: await catalog.featured(locale, 8) };
+  });
+
+  // Round 24 G063: the standard sizes of a product template («lizhnyk»), for the folded size table
+  // on a category page. Only what the panel's size library holds; nothing is invented.
+  app.get('/size-library', async (req, reply) => {
+    const { locale: l, template } = z.object({ locale: locale.default('uk'), template: z.string().regex(/^[a-z-]{2,40}$/) }).parse(req.query);
+    const rows = await sizeLibrary(template, l === 'uk' ? ['uk'] : [l, 'uk']);
+    reply.header('cache-control', CACHED);
+    return {
+      items: rows.map((r) => {
+        const d = r.dimensions as { widthCm?: number; lengthCm?: number };
+        const label = (r.translations.find((t) => t.locale === l) ?? r.translations.find((t) => t.locale === 'uk'))?.label ?? r.key;
+        return { key: r.key, label, widthCm: d.widthCm ?? null, lengthCm: d.lengthCm ?? null };
+      }),
+    };
   });
 
   app.get<{ Params: { slug: string } }>('/products/:slug', async (req, reply) => {

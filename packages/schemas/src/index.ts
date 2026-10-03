@@ -1,6 +1,7 @@
 export * from './primitives';
 export * from './errors';
 export * from './business';
+export * from './businessSchemas';
 export * from './permissions';
 export * from './catalog';
 export * from './pricing';

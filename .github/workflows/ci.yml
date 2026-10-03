@@ -26,6 +26,7 @@ jobs:
       SITE_URL: http://localhost:3001
       ADMIN_URL: http://localhost:3000/admin
       SEED_DEMO: '1'
+      VITE_ENABLED_LOCALES: uk,en
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,8 +35,23 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npx tsx prisma/seed/index.ts
+      - run: npx tsx scripts/translate-en-round24.ts
       - run: npm run typecheck
       - run: npx vitest run
       - run: npx vitest run
         working-directory: apps/api
       - run: npm run -s build -w @vivcharyk/admin && npm run -s build -w @vivcharyk/storefront
+      # Round 24 G187–G189: the SEO check of the built site against this database (scripts/seo-check.ts):
+      # every sitemap URL answers 200 with one title, a description, a self canonical, one h1, og tags.
+      # continue-on-error until the round-24 page work (titles ≤ 65, descriptions, og:image everywhere)
+      # has landed; then delete that line so a missing title, description or canonical fails the build.
+      - name: SEO check
+        continue-on-error: true
+        run: |
+          (cd apps/api && ROLE=api PORT=3000 nohup npx tsx src/server.ts > /tmp/api.log 2>&1 &)
+          (cd apps/storefront && WEB_PORT=3001 nohup node server.mjs > /tmp/web.log 2>&1 &)
+          for _ in $(seq 1 90); do curl -sf -o /dev/null http://127.0.0.1:3000/api/v1/health && curl -sf -o /dev/null http://127.0.0.1:3001/uk/ && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:3001 npx tsx scripts/seo-check.ts --out seo-snapshot.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: seo-snapshot, path: seo-snapshot.json, if-no-files-found: ignore }

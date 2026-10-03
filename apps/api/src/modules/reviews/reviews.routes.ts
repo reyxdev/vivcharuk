@@ -17,6 +17,8 @@ const listQuery = z.object({
   source: z.enum(['all', 'site', 'prom']).default('all'),
   page: z.coerce.number().int().min(1).max(100).default(1),
   perPage: z.coerce.number().int().min(1).max(60).default(12),
+  // Round 24 G086: the reviews of one product, shown on its page.
+  product: z.string().max(120).optional(),
 });
 
 const submitBody = z.object({
@@ -31,7 +33,10 @@ const submitBody = z.object({
 export async function reviewRoutes(app: FastifyInstance) {
   app.get('/reviews', async (req, reply) => {
     const q = listQuery.parse(req.query);
-    const where: Prisma.ReviewWhereInput = { status: 'APPROVED', ...(q.source === 'site' ? { source: 'SITE' } : q.source === 'prom' ? { source: 'PROM' } : {}) };
+    const where: Prisma.ReviewWhereInput = {
+      status: 'APPROVED', ...(q.source === 'site' ? { source: 'SITE' } : q.source === 'prom' ? { source: 'PROM' } : {}),
+      ...(q.product ? { product: { translations: { some: { slug: q.product } } } } : {}),
+    };
     const [total, rows, site, promCount] = await Promise.all([
       prisma.review.count({ where }),
       prisma.review.findMany({

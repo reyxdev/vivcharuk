@@ -1,0 +1,1914 @@
+{
+ "_readme": "Round 24 G093: English catalogue texts, applied by scripts/translate-en-round24.ts (idempotent). Each entry keeps the Ukrainian text it was translated from (uk): when the Ukrainian text in the database no longer matches, the entry is skipped with a warning, so a stale translation is never written. Keys: categories and collections by key, products by SKU, option values as <type>/<value>, attributes by key, materials and photo alt texts by their Ukrainian text. Slugs: Latin, lower case, from the English name.",
+ "categories": {
+  "kaptsi": {
+   "uk": {
+    "name": "Тапочки"
+   },
+   "en": {
+    "name": "Slippers",
+    "slug": "slippers",
+    "metaTitle": "Slippers — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm wool slippers felted and sewn in our workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Pick your size. Delivery across Ukraine."
+   }
+  },
+  "chuni": {
+   "uk": {
+    "name": "Чуні"
+   },
+   "en": {
+    "name": "Chuni Slippers",
+    "slug": "chuni-slippers",
+    "metaTitle": "Chuni Slippers — buy from the maker | Vivcharyk",
+    "metaDescription": "Chuni: felted wool slippers to keep your feet warm at home, from Vivcharyk in Yavoriv village, Kosiv district. Pick your size. Delivery across Ukraine."
+   }
+  },
+  "pinetky": {
+   "uk": {
+    "name": "Пінетки"
+   },
+   "en": {
+    "name": "Baby Booties",
+    "slug": "baby-booties",
+    "metaTitle": "Baby Booties — buy from the maker | Vivcharyk",
+    "metaDescription": "Baby booties for the littlest feet, from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district, in the Carpathians. Delivery across Ukraine."
+   }
+  },
+  "pledy": {
+   "uk": {
+    "name": "Пледи"
+   },
+   "en": {
+    "name": "Plaid Blankets",
+    "slug": "plaid-blankets",
+    "metaTitle": "Plaid Blankets — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool plaid blankets woven on the looms of our workshop in Yavoriv village, Kosiv district, for the sofa, the bed or cold evenings. Delivery across Ukraine."
+   }
+  },
+  "kovdry": {
+   "uk": {
+    "name": "Ковдри вовняні"
+   },
+   "en": {
+    "name": "Wool Duvets",
+    "slug": "wool-duvets",
+    "metaTitle": "Wool Duvets — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool duvets from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Natural warmth for your bed, with delivery across Ukraine."
+   }
+  },
+  "namatratsnyky": {
+   "uk": {
+    "name": "Наматрацники вовняні"
+   },
+   "en": {
+    "name": "Wool Mattress Toppers",
+    "slug": "wool-mattress-toppers",
+    "metaTitle": "Wool Mattress Toppers — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool mattress toppers from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district. A soft, warm layer for the bed. Delivery across Ukraine."
+   }
+  },
+  "konverty-dlia-nemovliat": {
+   "uk": {
+    "name": "Конверти для немовлят"
+   },
+   "en": {
+    "name": "Baby Bunting Bags",
+    "slug": "baby-bunting-bags",
+    "metaTitle": "Baby Bunting Bags — buy from the maker | Vivcharyk",
+    "metaDescription": "Bunting bags for newborns from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Delivery across Ukraine."
+   }
+  },
+  "podushky": {
+   "uk": {
+    "name": "Подушки вовняні"
+   },
+   "en": {
+    "name": "Wool Pillows",
+    "slug": "wool-pillows",
+    "metaTitle": "Wool Pillows — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool pillows sewn in our workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Choose your size and order online. Delivery across Ukraine."
+   }
+  },
+  "podushky-z-vovnoiu": {
+   "uk": {
+    "name": "Подушки з вовняним наповнювачем"
+   },
+   "en": {
+    "name": "Pillows with Wool Filling",
+    "slug": "pillows-with-wool-filling",
+    "metaTitle": "Pillows with Wool Filling — buy from the maker | Vivcharyk",
+    "metaDescription": "Pillows with a natural wool filling from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district. Choose your size, with delivery across Ukraine."
+   }
+  },
+  "podushky-pukh-pero": {
+   "uk": {
+    "name": "Подушки пух-перо"
+   },
+   "en": {
+    "name": "Down and Feather Pillows",
+    "slug": "down-and-feather-pillows",
+    "metaTitle": "Down and Feather Pillows — buy online | Vivcharyk",
+    "metaDescription": "Soft down and feather pillows in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv. Order online with delivery across Ukraine."
+   }
+  },
+  "podushky-antyalerhenni": {
+   "uk": {
+    "name": "Подушки з антиалергенного волокна"
+   },
+   "en": {
+    "name": "Hypoallergenic Fibre Pillows",
+    "slug": "hypoallergenic-fibre-pillows",
+    "metaTitle": "Hypoallergenic Fibre Pillows — buy online | Vivcharyk",
+    "metaDescription": "Pillows filled with hypoallergenic fibre, in the Vivcharyk shop alongside our Carpathian wool goods. Order online with delivery across Ukraine."
+   }
+  },
+  "podushky-rohalyky": {
+   "uk": {
+    "name": "Подушки для сну — рогалики"
+   },
+   "en": {
+    "name": "Crescent Sleep Pillows",
+    "slug": "crescent-sleep-pillows",
+    "metaTitle": "Crescent Sleep Pillows — buy from the maker | Vivcharyk",
+    "metaDescription": "Crescent-shaped sleep pillows from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district, in the Carpathians. Delivery across Ukraine."
+   }
+  },
+  "podushky-meblevi": {
+   "uk": {
+    "name": "Подушки меблеві"
+   },
+   "en": {
+    "name": "Cushions",
+    "slug": "cushions",
+    "metaTitle": "Cushions — buy from the maker | Vivcharyk",
+    "metaDescription": "Cushions for chairs, sofas and benches from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "navolochky": {
+   "uk": {
+    "name": "Наволочки"
+   },
+   "en": {
+    "name": "Pillowcases",
+    "slug": "pillowcases",
+    "metaTitle": "Pillowcases — buy from the maker | Vivcharyk",
+    "metaDescription": "Pillowcases from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district, to go with our pillows. Order online with delivery across Ukraine."
+   }
+  },
+  "postilna-bilyzna": {
+   "uk": {
+    "name": "Постільна білизна"
+   },
+   "en": {
+    "name": "Bed Linen",
+    "slug": "bed-linen",
+    "metaTitle": "Bed Linen — buy from the maker | Vivcharyk",
+    "metaDescription": "Bed linen from Vivcharyk to go with our wool duvets, pillows and lizhnyks. Order online from our Carpathian workshop, with delivery across Ukraine."
+   }
+  },
+  "shkarpetky": {
+   "uk": {
+    "name": "Шкарпетки"
+   },
+   "en": {
+    "name": "Socks",
+    "slug": "socks",
+    "metaTitle": "Socks — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm socks for cold days from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Pick your size. Delivery across Ukraine."
+   }
+  },
+  "rukavytsi": {
+   "uk": {
+    "name": "Рукавиці"
+   },
+   "en": {
+    "name": "Mittens",
+    "slug": "mittens",
+    "metaTitle": "Mittens — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm mittens for winter from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "hetry": {
+   "uk": {
+    "name": "Гетри"
+   },
+   "en": {
+    "name": "Leg Warmers",
+    "slug": "leg-warmers",
+    "metaTitle": "Leg Warmers — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm leg warmers from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "nakolinnyky": {
+   "uk": {
+    "name": "Наколінники"
+   },
+   "en": {
+    "name": "Knee Warmers",
+    "slug": "knee-warmers",
+    "metaTitle": "Knee Warmers — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm knee warmers from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "priazha": {
+   "uk": {
+    "name": "Пряжа кручена"
+   },
+   "en": {
+    "name": "Twisted Wool Yarn",
+    "slug": "twisted-wool-yarn",
+    "metaTitle": "Twisted Sheep's Wool Yarn — buy from the maker | Vivcharyk",
+    "metaDescription": "Twisted wool yarn spun in our workshop in Yavoriv village, Kosiv district, and sold in skeins for knitting. Delivery across Ukraine."
+   }
+  },
+  "rovnytsia": {
+   "uk": {
+    "name": "Рівниця сучена"
+   },
+   "en": {
+    "name": "Wool Roving",
+    "slug": "wool-roving",
+    "metaTitle": "Sheep's Wool Roving — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool roving carded in our workshop in Yavoriv village, Kosiv district: a continuous strip of parallel wool fibres for your crafts. Delivery across Ukraine."
+   }
+  },
+  "vovna-dlia-rukodillia": {
+   "uk": {
+    "name": "Вовна для рукоділля"
+   },
+   "en": {
+    "name": "Wool for Crafts",
+    "slug": "wool-for-crafts",
+    "metaTitle": "Wool for Crafts — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool for crafts from our workshop in Yavoriv village, Kosiv district, where we wash, card and spin wool ourselves. Delivery across Ukraine."
+   }
+  },
+  "huni": {
+   "uk": {
+    "name": "Гуні"
+   },
+   "en": {
+    "name": "Hunia Coats",
+    "slug": "hunia-coats",
+    "metaTitle": "Hunia Coats — buy from the maker | Vivcharyk",
+    "metaDescription": "Hunias: Hutsul felted wool coats sewn in our workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Delivery across Ukraine."
+   }
+  },
+  "keptari": {
+   "uk": {
+    "name": "Кептарі"
+   },
+   "en": {
+    "name": "Keptar Waistcoats",
+    "slug": "keptar-waistcoats",
+    "metaTitle": "Keptar Waistcoats — buy from the maker | Vivcharyk",
+    "metaDescription": "Keptars: Hutsul sheepskin waistcoats from Vivcharyk in Yavoriv village, Kosiv district, where we tan hides and sew sheepskin. Delivery across Ukraine."
+   }
+  },
+  "shuby": {
+   "uk": {
+    "name": "Шуби"
+   },
+   "en": {
+    "name": "Fur Coats",
+    "slug": "fur-coats",
+    "metaTitle": "Fur Coats — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm fur coats from Vivcharyk, a Carpathian workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Order online. Delivery across Ukraine."
+   }
+  },
+  "poiasy": {
+   "uk": {
+    "name": "Пояси"
+   },
+   "en": {
+    "name": "Woven Belts",
+    "slug": "woven-belts",
+    "metaTitle": "Woven Belts — buy from the maker | Vivcharyk",
+    "metaDescription": "Belts woven from wool yarn we spin ourselves, on the looms of our workshop in Yavoriv village, Kosiv district. Pick your length. Delivery across Ukraine."
+   }
+  },
+  "shapky": {
+   "uk": {
+    "name": "Шапки"
+   },
+   "en": {
+    "name": "Hats",
+    "slug": "hats",
+    "metaTitle": "Hats — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm hats from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Choose yours and order with delivery across Ukraine."
+   }
+  },
+  "kamizelky": {
+   "uk": {
+    "name": "Камізельки"
+   },
+   "en": {
+    "name": "Waistcoats",
+    "slug": "waistcoats",
+    "metaTitle": "Waistcoats — buy from the maker | Vivcharyk",
+    "metaDescription": "Waistcoats sewn in our workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Warm Carpathian clothing. Delivery across Ukraine."
+   }
+  },
+  "nakydky": {
+   "uk": {
+    "name": "Накидки"
+   },
+   "en": {
+    "name": "Capes",
+    "slug": "capes",
+    "metaTitle": "Capes — buy from the maker | Vivcharyk",
+    "metaDescription": "Capes from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Warm layers for cold days, with delivery across Ukraine."
+   }
+  },
+  "shkury": {
+   "uk": {
+    "name": "Шкури овечі"
+   },
+   "en": {
+    "name": "Sheepskin Rugs",
+    "slug": "sheepskin-rugs",
+    "metaTitle": "Sheepskin Rugs — buy from the maker | Vivcharyk",
+    "metaDescription": "Sheepskin rugs tanned in our workshop in Yavoriv village, Kosiv district: soft and warm on the floor, a bed or a chair. Delivery across Ukraine."
+   }
+  },
+  "kovryky-z-ovchyny": {
+   "uk": {
+    "name": "Коврики з овчини"
+   },
+   "en": {
+    "name": "Sheepskin Mats",
+    "slug": "sheepskin-mats",
+    "metaTitle": "Sheepskin Mats — buy from the maker | Vivcharyk",
+    "metaDescription": "Sheepskin mats for the floor, a bench or a chair, from hides tanned in our workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "avtomobilni-nakydky": {
+   "uk": {
+    "name": "Автомобільні накидки"
+   },
+   "en": {
+    "name": "Car Seat Covers",
+    "slug": "car-seat-covers",
+    "metaTitle": "Car Seat Covers — buy from the maker | Vivcharyk",
+    "metaDescription": "Sheepskin car seat covers from hides tanned in our own workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "vyroby-z-ovchyny": {
+   "uk": {
+    "name": "Вироби з овчини"
+   },
+   "en": {
+    "name": "Sheepskin Goods",
+    "slug": "sheepskin-goods",
+    "metaTitle": "Sheepskin Goods — buy from the maker | Vivcharyk",
+    "metaDescription": "Goods sewn from sheepskin we tan ourselves in our workshop in Yavoriv village, Kosiv district, Ivano-Frankivsk region. Delivery across Ukraine."
+   }
+  },
+  "dlia-kukhni": {
+   "uk": {
+    "name": "Для кухні"
+   },
+   "en": {
+    "name": "For the Kitchen",
+    "slug": "for-the-kitchen",
+    "metaTitle": "For the Kitchen — buy online | Vivcharyk",
+    "metaDescription": "Wooden goods for the kitchen in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv. Order online with delivery across Ukraine."
+   }
+  },
+  "masazhery": {
+   "uk": {
+    "name": "Масажери"
+   },
+   "en": {
+    "name": "Massagers",
+    "slug": "massagers",
+    "metaTitle": "Massagers — buy online | Vivcharyk",
+    "metaDescription": "Wooden massagers in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv, Kosiv district. Order online. Delivery across Ukraine."
+   }
+  },
+  "ihrashky": {
+   "uk": {
+    "name": "Іграшки"
+   },
+   "en": {
+    "name": "Toys",
+    "slug": "toys",
+    "metaTitle": "Toys — buy online | Vivcharyk",
+    "metaDescription": "Wooden toys in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv, Kosiv district. Order online with delivery across Ukraine."
+   }
+  },
+  "skarbnychky-ta-suveniry": {
+   "uk": {
+    "name": "Скарбнички та сувеніри"
+   },
+   "en": {
+    "name": "Money Boxes and Souvenirs",
+    "slug": "money-boxes-and-souvenirs",
+    "metaTitle": "Money Boxes and Souvenirs — buy online | Vivcharyk",
+    "metaDescription": "Wooden money boxes and souvenirs in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv. Order online. Delivery across Ukraine."
+   }
+  },
+  "lizhnyky": {
+   "uk": {
+    "name": "Ліжники"
+   },
+   "en": {
+    "name": "Lizhnyk Blankets",
+    "slug": "lizhnyk-blankets",
+    "metaTitle": "Sheep's Wool Lizhnyk Blankets — buy from the maker | Vivcharyk",
+    "metaDescription": "Lizhnyks: Hutsul sheep's wool blankets with a fluffy felted pile, woven in our workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "lizhnykovi-dorizhky": {
+   "uk": {
+    "name": "Ліжникові доріжки"
+   },
+   "en": {
+    "name": "Lizhnyk Runners",
+    "slug": "lizhnyk-runners",
+    "metaTitle": "Sheep's Wool Lizhnyk Runners — buy from the maker | Vivcharyk",
+    "metaDescription": "Narrow lizhnyk runners and small lizhnyk mats of sheep's wool, woven in our workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "lizhnykovi-nakydky": {
+   "uk": {
+    "name": "Ліжникові накидки"
+   },
+   "en": {
+    "name": "Lizhnyk Throws",
+    "slug": "lizhnyk-throws",
+    "metaTitle": "Sheep's Wool Lizhnyk Throws — buy from the maker | Vivcharyk",
+    "metaDescription": "Lizhnyk throws of sheep's wool with a soft felted pile, woven in our workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "kylymy": {
+   "uk": {
+    "name": "Килими та килимові доріжки"
+   },
+   "en": {
+    "name": "Rugs and Rug Runners",
+    "slug": "rugs-and-rug-runners",
+    "metaTitle": "Rugs and Rug Runners — buy from the maker | Vivcharyk",
+    "metaDescription": "Flat-woven rugs and rug runners with a dense, smooth texture and bright Carpathian geometric patterns. Order from Vivcharyk with delivery across Ukraine."
+   }
+  },
+  "lizhnyky-ta-pledy": {
+   "uk": {
+    "name": "Ліжники та килими"
+   },
+   "en": {
+    "name": "Lizhnyks and Rugs",
+    "slug": "lizhnyks-and-rugs",
+    "metaTitle": "Lizhnyks and Rugs — buy from the maker | Vivcharyk",
+    "metaDescription": "Lizhnyks with a felted pile, lizhnyk runners and throws woven in our workshop in Yavoriv, Kosiv district, plus flat-woven rugs. Delivery across Ukraine."
+   }
+  },
+  "pledy-ta-kovdry": {
+   "uk": {
+    "name": "Пледи та ковдри"
+   },
+   "en": {
+    "name": "Blankets and Duvets",
+    "slug": "blankets-and-duvets",
+    "metaTitle": "Blankets and Duvets — buy from the maker | Vivcharyk",
+    "metaDescription": "Plaid blankets, wool duvets, wool mattress toppers and baby bunting bags from Vivcharyk, a workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "vzuttia": {
+   "uk": {
+    "name": "Взуття"
+   },
+   "en": {
+    "name": "Footwear",
+    "slug": "footwear",
+    "metaTitle": "Footwear — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm home footwear from Vivcharyk: slippers, chuni (felted wool slippers) and baby booties. Pick your size and order online. Delivery across Ukraine."
+   }
+  },
+  "ovchyna": {
+   "uk": {
+    "name": "Овчина"
+   },
+   "en": {
+    "name": "Sheepskin",
+    "slug": "sheepskin",
+    "metaTitle": "Sheepskin — buy from the maker | Vivcharyk",
+    "metaDescription": "Sheepskin rugs, sheepskin mats and car seat covers from hides we tan ourselves in our workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "vovnianyi-odiah": {
+   "uk": {
+    "name": "Одяг"
+   },
+   "en": {
+    "name": "Clothing",
+    "slug": "clothing",
+    "metaTitle": "Clothing — buy from the maker | Vivcharyk",
+    "metaDescription": "Clothing from Vivcharyk in Yavoriv village, Kosiv district: hunias, keptars, fur coats, woven belts, hats and more. Order online. Delivery across Ukraine."
+   }
+  },
+  "podushky-ta-postil": {
+   "uk": {
+    "name": "Подушки"
+   },
+   "en": {
+    "name": "Pillows",
+    "slug": "pillows",
+    "metaTitle": "Pillows — buy from the maker | Vivcharyk",
+    "metaDescription": "Pillows from Vivcharyk: wool, wool-filled, down and feather, hypoallergenic fibre, crescent sleep pillows and cushions. Delivery across Ukraine."
+   }
+  },
+  "postil": {
+   "uk": {
+    "name": "Постіль"
+   },
+   "en": {
+    "name": "Bedding",
+    "slug": "bedding",
+    "metaTitle": "Bedding — buy from the maker | Vivcharyk",
+    "metaDescription": "Bedding from Vivcharyk: pillowcases and bed linen to go with our wool pillows, duvets and lizhnyks. Order online with delivery across Ukraine."
+   }
+  },
+  "shkarpetky-ta-kaptsi": {
+   "uk": {
+    "name": "Шкарпетки й теплі речі"
+   },
+   "en": {
+    "name": "Socks and Warm Things",
+    "slug": "socks-and-warm-things",
+    "metaTitle": "Socks and Warm Things — buy from the maker | Vivcharyk",
+    "metaDescription": "Warm socks, mittens, leg warmers and knee warmers from Vivcharyk, a wool workshop in Yavoriv village, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "priazha-ta-rukodillia": {
+   "uk": {
+    "name": "Пряжа та рукоділля"
+   },
+   "en": {
+    "name": "Yarn and Crafts",
+    "slug": "yarn-and-crafts",
+    "metaTitle": "Yarn and Crafts — buy from the maker | Vivcharyk",
+    "metaDescription": "Twisted wool yarn and wool roving, spun and carded in our workshop in Yavoriv village, Kosiv district, for knitting and crafts. Delivery across Ukraine."
+   }
+  },
+  "shkira": {
+   "uk": {
+    "name": "Шкіряні сумки"
+   },
+   "en": {
+    "name": "Leather Bags",
+    "slug": "leather-bags",
+    "metaTitle": "Leather Bags — buy from the maker | Vivcharyk",
+    "metaDescription": "Leather bags from Vivcharyk, sewn in the same workshop in Yavoriv village, Kosiv district, as our sheepskin goods. Delivery across Ukraine."
+   }
+  },
+  "derevo": {
+   "uk": {
+    "name": "Дерев'яні вироби"
+   },
+   "en": {
+    "name": "Wooden Goods",
+    "slug": "wooden-goods",
+    "metaTitle": "Wooden Goods — buy online | Vivcharyk",
+    "metaDescription": "Wooden goods in the Vivcharyk shop: things for the kitchen, massagers, toys, money boxes and souvenirs. Order online with delivery across Ukraine."
+   }
+  },
+  "eko-chai": {
+   "uk": {
+    "name": "Еко-чаї"
+   },
+   "en": {
+    "name": "Eco Teas",
+    "slug": "eco-teas",
+    "metaTitle": "Eco Teas — buy online | Vivcharyk",
+    "metaDescription": "Eco teas in the Vivcharyk shop, alongside our Carpathian wool goods from Yavoriv, Kosiv district. Order online with delivery across Ukraine."
+   }
+  }
+ },
+ "collections": {
+  "gifts": {
+   "uk": {
+    "name": "На подарунок"
+   },
+   "en": {
+    "name": "Gifts",
+    "slug": "gifts",
+    "metaTitle": "Gifts — buy from the maker | Vivcharyk",
+    "metaDescription": "Gift ideas from our Carpathian wool workshop in Yavoriv village, Kosiv district, for family and friends. Order online. Delivery across Ukraine."
+   }
+  },
+  "wedding": {
+   "uk": {
+    "name": "Весільні"
+   },
+   "en": {
+    "name": "For the Wedding",
+    "slug": "for-the-wedding",
+    "metaTitle": "For the Wedding — buy from the maker | Vivcharyk",
+    "metaDescription": "Wedding gifts and wool goods for the newlyweds' home, from our workshop in Yavoriv village, Kosiv district, in the Carpathians. Delivery across Ukraine."
+   }
+  },
+  "children": {
+   "uk": {
+    "name": "Для дітей"
+   },
+   "en": {
+    "name": "For Children",
+    "slug": "for-children",
+    "metaTitle": "For Children — buy from the maker | Vivcharyk",
+    "metaDescription": "Wool goods for children from Vivcharyk, a Carpathian wool workshop in Yavoriv village, Kosiv district. Order online with delivery across Ukraine."
+   }
+  }
+ },
+ "products": {
+  "VCH-DOR-001": {
+   "uk": {
+    "name": "Ліжниковий килимок білий з чорним орнаментом",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Невеликий килимок: біле поле з чорним ялинковим орнаментом по центру, китиці по краях. Підійде біля ліжка чи на крісло."
+   },
+   "en": {
+    "name": "White lizhnyk mat with a black ornament",
+    "slug": "white-lizhnyk-mat-with-black-ornament",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. A small mat: a white field with a black fir-tree ornament in the centre and tassels at the edges. Good by the bed or on an armchair.",
+    "metaDescription": "White lizhnyk mat with a black ornament. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Tassels at the edges. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-002": {
+   "uk": {
+    "name": "Ліжникова доріжка біла з темним зигзагом",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Вузька доріжка з білим полем і темно-сірим зигзагом на всю довжину."
+   },
+   "en": {
+    "name": "White lizhnyk runner with a dark zigzag",
+    "slug": "white-lizhnyk-runner-with-dark-zigzag",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. A narrow runner with a white field and a dark grey zigzag along its whole length.",
+    "metaDescription": "White lizhnyk runner with a dark zigzag. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. A narrow runner. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-003": {
+   "uk": {
+    "name": "Ліжникова доріжка сіро-біла з ялинковим краєм",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Доріжка розділена навпіл: темно-сіра й біла половини сходяться зубчастим «ялинковим» краєм."
+   },
+   "en": {
+    "name": "Grey and white lizhnyk runner with a fir-tree edge",
+    "slug": "grey-and-white-lizhnyk-runner-with-fir-tree-edge",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. The runner is split in half: the dark grey and white halves meet in a jagged fir-tree edge.",
+    "metaDescription": "Grey and white lizhnyk runner with a fir-tree edge. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-004": {
+   "uk": {
+    "name": "Ліжникова доріжка біла з темним орнаментом",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Світле поле з темно-сірим ялинковим орнаментом по центру на всю довжину, сірі краї."
+   },
+   "en": {
+    "name": "White lizhnyk runner with a dark ornament",
+    "slug": "white-lizhnyk-runner-with-dark-ornament",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. A light field with a dark grey fir-tree ornament down the centre along the whole length, and grey edges.",
+    "metaDescription": "White lizhnyk runner with a dark ornament. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Grey edges. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-005": {
+   "uk": {
+    "name": "Ліжникова доріжка із зеленим орнаментом",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Темно-сірий, зелений і білий кольори сходяться зубчастим візерунком уздовж доріжки."
+   },
+   "en": {
+    "name": "Lizhnyk runner with a green ornament",
+    "slug": "lizhnyk-runner-with-green-ornament",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. Dark grey, green and white meet in a jagged pattern along the runner.",
+    "metaDescription": "Lizhnyk runner with a green ornament. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-006": {
+   "uk": {
+    "name": "Ліжникова доріжка з великим ромбом",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. На сірому полі — великий ромб із коричневим, білим і зеленим орнаментом, по краях — китиці."
+   },
+   "en": {
+    "name": "Lizhnyk runner with a large diamond",
+    "slug": "lizhnyk-runner-with-large-diamond",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. On a grey field, a large diamond with a brown, white and green ornament; tassels at the edges.",
+    "metaDescription": "Lizhnyk runner with a large diamond. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Grey field, tassels. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-007": {
+   "uk": {
+    "name": "Ліжникова доріжка з ромбом-зіркою",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Центральний ромб-зірка в коричневих, зелених і білих тонах на сірому полі."
+   },
+   "en": {
+    "name": "Lizhnyk runner with a star diamond",
+    "slug": "lizhnyk-runner-with-star-diamond",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. A central star-shaped diamond in brown, green and white tones on a grey field.",
+    "metaDescription": "Lizhnyk runner with a star diamond. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Grey field. Delivery across Ukraine."
+   }
+  },
+  "VCH-DOR-008": {
+   "uk": {
+    "name": "Ліжникова доріжка біла рельєфна",
+    "description": "Ліжникова доріжка з овечої вовни, виткана в нашій майстерні в Яворові. Біла доріжка, повністю виткана об'ємними «горошинами» — м'яка й рельєфна під ногами."
+   },
+   "en": {
+    "name": "White textured lizhnyk runner",
+    "slug": "white-textured-lizhnyk-runner",
+    "description": "A lizhnyk runner of sheep's wool, woven in our workshop in Yavoriv. A white runner woven entirely in raised bobbles, soft and textured underfoot.",
+    "metaDescription": "White textured lizhnyk runner. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Woven in raised bobbles. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-001": {
+   "uk": {
+    "name": "Килим барвистий з ромбами",
+    "description": "Тканий килим із щільною гладкою фактурою. Чорне поле з рядами помаранчевих, жовтих, зелених і червоних ромбів та смуг. Яскравий карпатський колорит."
+   },
+   "en": {
+    "name": "Colourful rug with diamonds",
+    "slug": "colourful-rug-with-diamonds",
+    "description": "A woven rug with a dense, smooth texture. A black field with rows of orange, yellow, green and red diamonds and stripes. Bright Carpathian colours.",
+    "metaDescription": "Colourful rug with diamonds: a woven rug with a dense, smooth texture. Black field with orange, yellow, green and red diamonds. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-002": {
+   "uk": {
+    "name": "Килим помаранчевий з ромбами",
+    "description": "Тканий килим із щільною гладкою фактурою. Помаранчеве й червоне поле з рядами ромбів у зелених, жовтих і бордових відтінках."
+   },
+   "en": {
+    "name": "Orange rug with diamonds",
+    "slug": "orange-rug-with-diamonds",
+    "description": "A woven rug with a dense, smooth texture. An orange and red field with rows of diamonds in shades of green, yellow and burgundy.",
+    "metaDescription": "Orange rug with diamonds: a woven rug with a dense, smooth texture. Orange and red field, green, yellow and burgundy diamonds. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-003": {
+   "uk": {
+    "name": "Килим червоно-помаранчевий з ялинками",
+    "description": "Тканий килим із щільною гладкою фактурою. Вертикальні смуги червоного, помаранчевого, зеленого й жовтого кольорів із зубчастим орнаментом."
+   },
+   "en": {
+    "name": "Red and orange rug with fir trees",
+    "slug": "red-and-orange-rug-with-fir-trees",
+    "description": "A woven rug with a dense, smooth texture. Vertical stripes of red, orange, green and yellow with a jagged ornament.",
+    "metaDescription": "Red and orange rug with fir trees: a woven rug with a dense, smooth texture. Red, orange, green and yellow stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-004": {
+   "uk": {
+    "name": "Килим чорний з помаранчевими ромбами",
+    "description": "Тканий килим із щільною гладкою фактурою. Чорне поле з великими помаранчево-жовтими ромбами й червоними смугами."
+   },
+   "en": {
+    "name": "Black rug with orange diamonds",
+    "slug": "black-rug-with-orange-diamonds",
+    "description": "A woven rug with a dense, smooth texture. A black field with large orange and yellow diamonds and red stripes.",
+    "metaDescription": "Black rug with orange diamonds: a woven rug with a dense, smooth texture. Large orange and yellow diamonds, red stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-005": {
+   "uk": {
+    "name": "Килим бордовий із жовтими ромбами",
+    "description": "Тканий килим із щільною гладкою фактурою. Бордове поле з ромбами помаранчевого, жовтого й зеленого кольорів."
+   },
+   "en": {
+    "name": "Burgundy rug with yellow diamonds",
+    "slug": "burgundy-rug-with-yellow-diamonds",
+    "description": "A woven rug with a dense, smooth texture. A burgundy field with orange, yellow and green diamonds.",
+    "metaDescription": "Burgundy rug with yellow diamonds: a woven rug with a dense, smooth texture. Orange, yellow and green diamonds. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-006": {
+   "uk": {
+    "name": "Килим бордовий з орнаментальними смугами",
+    "description": "Тканий килим із щільною гладкою фактурою. Вузькі смуги з орнаментом у бордових, зелених, жовтих і білих тонах."
+   },
+   "en": {
+    "name": "Burgundy rug with ornamental stripes",
+    "slug": "burgundy-rug-with-ornamental-stripes",
+    "description": "A woven rug with a dense, smooth texture. Narrow stripes with an ornament in burgundy, green, yellow and white tones.",
+    "metaDescription": "Burgundy rug with ornamental stripes: a woven rug with a dense, smooth texture. Burgundy, green, yellow and white. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-007": {
+   "uk": {
+    "name": "Килим світлий з темними смугами",
+    "description": "Тканий килим із щільною гладкою фактурою. Світло-сіре поле з темно-коричневими смугами та дрібним орнаментом «стрілками». Стриманий і світлий."
+   },
+   "en": {
+    "name": "Light rug with dark stripes",
+    "slug": "light-rug-with-dark-stripes",
+    "description": "A woven rug with a dense, smooth texture. A light grey field with dark brown stripes and a small arrow ornament. Understated and light.",
+    "metaDescription": "Light rug with dark stripes: a woven rug with a dense, smooth texture. Light grey field, dark brown stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-008": {
+   "uk": {
+    "name": "Килим червоний у смугу",
+    "description": "Тканий килим із щільною гладкою фактурою. Червоне поле з білими й темними смугами та центральним ромбоподібним орнаментом."
+   },
+   "en": {
+    "name": "Red striped rug",
+    "slug": "red-striped-rug",
+    "description": "A woven rug with a dense, smooth texture. A red field with white and dark stripes and a central diamond-shaped ornament.",
+    "metaDescription": "Red striped rug: a woven rug with a dense, smooth texture. Red field, white and dark stripes, a central diamond. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-009": {
+   "uk": {
+    "name": "Килим бежевий у коричневу смугу",
+    "description": "Тканий килим із щільною гладкою фактурою. Бежеве поле з коричневими й білими смугами, з тонким білим орнаментом."
+   },
+   "en": {
+    "name": "Beige rug with brown stripes",
+    "slug": "beige-rug-with-brown-stripes",
+    "description": "A woven rug with a dense, smooth texture. A beige field with brown and white stripes and a fine white ornament.",
+    "metaDescription": "Beige rug with brown stripes: a woven rug with a dense, smooth texture. Beige field, brown and white stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-010": {
+   "uk": {
+    "name": "Килим білий з бордовим ромбом",
+    "description": "Тканий килим із щільною гладкою фактурою. Світле поле з бордовими й зеленими смугами, по центру — орнамент-ромб у бордових і гірчичних тонах."
+   },
+   "en": {
+    "name": "White rug with a burgundy diamond",
+    "slug": "white-rug-with-burgundy-diamond",
+    "description": "A woven rug with a dense, smooth texture. A light field with burgundy and green stripes; in the centre, a diamond ornament in burgundy and mustard tones.",
+    "metaDescription": "White rug with a burgundy diamond: a woven rug with a dense, smooth texture. Burgundy and green stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-011": {
+   "uk": {
+    "name": "Килим зелений у смугу",
+    "description": "Тканий килим із щільною гладкою фактурою. Смуги сіро-зеленого, темно-зеленого й білого кольорів з дрібними ромбиками."
+   },
+   "en": {
+    "name": "Green striped rug",
+    "slug": "green-striped-rug",
+    "description": "A woven rug with a dense, smooth texture. Stripes of grey-green, dark green and white with small diamonds.",
+    "metaDescription": "Green striped rug: a woven rug with a dense, smooth texture. Grey-green, dark green and white stripes, small diamonds. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-012": {
+   "uk": {
+    "name": "Килим рожево-бордовий з орнаментом",
+    "description": "Тканий килим із щільною гладкою фактурою. Рожево-бордові смуги з дрібним білим, червоним і зеленим орнаментом та вузькими кольоровими вставками."
+   },
+   "en": {
+    "name": "Pink and burgundy rug with an ornament",
+    "slug": "pink-and-burgundy-rug-with-ornament",
+    "description": "A woven rug with a dense, smooth texture. Pink and burgundy stripes with a small white, red and green ornament and narrow coloured inserts.",
+    "metaDescription": "Pink and burgundy rug with an ornament: a woven rug with a dense, smooth texture. Pink and burgundy stripes. Delivery across Ukraine."
+   }
+  },
+  "VCH-KYL-013": {
+   "uk": {
+    "name": "Килим білий із зелено-гірчичним орнаментом",
+    "description": "Тканий килим із щільною гладкою фактурою. Біле поле з зеленими, гірчичними й бордовими смугами та орнаментом-зіркою."
+   },
+   "en": {
+    "name": "White rug with a green and mustard ornament",
+    "slug": "white-rug-with-green-and-mustard-ornament",
+    "description": "A woven rug with a dense, smooth texture. A white field with green, mustard and burgundy stripes and a star ornament.",
+    "metaDescription": "White rug with a green and mustard ornament: a woven rug with a dense, smooth texture. A star ornament. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZ-0108": {
+   "uk": {
+    "name": "Ліжник «Пробний»",
+    "description": "Пробний вовняний ліжник, витканий у Яворові з карпатської вовни. Теплий і щільний."
+   },
+   "en": {
+    "name": "Trial lizhnyk",
+    "slug": "trial-lizhnyk",
+    "description": "A trial wool lizhnyk, woven in Yavoriv from Carpathian wool. Warm and dense.",
+    "metaDescription": "Trial wool lizhnyk, woven in Yavoriv from Carpathian wool: warm and dense. Order from Vivcharyk with delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-001": {
+   "uk": {
+    "name": "Ліжник сірий із чорно-білими ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле, по центру — три ромби-медальйони з білої та чорної вовни, облямівка з білими й чорними зубцями. Густий пухнастий ворс, по краях — китиці."
+   },
+   "en": {
+    "name": "Grey lizhnyk with black and white diamonds",
+    "slug": "grey-lizhnyk-with-black-and-white-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with three diamond medallions of white and black wool in the centre, and a border of white and black teeth. A thick, fluffy pile, with tassels at the edges.",
+    "metaDescription": "Grey lizhnyk with black and white diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-002": {
+   "uk": {
+    "name": "Ліжник сірий з червоним зигзагом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Світло-сіре поле з коричневими ступінчастими ромбами, обведеними білим і червоним, уздовж краю біжить червоний зигзаг. Ворс м'який і густий, по краях — китиці."
+   },
+   "en": {
+    "name": "Grey lizhnyk with a red zigzag",
+    "slug": "grey-lizhnyk-with-red-zigzag",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A light grey field with brown stepped diamonds outlined in white and red, and a red zigzag running along the edge. The pile is soft and thick, with tassels at the edges.",
+    "metaDescription": "Grey lizhnyk with a red zigzag. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Soft, thick pile, tassels. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-003": {
+   "uk": {
+    "name": "Ліжник з коричнево-сірими трикутниками",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Геометричний візерунок із трикутників білого, сірого, світло-коричневого й темно-коричневого кольорів у природних відтінках вовни. Сіра облямівка, китиці по краях."
+   },
+   "en": {
+    "name": "Lizhnyk with brown and grey triangles",
+    "slug": "lizhnyk-with-brown-and-grey-triangles",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A geometric pattern of white, grey, light brown and dark brown triangles in the natural shades of wool. A grey border, tassels at the edges.",
+    "metaDescription": "Lizhnyk with brown and grey triangles. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Natural wool shades. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-004": {
+   "uk": {
+    "name": "Ліжник білий з коричневим зигзагом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Широкі зигзаги темно-коричневого, коричневого та сірого кольорів на білому полі. Коричневі смуги мають об'ємну рельєфну фактуру, що добре видно зблизька."
+   },
+   "en": {
+    "name": "White lizhnyk with a brown zigzag",
+    "slug": "white-lizhnyk-with-brown-zigzag",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Wide zigzags of dark brown, brown and grey on a white field. The brown stripes have a raised, textured surface that shows well up close.",
+    "metaDescription": "White lizhnyk with a brown zigzag. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Raised texture. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-005": {
+   "uk": {
+    "name": "Ліжник темний з малиновими й синіми ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Темно-сіре поле з білою ступінчастою облямівкою, по центру — ромби з малиновими й синіми акцентами. Яскравий, контрастний гуцульський орнамент."
+   },
+   "en": {
+    "name": "Dark lizhnyk with crimson and blue diamonds",
+    "slug": "dark-lizhnyk-with-crimson-and-blue-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A dark grey field with a white stepped border, and diamonds with crimson and blue accents in the centre. A bright, contrasting Hutsul ornament.",
+    "metaDescription": "Dark lizhnyk with crimson and blue diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-006": {
+   "uk": {
+    "name": "Ліжник сірий з трьома кольоровими ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. На сірому полі — три ромби: червоний, синій і зелений у білому контурі. Чорно-біла облямівка із зубцями, китиці по краях."
+   },
+   "en": {
+    "name": "Grey lizhnyk with three coloured diamonds",
+    "slug": "grey-lizhnyk-with-three-coloured-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. On a grey field, three diamonds: red, blue and green, outlined in white. A black and white toothed border, tassels at the edges.",
+    "metaDescription": "Grey lizhnyk with three coloured diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-007": {
+   "uk": {
+    "name": "Ліжник сірий з двома орнаментальними полями",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Полотно поділене на дві частини, у кожній — зірка-ромб із червоними, синіми й зеленими деталями та білі прямокутники обабіч. Темні смуги по краях."
+   },
+   "en": {
+    "name": "Grey lizhnyk with two ornamental panels",
+    "slug": "grey-lizhnyk-with-two-ornamental-panels",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. The cloth is divided into two parts, each with a star diamond with red, blue and green details and white rectangles on either side. Dark stripes at the edges.",
+    "metaDescription": "Grey lizhnyk with two ornamental panels. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-008": {
+   "uk": {
+    "name": "Ліжник білий з малиновими ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Біле поле з ромбами малинового й коричневого кольорів, облямівка — малиново-чорна шахова клітинка. Святковий яскравий візерунок."
+   },
+   "en": {
+    "name": "White lizhnyk with crimson diamonds",
+    "slug": "white-lizhnyk-with-crimson-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A white field with crimson and brown diamonds and a crimson and black chequered border. A bright, festive pattern.",
+    "metaDescription": "White lizhnyk with crimson diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Chequered border. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-009": {
+   "uk": {
+    "name": "Ліжник білий із зеленим зигзагом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Зелені й темно-коричневі зигзаги на білому полі. Зелені смуги виткано об'ємними «горошинами», тож ліжник приємно рельєфний на дотик."
+   },
+   "en": {
+    "name": "White lizhnyk with a green zigzag",
+    "slug": "white-lizhnyk-with-green-zigzag",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Green and dark brown zigzags on a white field. The green stripes are woven in raised bobbles, so the lizhnyk feels pleasantly textured to the touch.",
+    "metaDescription": "White lizhnyk with a green zigzag. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Raised texture. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-010": {
+   "uk": {
+    "name": "Ліжник сірий з кольоровими ромбиками",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з білими смугами, на яких ряди червоних, синіх і жовтих ромбиків, між ними — короткі кольорові штрихи. Легкий, веселий орнамент."
+   },
+   "en": {
+    "name": "Grey lizhnyk with small coloured diamonds",
+    "slug": "grey-lizhnyk-with-small-coloured-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with white stripes carrying rows of small red, blue and yellow diamonds, with short coloured dashes between them. A light, cheerful ornament.",
+    "metaDescription": "Grey lizhnyk with small coloured diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-011": {
+   "uk": {
+    "name": "Ліжник сірий із синім ромбом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сірувато-коричневе поле з центральним синім ромбом у білому контурі, по краях — білі прямокутники та синьо-білі смуги."
+   },
+   "en": {
+    "name": "Grey lizhnyk with a blue diamond",
+    "slug": "grey-lizhnyk-with-blue-diamond",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A greyish-brown field with a central blue diamond outlined in white; white rectangles and blue and white stripes at the edges.",
+    "metaDescription": "Grey lizhnyk with a blue diamond. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-012": {
+   "uk": {
+    "name": "Ліжник у кольорову смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Дрібні поперечні смужки білого, сірого, червоного, синього й зеленого кольорів. Пасує до будь-якого інтер'єру, підходить як покривало чи плед."
+   },
+   "en": {
+    "name": "Lizhnyk with coloured stripes",
+    "slug": "lizhnyk-with-coloured-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Fine crosswise stripes of white, grey, red, blue and green. Suits any interior and works as a bedspread or a throw.",
+    "metaDescription": "Lizhnyk with coloured stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. A bedspread or a throw. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-013": {
+   "uk": {
+    "name": "Ліжник у кольорову клітинку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Шахові квадрати синього, жовтого, сірого й білого кольорів у білій облямівці. Квадрати виткано об'ємною фактурою."
+   },
+   "en": {
+    "name": "Lizhnyk with coloured checks",
+    "slug": "lizhnyk-with-coloured-checks",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Chequered squares of blue, yellow, grey and white in a white border. The squares are woven with a raised texture.",
+    "metaDescription": "Lizhnyk with coloured checks. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Raised texture. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-014": {
+   "uk": {
+    "name": "Ліжник у дрібну малинову смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Дрібна смужка малинового, сірого й білого кольорів, світлі краї з китицями. Спокійний візерунок на щодень."
+   },
+   "en": {
+    "name": "Lizhnyk with fine crimson stripes",
+    "slug": "lizhnyk-with-fine-crimson-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Fine stripes of crimson, grey and white, with light edges and tassels. A calm pattern for every day.",
+    "metaDescription": "Lizhnyk with fine crimson stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. For every day. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-015": {
+   "uk": {
+    "name": "Ліжник білий у тонку сіру смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Тонкі смужки сірого й коричневого кольорів на білому полі — природні відтінки вовни. Легкий і світлий."
+   },
+   "en": {
+    "name": "White lizhnyk with thin grey stripes",
+    "slug": "white-lizhnyk-with-thin-grey-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Thin grey and brown stripes on a white field, in the natural shades of wool. Light and bright.",
+    "metaDescription": "White lizhnyk with thin grey stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Light and bright. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-016": {
+   "uk": {
+    "name": "Ліжник білий із широкими сірими смугами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Білі поля чергуються з групами сірих і чорних смуг. Стриманий класичний ліжник."
+   },
+   "en": {
+    "name": "White lizhnyk with wide grey stripes",
+    "slug": "white-lizhnyk-with-wide-grey-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. White fields alternate with groups of grey and black stripes. An understated classic lizhnyk.",
+    "metaDescription": "White lizhnyk with wide grey stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Understated and classic. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-017": {
+   "uk": {
+    "name": "Ліжник білий у бордову смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Поперечні бордово-малинові смуги на білому полі. Ворс густий, по краях — китиці."
+   },
+   "en": {
+    "name": "White lizhnyk with burgundy stripes",
+    "slug": "white-lizhnyk-with-burgundy-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Crosswise burgundy and crimson stripes on a white field. The pile is thick, with tassels at the edges.",
+    "metaDescription": "White lizhnyk with burgundy stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Thick pile. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-018": {
+   "uk": {
+    "name": "Ліжник сіро-білий з темними хрестами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Біле й сіре поля з темно-сірими фігурами у формі хреста та тонкими смужками. Простий графічний орнамент."
+   },
+   "en": {
+    "name": "Grey and white lizhnyk with dark crosses",
+    "slug": "grey-and-white-lizhnyk-with-dark-crosses",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. White and grey fields with dark grey cross-shaped figures and thin stripes. A simple graphic ornament.",
+    "metaDescription": "Grey and white lizhnyk with dark crosses. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-019": {
+   "uk": {
+    "name": "Ліжник у сіро-білу смужку з малиновою ниткою",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіро-білі смуги з тонкими малиновими й темними нитками, ширші сірі смуги по краях."
+   },
+   "en": {
+    "name": "Grey and white striped lizhnyk with a crimson thread",
+    "slug": "grey-and-white-striped-lizhnyk-with-crimson-thread",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Grey and white stripes with thin crimson and dark threads, and wider grey stripes at the edges.",
+    "metaDescription": "Grey and white striped lizhnyk with a crimson thread. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-020": {
+   "uk": {
+    "name": "Ліжник сірий у темну смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з парними смужками темно-коричневого й білого кольорів. Практичний ліжник на щодень."
+   },
+   "en": {
+    "name": "Grey lizhnyk with dark stripes",
+    "slug": "grey-lizhnyk-with-dark-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with paired stripes of dark brown and white. A practical lizhnyk for every day.",
+    "metaDescription": "Grey lizhnyk with dark stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. For every day. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-021": {
+   "uk": {
+    "name": "Ліжник білий у сіро-коричневу смужку",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Білі, сірі й темні смужки з тонкою рудою ниткою. Природні відтінки вовни."
+   },
+   "en": {
+    "name": "White lizhnyk with grey and brown stripes",
+    "slug": "white-lizhnyk-with-grey-and-brown-stripes",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. White, grey and dark stripes with a thin rust-coloured thread. Natural shades of wool.",
+    "metaDescription": "White lizhnyk with grey and brown stripes. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-022": {
+   "uk": {
+    "name": "Ліжник сірий з квадратами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з розкиданими квадратами в білих, чорних і сірих рамках. Сучасна графіка в природних кольорах вовни."
+   },
+   "en": {
+    "name": "Grey lizhnyk with squares",
+    "slug": "grey-lizhnyk-with-squares",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with scattered squares in white, black and grey frames. Modern graphics in the natural colours of wool.",
+    "metaDescription": "Grey lizhnyk with squares. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Natural wool colours. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-023": {
+   "uk": {
+    "name": "Ліжник з жовтим зигзагом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Зигзаги жовтого, сірого й темно-сірого кольорів на білому полі. Жовті смуги виткано щільною гладкою фактурою, білі — рельєфною."
+   },
+   "en": {
+    "name": "Lizhnyk with a yellow zigzag",
+    "slug": "lizhnyk-with-yellow-zigzag",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Yellow, grey and dark grey zigzags on a white field. The yellow stripes are woven with a dense, smooth texture, the white ones with a raised texture.",
+    "metaDescription": "Lizhnyk with a yellow zigzag. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Smooth and raised textures. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-024": {
+   "uk": {
+    "name": "Ліжник сірий з чорно-білою зіркою",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з центральним орнаментом із чорно-білих ромбів і облямівкою із зубцями. Класичний гуцульський візерунок."
+   },
+   "en": {
+    "name": "Grey lizhnyk with a black and white star",
+    "slug": "grey-lizhnyk-with-black-and-white-star",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with a central ornament of black and white diamonds and a toothed border. A classic Hutsul pattern.",
+    "metaDescription": "Grey lizhnyk with a black and white star. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-025": {
+   "uk": {
+    "name": "Ліжник білий із синіми ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Ряди ромбів синього, сірого й чорного кольорів на білому полі складаються в об'ємний візерунок, схожий на кубики."
+   },
+   "en": {
+    "name": "White lizhnyk with blue diamonds",
+    "slug": "white-lizhnyk-with-blue-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Rows of blue, grey and black diamonds on a white field form a three-dimensional pattern that looks like cubes.",
+    "metaDescription": "White lizhnyk with blue diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Looks like cubes. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-026": {
+   "uk": {
+    "name": "Ліжник сірий з білими й синіми ромбиками",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з розкиданими дрібними ромбиками: білі виткано об'ємною фактурою, сині — гладкою."
+   },
+   "en": {
+    "name": "Grey lizhnyk with small white and blue diamonds",
+    "slug": "grey-lizhnyk-with-small-white-and-blue-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with small scattered diamonds: the white ones woven with a raised texture, the blue ones smooth.",
+    "metaDescription": "Grey lizhnyk with small white and blue diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-027": {
+   "uk": {
+    "name": "Ліжник сірий з малиновими ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Три ромби з малиновим і зеленим центром на сірому полі, широка біла облямівка зі сходинками."
+   },
+   "en": {
+    "name": "Grey lizhnyk with crimson diamonds",
+    "slug": "grey-lizhnyk-with-crimson-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Three diamonds with crimson and green centres on a grey field, and a wide white stepped border.",
+    "metaDescription": "Grey lizhnyk with crimson diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. White stepped border. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-028": {
+   "uk": {
+    "name": "Ліжник білий із синьою хвилею",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Широкі хвилі синього, сірого й чорного кольорів на білому полі. Сучасний і водночас народний."
+   },
+   "en": {
+    "name": "White lizhnyk with a blue wave",
+    "slug": "white-lizhnyk-with-blue-wave",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Wide waves of blue, grey and black on a white field. Modern and folk at the same time.",
+    "metaDescription": "White lizhnyk with a blue wave. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Blue, grey and black. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-029": {
+   "uk": {
+    "name": "Ліжник сірий з червоними ромбами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Білі смуги з червоними й білими ромбами на сірому полі, тонка синя лінія вздовж краю."
+   },
+   "en": {
+    "name": "Grey lizhnyk with red diamonds",
+    "slug": "grey-lizhnyk-with-red-diamonds",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. White stripes with red and white diamonds on a grey field, and a thin blue line along the edge.",
+    "metaDescription": "Grey lizhnyk with red diamonds. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. A thin blue edge line. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-030": {
+   "uk": {
+    "name": "Ліжник білий з коричнево-рудим орнаментом",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. На білому полі — центральний орнамент темно-сірого кольору з рудими акцентами, темна облямівка."
+   },
+   "en": {
+    "name": "White lizhnyk with a brown and rust ornament",
+    "slug": "white-lizhnyk-with-brown-and-rust-ornament",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. On a white field, a central dark grey ornament with rust accents, and a dark border.",
+    "metaDescription": "White lizhnyk with a brown and rust ornament. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-031": {
+   "uk": {
+    "name": "Ліжник сірий з квадратами-лабіринтами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Сіре поле з квадратами-лабіринтами в сірих, білих і темних тонах."
+   },
+   "en": {
+    "name": "Grey lizhnyk with maze squares",
+    "slug": "grey-lizhnyk-with-maze-squares",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. A grey field with maze squares in grey, white and dark tones.",
+    "metaDescription": "Grey lizhnyk with maze squares. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Grey, white and dark tones. Delivery across Ukraine."
+   }
+  },
+  "VCH-LZH-032": {
+   "uk": {
+    "name": "Ліжник сіро-білий з червоними квадратами",
+    "description": "Ліжник з овечої вовни, витканий у нашій майстерні в Яворові. Квадрати-лабіринти з червоною й чорною рамкою на сіро-білому полі."
+   },
+   "en": {
+    "name": "Grey and white lizhnyk with red squares",
+    "slug": "grey-and-white-lizhnyk-with-red-squares",
+    "description": "A sheep's wool lizhnyk, woven in our workshop in Yavoriv. Maze squares with red and black frames on a grey and white field.",
+    "metaDescription": "Grey and white lizhnyk with red squares. Sheep's wool, handwoven in our workshop in Yavoriv, Kosiv district. Red and black frames. Delivery across Ukraine."
+   }
+  },
+  "VCH-PD-0103": {
+   "uk": {
+    "name": "Подушка «Тестова»",
+    "description": "Тестова вовняна подушка ручної роботи з карпатської вовни, щільна і тепла."
+   },
+   "en": {
+    "name": "Test pillow",
+    "slug": "test-pillow",
+    "description": "A handmade test wool pillow of Carpathian wool, dense and warm.",
+    "metaDescription": "Handmade test wool pillow of Carpathian wool: dense and warm. Order from Vivcharyk with delivery across Ukraine."
+   }
+  }
+ },
+ "optionTypes": {
+  "size": {
+   "uk": "Розмір",
+   "en": "Size"
+  },
+  "color": {
+   "uk": "Колір",
+   "en": "Colour"
+  },
+  "pattern": {
+   "uk": "Візерунок",
+   "en": "Pattern"
+  }
+ },
+ "optionValues": {
+  "size/lizhnyk-150x200": {
+   "uk": "150×200 см",
+   "en": "150×200 cm"
+  },
+  "size/lizhnyk-170x210": {
+   "uk": "170×210 см",
+   "en": "170×210 cm"
+  },
+  "size/lizhnyk-200x220": {
+   "uk": "Двоспальний · 200×220 см",
+   "en": "Double · 200×220 cm"
+  },
+  "size/lizhnyk-220x240": {
+   "uk": "220×240 см",
+   "en": "220×240 cm"
+  },
+  "size/podushka-40x40": {
+   "uk": "40×40 см",
+   "en": "40×40 cm"
+  },
+  "size/podushka-50x50": {
+   "uk": "50×50 см",
+   "en": "50×50 cm"
+  },
+  "size/podushka-50x70": {
+   "uk": "50×70 см",
+   "en": "50×70 cm"
+  },
+  "size/podushka-70x70": {
+   "uk": "70×70 см",
+   "en": "70×70 cm"
+  },
+  "size/odyah-s": {
+   "uk": "S",
+   "en": "S"
+  },
+  "size/odyah-m": {
+   "uk": "M",
+   "en": "M"
+  },
+  "size/odyah-l": {
+   "uk": "L",
+   "en": "L"
+  },
+  "size/odyah-xl": {
+   "uk": "XL",
+   "en": "XL"
+  },
+  "size/odyah-xxl": {
+   "uk": "XXL",
+   "en": "XXL"
+  },
+  "size/odyah-universalnyi": {
+   "uk": "Універсальний",
+   "en": "One size"
+  },
+  "size/shkarpetky-36-38": {
+   "uk": "36–38",
+   "en": "36–38"
+  },
+  "size/shkarpetky-39-41": {
+   "uk": "39–41",
+   "en": "39–41"
+  },
+  "size/shkarpetky-42-44": {
+   "uk": "42–44",
+   "en": "42–44"
+  },
+  "size/shkarpetky-45-46": {
+   "uk": "45–46",
+   "en": "45–46"
+  },
+  "size/kaptsi-36": {
+   "uk": "36",
+   "en": "36"
+  },
+  "size/kaptsi-37": {
+   "uk": "37",
+   "en": "37"
+  },
+  "size/kaptsi-38": {
+   "uk": "38",
+   "en": "38"
+  },
+  "size/kaptsi-39": {
+   "uk": "39",
+   "en": "39"
+  },
+  "size/kaptsi-40": {
+   "uk": "40",
+   "en": "40"
+  },
+  "size/kaptsi-41": {
+   "uk": "41",
+   "en": "41"
+  },
+  "size/kaptsi-42": {
+   "uk": "42",
+   "en": "42"
+  },
+  "size/kaptsi-43": {
+   "uk": "43",
+   "en": "43"
+  },
+  "size/kaptsi-44": {
+   "uk": "44",
+   "en": "44"
+  },
+  "size/kaptsi-45": {
+   "uk": "45",
+   "en": "45"
+  },
+  "size/kaptsi-46": {
+   "uk": "46",
+   "en": "46"
+  },
+  "size/poias-90": {
+   "uk": "90 см",
+   "en": "90 cm"
+  },
+  "size/poias-110": {
+   "uk": "110 см",
+   "en": "110 cm"
+  },
+  "size/poias-130": {
+   "uk": "130 см",
+   "en": "130 cm"
+  },
+  "color/bilyi": {
+   "uk": "Білий",
+   "en": "White"
+  },
+  "color/naturalnyi": {
+   "uk": "Натуральний",
+   "en": "Natural"
+  },
+  "color/siryi": {
+   "uk": "Сірий",
+   "en": "Grey"
+  },
+  "color/chornyi": {
+   "uk": "Чорний",
+   "en": "Black"
+  },
+  "color/chervonyi": {
+   "uk": "Червоний",
+   "en": "Red"
+  },
+  "color/zelenyi": {
+   "uk": "Зелений",
+   "en": "Green"
+  },
+  "pattern/rombi": {
+   "uk": "Ромби",
+   "en": "Diamonds"
+  },
+  "pattern/smuhy": {
+   "uk": "Смуги",
+   "en": "Stripes"
+  },
+  "pattern/yalynka": {
+   "uk": "Ялинка",
+   "en": "Fir tree"
+  }
+ },
+ "attributes": {
+  "warp": {
+   "uk": {
+    "name": "Основа"
+   },
+   "en": {
+    "name": "Warp"
+   }
+  },
+  "weft": {
+   "uk": {
+    "name": "Уток"
+   },
+   "en": {
+    "name": "Weft"
+   }
+  },
+  "density_gsm": {
+   "uk": {
+    "name": "Щільність",
+    "helpText": "Чим більше — тим тепліше"
+   },
+   "en": {
+    "name": "Density",
+    "helpText": "The higher, the warmer"
+   }
+  },
+  "filling": {
+   "uk": {
+    "name": "Наповнювач"
+   },
+   "en": {
+    "name": "Filling"
+   }
+  },
+  "sole": {
+   "uk": {
+    "name": "Підошва"
+   },
+   "en": {
+    "name": "Sole"
+   }
+  },
+  "skein_weight_g": {
+   "uk": {
+    "name": "Вага мотка"
+   },
+   "en": {
+    "name": "Skein weight"
+   }
+  },
+  "skein_length_m": {
+   "uk": {
+    "name": "Метраж"
+   },
+   "en": {
+    "name": "Length per skein"
+   }
+  },
+  "ply_count": {
+   "uk": {
+    "name": "Кількість складань"
+   },
+   "en": {
+    "name": "Number of plies"
+   }
+  },
+  "needle_size": {
+   "uk": {
+    "name": "Рекомендовані спиці"
+   },
+   "en": {
+    "name": "Recommended needles"
+   }
+  },
+  "length_cm": {
+   "uk": {
+    "name": "Довжина"
+   },
+   "en": {
+    "name": "Length"
+   }
+  },
+  "width_cm": {
+   "uk": {
+    "name": "Ширина"
+   },
+   "en": {
+    "name": "Width"
+   }
+  },
+  "fur_color": {
+   "uk": {
+    "name": "Колір хутра"
+   },
+   "en": {
+    "name": "Fur colour"
+   }
+  },
+  "pile_length_mm": {
+   "uk": {
+    "name": "Довжина ворсу"
+   },
+   "en": {
+    "name": "Pile length"
+   }
+  },
+  "tanning_type": {
+   "uk": {
+    "name": "Тип вичинки"
+   },
+   "en": {
+    "name": "Tanning type"
+   }
+  },
+  "leather_type": {
+   "uk": {
+    "name": "Вид шкіри"
+   },
+   "en": {
+    "name": "Leather type"
+   }
+  },
+  "hardware": {
+   "uk": {
+    "name": "Фурнітура"
+   },
+   "en": {
+    "name": "Fittings"
+   }
+  },
+  "dimensions_cm": {
+   "uk": {
+    "name": "Розміри"
+   },
+   "en": {
+    "name": "Dimensions"
+   }
+  },
+  "yarn_thickness": {
+   "uk": {
+    "name": "Товщина пряжі"
+   },
+   "en": {
+    "name": "Yarn thickness"
+   },
+   "options": {
+    "thin": {
+     "uk": "Тонка",
+     "en": "Thin"
+    },
+    "medium": {
+     "uk": "Середня",
+     "en": "Medium"
+    },
+    "thick": {
+     "uk": "Товста",
+     "en": "Thick"
+    }
+   }
+  }
+ },
+ "materials": {
+  "Овеча вовна": "Sheep's wool",
+  "Овчина": "Sheepskin",
+  "Шкіра": "Leather",
+  "Бавовна": "Cotton",
+  "Льон": "Linen"
+ },
+ "stages": {
+  "tanning": {
+   "uk": {
+    "title": "Вичинка шкур",
+    "body": "Овечі шкури вичинюємо самі: від сирої шкури до м’якої овчини й шкіри, з яких потім шиємо вироби."
+   },
+   "en": {
+    "title": "Tanning of hides",
+    "body": "We tan the sheep hides ourselves: from a raw hide to soft sheepskin and leather, which we then sew into our goods."
+   }
+  },
+  "washing": {
+   "uk": {
+    "title": "Миття",
+    "body": "Сиру вовну перемо: вода забирає бруд і жир. Після миття вовна сохне, і лише суха йде далі."
+   },
+   "en": {
+    "title": "Washing",
+    "body": "We wash the raw wool: the water takes away the dirt and grease. After washing the wool dries, and only dry wool goes on to the next stage."
+   }
+  },
+  "carding": {
+   "uk": {
+    "title": "Чесання",
+    "body": "Мита вовна йде на чесальну машину. Сплутане руно розділяється на паралельні волокна й виходить безперервною стрічкою — рівницею."
+   },
+   "en": {
+    "title": "Carding",
+    "body": "The washed wool goes to the carding machine. The tangled fleece is separated into parallel fibres and comes out as a continuous strip: wool roving."
+   }
+  },
+  "spinning": {
+   "uk": {
+    "title": "Прядіння",
+    "body": "З рівниці прядемо нитку. Тут задається товщина пряжі: з неї тчемо ліжники й пояси, а частину продаємо мотками."
+   },
+   "en": {
+    "title": "Spinning",
+    "body": "We spin thread from the roving. This is where the thickness of the yarn is set: we weave lizhnyks and belts from it, and sell some of it in skeins."
+   }
+  },
+  "weaving": {
+   "uk": {
+    "title": "Ткання",
+    "body": "На ткацькому верстаті пряжа стає полотном — ліжником, пледом, поясом чи тканиною для одягу."
+   },
+   "en": {
+    "title": "Weaving",
+    "body": "On the loom, the yarn becomes cloth: a lizhnyk, a plaid blanket, a belt or fabric for clothing."
+   }
+  },
+  "felting": {
+   "uk": {
+    "title": "Валяння",
+    "body": "Виткане полотно валяють: вовна ущільнюється, а ворс піднімається. Так ліжник стає густим і пухнастим. Валяємо й капці."
+   },
+   "en": {
+    "title": "Felting",
+    "body": "The woven cloth is felted: the wool becomes denser and the pile rises. This is how a lizhnyk becomes thick and fluffy. We felt slippers too."
+   }
+  },
+  "sewing": {
+   "uk": {
+    "title": "Пошиття",
+    "body": "Обробляємо краї, шиємо гуні, камізельки, подушки й капці. Тут же, в тому самому цеху, шиють вироби з овчини та шкіри."
+   },
+   "en": {
+    "title": "Sewing",
+    "body": "We finish the edges and sew hunias, waistcoats, pillows and slippers. Sheepskin and leather goods are sewn here too, in the same workshop."
+   }
+  }
+ },
+ "tags": {
+  "care": {
+   "uk": "Догляд за вовною",
+   "en": {
+    "name": "Wool care",
+    "slug": "wool-care"
+   }
+  },
+  "lizhnyk-history": {
+   "uk": "Історія ліжникарства",
+   "en": {
+    "name": "The history of lizhnyk weaving",
+    "slug": "history-of-lizhnyk-weaving"
+   }
+  },
+  "yavoriv": {
+   "uk": "Яворів і Карпати",
+   "en": {
+    "name": "Yavoriv and the Carpathians",
+    "slug": "yavoriv-and-carpathians"
+   }
+  },
+  "how-we-make": {
+   "uk": "Як ми виробляємо",
+   "en": {
+    "name": "How we make it",
+    "slug": "how-we-make-it"
+   }
+  },
+  "choosing-lizhnyk": {
+   "uk": "Як обрати ліжник",
+   "en": {
+    "name": "How to choose a lizhnyk",
+    "slug": "how-to-choose-lizhnyk"
+   }
+  },
+  "knitting": {
+   "uk": "В'язання з нашої пряжі",
+   "en": {
+    "name": "Knitting with our yarn",
+    "slug": "knitting-with-our-yarn"
+   }
+  }
+ },
+ "mediaAlt": {
+  "Килим барвистий з ромбами — візерунок ближче": "Colourful rug with diamonds — closer view of the pattern",
+  "Килим барвистий з ромбами — загальний вигляд": "Colourful rug with diamonds — full view",
+  "Килим барвистий з ромбами — фактура зблизька": "Colourful rug with diamonds — close-up of the texture",
+  "Килим бежевий у коричневу смугу — візерунок ближче": "Beige rug with brown stripes — closer view of the pattern",
+  "Килим бежевий у коричневу смугу — загальний вигляд": "Beige rug with brown stripes — full view",
+  "Килим бежевий у коричневу смугу — фактура зблизька": "Beige rug with brown stripes — close-up of the texture",
+  "Килим бордовий з орнаментальними смугами — візерунок ближче": "Burgundy rug with ornamental stripes — closer view of the pattern",
+  "Килим бордовий з орнаментальними смугами — загальний вигляд": "Burgundy rug with ornamental stripes — full view",
+  "Килим бордовий з орнаментальними смугами — фактура зблизька": "Burgundy rug with ornamental stripes — close-up of the texture",
+  "Килим бордовий із жовтими ромбами — візерунок ближче": "Burgundy rug with yellow diamonds — closer view of the pattern",
+  "Килим бордовий із жовтими ромбами — загальний вигляд": "Burgundy rug with yellow diamonds — full view",
+  "Килим бордовий із жовтими ромбами — фактура зблизька": "Burgundy rug with yellow diamonds — close-up of the texture",
+  "Килим білий з бордовим ромбом — візерунок ближче": "White rug with a burgundy diamond — closer view of the pattern",
+  "Килим білий з бордовим ромбом — загальний вигляд": "White rug with a burgundy diamond — full view",
+  "Килим білий з бордовим ромбом — фактура зблизька": "White rug with a burgundy diamond — close-up of the texture",
+  "Килим білий із зелено-гірчичним орнаментом — візерунок ближче": "White rug with a green and mustard ornament — closer view of the pattern",
+  "Килим білий із зелено-гірчичним орнаментом — загальний вигляд": "White rug with a green and mustard ornament — full view",
+  "Килим білий із зелено-гірчичним орнаментом — фактура зблизька": "White rug with a green and mustard ornament — close-up of the texture",
+  "Килим зелений у смугу — візерунок ближче": "Green striped rug — closer view of the pattern",
+  "Килим зелений у смугу — загальний вигляд": "Green striped rug — full view",
+  "Килим зелений у смугу — фактура зблизька": "Green striped rug — close-up of the texture",
+  "Килим помаранчевий з ромбами — візерунок ближче": "Orange rug with diamonds — closer view of the pattern",
+  "Килим помаранчевий з ромбами — загальний вигляд": "Orange rug with diamonds — full view",
+  "Килим помаранчевий з ромбами — фактура зблизька": "Orange rug with diamonds — close-up of the texture",
+  "Килим рожево-бордовий з орнаментом — візерунок ближче": "Pink and burgundy rug with an ornament — closer view of the pattern",
+  "Килим рожево-бордовий з орнаментом — загальний вигляд": "Pink and burgundy rug with an ornament — full view",
+  "Килим рожево-бордовий з орнаментом — фактура зблизька": "Pink and burgundy rug with an ornament — close-up of the texture",
+  "Килим світлий з темними смугами — візерунок ближче": "Light rug with dark stripes — closer view of the pattern",
+  "Килим світлий з темними смугами — загальний вигляд": "Light rug with dark stripes — full view",
+  "Килим світлий з темними смугами — фактура зблизька": "Light rug with dark stripes — close-up of the texture",
+  "Килим червоний у смугу — візерунок ближче": "Red striped rug — closer view of the pattern",
+  "Килим червоний у смугу — загальний вигляд": "Red striped rug — full view",
+  "Килим червоний у смугу — фактура зблизька": "Red striped rug — close-up of the texture",
+  "Килим червоно-помаранчевий з ялинками — візерунок ближче": "Red and orange rug with fir trees — closer view of the pattern",
+  "Килим червоно-помаранчевий з ялинками — загальний вигляд": "Red and orange rug with fir trees — full view",
+  "Килим червоно-помаранчевий з ялинками — фактура зблизька": "Red and orange rug with fir trees — close-up of the texture",
+  "Килим чорний з помаранчевими ромбами — візерунок ближче": "Black rug with orange diamonds — closer view of the pattern",
+  "Килим чорний з помаранчевими ромбами — загальний вигляд": "Black rug with orange diamonds — full view",
+  "Килим чорний з помаранчевими ромбами — фактура зблизька": "Black rug with orange diamonds — close-up of the texture",
+  "Ліжник білий з коричневим зигзагом — з загорнутим кутом": "White lizhnyk with a brown zigzag — with a corner folded back",
+  "Ліжник білий з коричневим зигзагом — загальний вигляд": "White lizhnyk with a brown zigzag — full view",
+  "Ліжник білий з коричневим зигзагом — фактура зблизька": "White lizhnyk with a brown zigzag — close-up of the texture",
+  "Ліжник білий з коричнево-рудим орнаментом — з загорнутим кутом": "White lizhnyk with a brown and rust ornament — with a corner folded back",
+  "Ліжник білий з коричнево-рудим орнаментом — загальний вигляд": "White lizhnyk with a brown and rust ornament — full view",
+  "Ліжник білий з коричнево-рудим орнаментом — фактура зблизька": "White lizhnyk with a brown and rust ornament — close-up of the texture",
+  "Ліжник білий з малиновими ромбами — з загорнутим кутом": "White lizhnyk with crimson diamonds — with a corner folded back",
+  "Ліжник білий з малиновими ромбами — загальний вигляд": "White lizhnyk with crimson diamonds — full view",
+  "Ліжник білий з малиновими ромбами — фактура зблизька": "White lizhnyk with crimson diamonds — close-up of the texture",
+  "Ліжник білий у бордову смужку — з загорнутим кутом": "White lizhnyk with burgundy stripes — with a corner folded back",
+  "Ліжник білий у бордову смужку — загальний вигляд": "White lizhnyk with burgundy stripes — full view",
+  "Ліжник білий у бордову смужку — фактура зблизька": "White lizhnyk with burgundy stripes — close-up of the texture",
+  "Ліжник білий у сіро-коричневу смужку — з загорнутим кутом": "White lizhnyk with grey and brown stripes — with a corner folded back",
+  "Ліжник білий у сіро-коричневу смужку — загальний вигляд": "White lizhnyk with grey and brown stripes — full view",
+  "Ліжник білий у сіро-коричневу смужку — фактура зблизька": "White lizhnyk with grey and brown stripes — close-up of the texture",
+  "Ліжник білий у тонку сіру смужку — з загорнутим кутом": "White lizhnyk with thin grey stripes — with a corner folded back",
+  "Ліжник білий у тонку сіру смужку — загальний вигляд": "White lizhnyk with thin grey stripes — full view",
+  "Ліжник білий у тонку сіру смужку — фактура зблизька": "White lizhnyk with thin grey stripes — close-up of the texture",
+  "Ліжник білий із зеленим зигзагом — з загорнутим кутом": "White lizhnyk with a green zigzag — with a corner folded back",
+  "Ліжник білий із зеленим зигзагом — загальний вигляд": "White lizhnyk with a green zigzag — full view",
+  "Ліжник білий із зеленим зигзагом — фактура зблизька": "White lizhnyk with a green zigzag — close-up of the texture",
+  "Ліжник білий із синьою хвилею — з загорнутим кутом": "White lizhnyk with a blue wave — with a corner folded back",
+  "Ліжник білий із синьою хвилею — загальний вигляд": "White lizhnyk with a blue wave — full view",
+  "Ліжник білий із синьою хвилею — фактура зблизька": "White lizhnyk with a blue wave — close-up of the texture",
+  "Ліжник білий із синіми ромбами — з загорнутим кутом": "White lizhnyk with blue diamonds — with a corner folded back",
+  "Ліжник білий із синіми ромбами — загальний вигляд": "White lizhnyk with blue diamonds — full view",
+  "Ліжник білий із синіми ромбами — фактура зблизька": "White lizhnyk with blue diamonds — close-up of the texture",
+  "Ліжник білий із широкими сірими смугами — з загорнутим кутом": "White lizhnyk with wide grey stripes — with a corner folded back",
+  "Ліжник білий із широкими сірими смугами — загальний вигляд": "White lizhnyk with wide grey stripes — full view",
+  "Ліжник білий із широкими сірими смугами — фактура зблизька": "White lizhnyk with wide grey stripes — close-up of the texture",
+  "Ліжник з жовтим зигзагом — з загорнутим кутом": "Lizhnyk with a yellow zigzag — with a corner folded back",
+  "Ліжник з жовтим зигзагом — загальний вигляд": "Lizhnyk with a yellow zigzag — full view",
+  "Ліжник з жовтим зигзагом — фактура зблизька": "Lizhnyk with a yellow zigzag — close-up of the texture",
+  "Ліжник з коричнево-сірими трикутниками — з загорнутим кутом": "Lizhnyk with brown and grey triangles — with a corner folded back",
+  "Ліжник з коричнево-сірими трикутниками — загальний вигляд": "Lizhnyk with brown and grey triangles — full view",
+  "Ліжник з коричнево-сірими трикутниками — фактура зблизька": "Lizhnyk with brown and grey triangles — close-up of the texture",
+  "Ліжник сірий з білими й синіми ромбиками — з загорнутим кутом": "Grey lizhnyk with small white and blue diamonds — with a corner folded back",
+  "Ліжник сірий з білими й синіми ромбиками — загальний вигляд": "Grey lizhnyk with small white and blue diamonds — full view",
+  "Ліжник сірий з білими й синіми ромбиками — фактура зблизька": "Grey lizhnyk with small white and blue diamonds — close-up of the texture",
+  "Ліжник сірий з двома орнаментальними полями — з загорнутим кутом": "Grey lizhnyk with two ornamental panels — with a corner folded back",
+  "Ліжник сірий з двома орнаментальними полями — загальний вигляд": "Grey lizhnyk with two ornamental panels — full view",
+  "Ліжник сірий з двома орнаментальними полями — фактура зблизька": "Grey lizhnyk with two ornamental panels — close-up of the texture",
+  "Ліжник сірий з квадратами — з загорнутим кутом": "Grey lizhnyk with squares — with a corner folded back",
+  "Ліжник сірий з квадратами — загальний вигляд": "Grey lizhnyk with squares — full view",
+  "Ліжник сірий з квадратами — фактура зблизька": "Grey lizhnyk with squares — close-up of the texture",
+  "Ліжник сірий з квадратами-лабіринтами — з загорнутим кутом": "Grey lizhnyk with maze squares — with a corner folded back",
+  "Ліжник сірий з квадратами-лабіринтами — загальний вигляд": "Grey lizhnyk with maze squares — full view",
+  "Ліжник сірий з квадратами-лабіринтами — фактура зблизька": "Grey lizhnyk with maze squares — close-up of the texture",
+  "Ліжник сірий з кольоровими ромбиками — з загорнутим кутом": "Grey lizhnyk with small coloured diamonds — with a corner folded back",
+  "Ліжник сірий з кольоровими ромбиками — загальний вигляд": "Grey lizhnyk with small coloured diamonds — full view",
+  "Ліжник сірий з кольоровими ромбиками — фактура зблизька": "Grey lizhnyk with small coloured diamonds — close-up of the texture",
+  "Ліжник сірий з малиновими ромбами — з загорнутим кутом": "Grey lizhnyk with crimson diamonds — with a corner folded back",
+  "Ліжник сірий з малиновими ромбами — загальний вигляд": "Grey lizhnyk with crimson diamonds — full view",
+  "Ліжник сірий з малиновими ромбами — фактура зблизька": "Grey lizhnyk with crimson diamonds — close-up of the texture",
+  "Ліжник сірий з трьома кольоровими ромбами — з загорнутим кутом": "Grey lizhnyk with three coloured diamonds — with a corner folded back",
+  "Ліжник сірий з трьома кольоровими ромбами — загальний вигляд": "Grey lizhnyk with three coloured diamonds — full view",
+  "Ліжник сірий з трьома кольоровими ромбами — фактура зблизька": "Grey lizhnyk with three coloured diamonds — close-up of the texture",
+  "Ліжник сірий з червоним зигзагом — з загорнутим кутом": "Grey lizhnyk with a red zigzag — with a corner folded back",
+  "Ліжник сірий з червоним зигзагом — загальний вигляд": "Grey lizhnyk with a red zigzag — full view",
+  "Ліжник сірий з червоним зигзагом — фактура зблизька": "Grey lizhnyk with a red zigzag — close-up of the texture",
+  "Ліжник сірий з червоними ромбами — з загорнутим кутом": "Grey lizhnyk with red diamonds — with a corner folded back",
+  "Ліжник сірий з червоними ромбами — загальний вигляд": "Grey lizhnyk with red diamonds — full view",
+  "Ліжник сірий з червоними ромбами — фактура зблизька": "Grey lizhnyk with red diamonds — close-up of the texture",
+  "Ліжник сірий з чорно-білою зіркою — з загорнутим кутом": "Grey lizhnyk with a black and white star — with a corner folded back",
+  "Ліжник сірий з чорно-білою зіркою — загальний вигляд": "Grey lizhnyk with a black and white star — full view",
+  "Ліжник сірий з чорно-білою зіркою — фактура зблизька": "Grey lizhnyk with a black and white star — close-up of the texture",
+  "Ліжник сірий у темну смужку — з загорнутим кутом": "Grey lizhnyk with dark stripes — with a corner folded back",
+  "Ліжник сірий у темну смужку — загальний вигляд": "Grey lizhnyk with dark stripes — full view",
+  "Ліжник сірий у темну смужку — фактура зблизька": "Grey lizhnyk with dark stripes — close-up of the texture",
+  "Ліжник сірий із синім ромбом — з загорнутим кутом": "Grey lizhnyk with a blue diamond — with a corner folded back",
+  "Ліжник сірий із синім ромбом — загальний вигляд": "Grey lizhnyk with a blue diamond — full view",
+  "Ліжник сірий із синім ромбом — фактура зблизька": "Grey lizhnyk with a blue diamond — close-up of the texture",
+  "Ліжник сірий із чорно-білими ромбами — з загорнутим кутом": "Grey lizhnyk with black and white diamonds — with a corner folded back",
+  "Ліжник сірий із чорно-білими ромбами — загальний вигляд": "Grey lizhnyk with black and white diamonds — full view",
+  "Ліжник сірий із чорно-білими ромбами — фактура зблизька": "Grey lizhnyk with black and white diamonds — close-up of the texture",
+  "Ліжник сіро-білий з темними хрестами — з загорнутим кутом": "Grey and white lizhnyk with dark crosses — with a corner folded back",
+  "Ліжник сіро-білий з темними хрестами — загальний вигляд": "Grey and white lizhnyk with dark crosses — full view",
+  "Ліжник сіро-білий з темними хрестами — фактура зблизька": "Grey and white lizhnyk with dark crosses — close-up of the texture",
+  "Ліжник сіро-білий з червоними квадратами — з загорнутим кутом": "Grey and white lizhnyk with red squares — with a corner folded back",
+  "Ліжник сіро-білий з червоними квадратами — загальний вигляд": "Grey and white lizhnyk with red squares — full view",
+  "Ліжник сіро-білий з червоними квадратами — фактура зблизька": "Grey and white lizhnyk with red squares — close-up of the texture",
+  "Ліжник темний з малиновими й синіми ромбами — з загорнутим кутом": "Dark lizhnyk with crimson and blue diamonds — with a corner folded back",
+  "Ліжник темний з малиновими й синіми ромбами — загальний вигляд": "Dark lizhnyk with crimson and blue diamonds — full view",
+  "Ліжник темний з малиновими й синіми ромбами — фактура зблизька": "Dark lizhnyk with crimson and blue diamonds — close-up of the texture",
+  "Ліжник у дрібну малинову смужку — з загорнутим кутом": "Lizhnyk with fine crimson stripes — with a corner folded back",
+  "Ліжник у дрібну малинову смужку — загальний вигляд": "Lizhnyk with fine crimson stripes — full view",
+  "Ліжник у дрібну малинову смужку — фактура зблизька": "Lizhnyk with fine crimson stripes — close-up of the texture",
+  "Ліжник у кольорову клітинку — з загорнутим кутом": "Lizhnyk with coloured checks — with a corner folded back",
+  "Ліжник у кольорову клітинку — загальний вигляд": "Lizhnyk with coloured checks — full view",
+  "Ліжник у кольорову клітинку — фактура зблизька": "Lizhnyk with coloured checks — close-up of the texture",
+  "Ліжник у кольорову смужку — з загорнутим кутом": "Lizhnyk with coloured stripes — with a corner folded back",
+  "Ліжник у кольорову смужку — загальний вигляд": "Lizhnyk with coloured stripes — full view",
+  "Ліжник у кольорову смужку — фактура зблизька": "Lizhnyk with coloured stripes — close-up of the texture",
+  "Ліжник у сіро-білу смужку з малиновою ниткою — з загорнутим кутом": "Grey and white striped lizhnyk with a crimson thread — with a corner folded back",
+  "Ліжник у сіро-білу смужку з малиновою ниткою — загальний вигляд": "Grey and white striped lizhnyk with a crimson thread — full view",
+  "Ліжник у сіро-білу смужку з малиновою ниткою — фактура зблизька": "Grey and white striped lizhnyk with a crimson thread — close-up of the texture",
+  "Ліжникова доріжка біла з темним зигзагом — з загорнутим кутом": "White lizhnyk runner with a dark zigzag — with a corner folded back",
+  "Ліжникова доріжка біла з темним зигзагом — загальний вигляд": "White lizhnyk runner with a dark zigzag — full view",
+  "Ліжникова доріжка біла з темним зигзагом — фактура зблизька": "White lizhnyk runner with a dark zigzag — close-up of the texture",
+  "Ліжникова доріжка біла з темним орнаментом — з загорнутим кутом": "White lizhnyk runner with a dark ornament — with a corner folded back",
+  "Ліжникова доріжка біла з темним орнаментом — загальний вигляд": "White lizhnyk runner with a dark ornament — full view",
+  "Ліжникова доріжка біла з темним орнаментом — фактура зблизька": "White lizhnyk runner with a dark ornament — close-up of the texture",
+  "Ліжникова доріжка біла рельєфна — з загорнутим кутом": "White textured lizhnyk runner — with a corner folded back",
+  "Ліжникова доріжка біла рельєфна — загальний вигляд": "White textured lizhnyk runner — full view",
+  "Ліжникова доріжка біла рельєфна — фактура зблизька": "White textured lizhnyk runner — close-up of the texture",
+  "Ліжникова доріжка з великим ромбом — з загорнутим кутом": "Lizhnyk runner with a large diamond — with a corner folded back",
+  "Ліжникова доріжка з великим ромбом — загальний вигляд": "Lizhnyk runner with a large diamond — full view",
+  "Ліжникова доріжка з великим ромбом — фактура зблизька": "Lizhnyk runner with a large diamond — close-up of the texture",
+  "Ліжникова доріжка з ромбом-зіркою — з загорнутим кутом": "Lizhnyk runner with a star diamond — with a corner folded back",
+  "Ліжникова доріжка з ромбом-зіркою — загальний вигляд": "Lizhnyk runner with a star diamond — full view",
+  "Ліжникова доріжка з ромбом-зіркою — фактура зблизька": "Lizhnyk runner with a star diamond — close-up of the texture",
+  "Ліжникова доріжка сіро-біла з ялинковим краєм — з загорнутим кутом": "Grey and white lizhnyk runner with a fir-tree edge — with a corner folded back",
+  "Ліжникова доріжка сіро-біла з ялинковим краєм — загальний вигляд": "Grey and white lizhnyk runner with a fir-tree edge — full view",
+  "Ліжникова доріжка сіро-біла з ялинковим краєм — фактура зблизька": "Grey and white lizhnyk runner with a fir-tree edge — close-up of the texture",
+  "Ліжникова доріжка із зеленим орнаментом — з загорнутим кутом": "Lizhnyk runner with a green ornament — with a corner folded back",
+  "Ліжникова доріжка із зеленим орнаментом — загальний вигляд": "Lizhnyk runner with a green ornament — full view",
+  "Ліжникова доріжка із зеленим орнаментом — фактура зблизька": "Lizhnyk runner with a green ornament — close-up of the texture",
+  "Ліжниковий килимок білий з чорним орнаментом — з загорнутим кутом": "White lizhnyk mat with a black ornament — with a corner folded back",
+  "Ліжниковий килимок білий з чорним орнаментом — загальний вигляд": "White lizhnyk mat with a black ornament — full view",
+  "Ліжниковий килимок білий з чорним орнаментом — фактура зблизька": "White lizhnyk mat with a black ornament — close-up of the texture",
+  "Прядильна машина скручує вовняну пряжу": "A spinning machine twisting wool yarn",
+  "Ткання ліжника на верстаті": "Weaving a lizhnyk on the loom",
+  "Чесальна машина розчісує вовну": "A carding machine combing wool"
+ }
+}

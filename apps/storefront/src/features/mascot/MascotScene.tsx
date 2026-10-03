@@ -2,6 +2,7 @@ import shepherd from './art/shepherd.symbol.svg?raw';
 import sheep from './art/sheep.symbol.svg?raw';
 // The right arm is drawn with the staff in the hero; here it is its own symbol so it can hold a lantern.
 import armStaff from './art/shepherd-arm-staff.symbol.svg?raw';
+import { useLocale } from '@/lib/i18n';
 
 // Mascot surfaces beyond the hero (round 10 part 3 #22, part 5 #4, part 8 #16; round 11 #27, #39):
 // the same shepherd and sheep as the hero, in short scenes played once, then a resting pose; a still
@@ -78,9 +79,15 @@ function Basket() {
   );
 }
 
+const LABEL = {
+  uk: { search: 'Пастух з ліхтарем шукає вівцю, а вона ховається за кущем', thanks: 'Пастух махає рукою, вівці радісно підстрибують', cart: 'Вівця заглядає в порожній кошик' },
+  en: { search: 'A shepherd with a lantern looks for a sheep hiding behind a bush', thanks: 'The shepherd waves, and the sheep hop with joy', cart: 'A sheep peers into an empty basket' },
+};
+
 export function MascotScene({ kind, className = '' }: { kind: 'search' | 'cart' | 'thanks'; className?: string }) {
+  const locale = useLocale();
   return (
-    <svg viewBox="0 0 600 360" role="img" aria-label={kind === 'search' ? 'Пастух з ліхтарем шукає вівцю, а вона ховається за кущем' : kind === 'thanks' ? 'Пастух махає рукою, вівці радісно підстрибують' : 'Вівця заглядає в порожній кошик'} className={className}>
+    <svg viewBox="0 0 600 360" role="img" aria-label={LABEL[locale === 'en' ? 'en' : 'uk'][kind]} className={className}>
       <defs dangerouslySetInnerHTML={{ __html: `${shepherd}${sheep}${armStaff}<radialGradient id="m-light"><stop offset="0" stop-color="#FFE39A" stop-opacity=".9"/><stop offset="1" stop-color="#FFE39A" stop-opacity="0"/></radialGradient>` }} />
       <style>{css}</style>
       <Ground />

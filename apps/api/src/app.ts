@@ -27,6 +27,8 @@ import { adminCategoryRoutes } from './modules/categories/admin-categories.route
 import { auditRoutes } from './modules/audit/audit.routes';
 import { employeeRoutes } from './modules/employees/employees.routes';
 import { seoRoutes } from './modules/seo/seo.routes';
+import { telemetryRoutes } from './modules/seo/telemetry.routes';
+import { feedRoutes } from './modules/seo/feed.routes';
 import { templateRoutes } from './modules/templates/templates.routes';
 import { customerRoutes } from './modules/customers/customers.routes';
 import { stockRoutes } from './modules/stock/stock.routes';
@@ -126,6 +128,7 @@ export async function buildApp() {
       await v1.register(auditRoutes);
       await v1.register(employeeRoutes);
       await v1.register(seoRoutes);
+      await v1.register(telemetryRoutes);
       await v1.register(templateRoutes);
       await v1.register(customerRoutes);
       await v1.register(stockRoutes);
@@ -145,6 +148,8 @@ export async function buildApp() {
     { prefix: '/api/v1' },
   );
 
+  // Round 24 G124: the Merchant feed sits outside /api (Caddy sends /feed/* here).
+  await app.register(feedRoutes);
   await app.register(adminStatic);
   await app.register(mediaStatic);
 

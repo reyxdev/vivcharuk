@@ -1,11 +1,11 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { MascotScene } from '@/features/mascot/MascotScene';
+import { LazyMascotScene as MascotScene } from '@/features/mascot/LazyMascotScene';
 import { Form, Link, useNavigation, useSearchParams } from 'react-router';
 import type { Locale, ProductListResponse } from '@vivcharyk/schemas';
 import { t, type MessageKey } from '@/lib/i18n';
 import { formatUah } from '@/lib/money';
 import { ProductCard } from './ProductCard';
-import { useSwipeClose } from '@/lib/motion';
+import { hasNavigated, useSwipeClose } from '@/lib/motion';
 
 // Round 10 part 3 #21: popular, new, cheapest, most expensive, discounted.
 const SORTS = ['popularity', 'newest', 'price_asc', 'price_desc', 'discount'] as const;
@@ -55,7 +55,8 @@ export function Listing({ data, locale, before, hidden = {}, countBase = {}, sor
   // «Показати ще» appends the next page under the cards already shown (round 10 part 3 #3; the
   // ?page= URL stays real for Google). Filters or sort replace the list.
   const base = (() => { const b = new URLSearchParams(params); b.delete('page'); return b.toString(); })();
-  const acc = useRef<{ base: string; page: number; items: typeof data.items; firstNew: number }>({ base, page: data.page.number, items: data.items, firstNew: -1 });
+  // On the first page of a visit the cards are simply there (no rise: the first photo is the LCP element).
+  const acc = useRef<{ base: string; page: number; items: typeof data.items; firstNew: number }>({ base, page: data.page.number, items: data.items, firstNew: hasNavigated() ? -1 : data.items.length });
   if (acc.current.base !== base || data.page.number !== acc.current.page) {
     const more = acc.current.base === base && data.page.number === acc.current.page + 1;
     acc.current = more
@@ -79,7 +80,7 @@ export function Listing({ data, locale, before, hidden = {}, countBase = {}, sor
         className={`flex flex-col gap-6 ${open ? 'vk-sheet max-lg:fixed max-lg:inset-0 max-lg:z-(--z-modal) max-lg:overflow-y-auto max-lg:bg-bg-page max-lg:p-4 max-lg:pb-28' : 'max-lg:hidden'}`}>
         <div className="flex items-center justify-between lg:hidden">
           <h2 className="text-h3 text-text-primary">{t(locale, 'catalog.filters')}</h2>
-          <button type="button" onClick={() => setOpen(false)} aria-label="Закрити" className="text-h2 leading-none text-text-muted">×</button>
+          <button type="button" onClick={() => setOpen(false)} aria-label={t(locale, 'nav.close')} className="text-h2 leading-none text-text-muted">×</button>
         </div>
         {Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
         {before}
@@ -135,14 +136,14 @@ export function Listing({ data, locale, before, hidden = {}, countBase = {}, sor
             <Link to={reset ? `?${reset}` : '.'} className="text-body-sm text-text-primary underline">{t(locale, 'catalog.resetAll')}</Link>
           </div>
         )}
-        {slow && <div className="vk-thread-bar h-1.5 w-full" role="progressbar" aria-label="Завантаження" />}
+        {slow && <div className="vk-thread-bar h-1.5 w-full" role="progressbar" aria-label={t(locale, 'catalog.loading')} />}
         {items.length === 0 ? (
           (empty ?? (
             <div className="flex flex-col items-start gap-3">
               {/* Round 10 part 3 #22: mascot + «Скинути фільтри». */}
               <MascotScene kind="search" className="w-72 max-w-full" />
               <p className="text-body text-text-muted">{t(locale, 'catalog.empty')}</p>
-              <Link to={reset ? `?${reset}` : '.'} className="rounded-md border border-border-control px-4 py-2 text-body text-text-primary">Скинути фільтри</Link>
+              <Link to={reset ? `?${reset}` : '.'} className="rounded-md border border-border-control px-4 py-2 text-body text-text-primary">{t(locale, 'catalog.resetFilters')}</Link>
             </div>
           ))
         ) : (
@@ -150,7 +151,7 @@ export function Listing({ data, locale, before, hidden = {}, countBase = {}, sor
             {items.map((item, i) => (
               // New cards rise in sequence (60 ms stagger, capped at six).
               <div key={item.id} className={i >= firstNew ? 'vk-rise' : ''} style={{ '--i': Math.min(Math.max(0, i - firstNew), 6) } as React.CSSProperties}>
-                <ProductCard item={item} locale={locale} />
+                <ProductCard item={item} locale={locale} priority={i < 2} />
               </div>
             ))}
           </div>
@@ -186,20 +187,20 @@ function PriceFilter({ min, max, from, to, locale }: { min: number; max: number;
   const push = (el: HTMLInputElement | null) => el?.dispatchEvent(new Event('change', { bubbles: true }));
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-2 text-body font-semibold text-text-primary">Ціна, ₴</legend>
+      <legend className="mb-2 text-body font-semibold text-text-primary">{t(locale, 'catalog.price')}</legend>
       {max > min && (
         <div className="relative h-6">
           <div className="absolute inset-x-0 top-2.5 h-1 rounded-full bg-border-control" />
           <div className="absolute top-2.5 h-1 rounded-full bg-bg-inverted" style={{ left: `${pct(loN)}%`, right: `${100 - pct(hiN)}%` }} />
-          <input type="range" min={min} max={max} step={step} value={loN} aria-label="Ціна від" className={thumb}
+          <input type="range" min={min} max={max} step={step} value={loN} aria-label={t(locale, 'catalog.priceFrom')} className={thumb}
             onChange={(e) => { const v = Math.min(Number(e.target.value), hiN - step); setLo(v <= min ? '' : String(v)); requestAnimationFrame(() => push(e.target.closest('fieldset')?.querySelector('input[name=priceMin]') ?? null)); }} />
-          <input type="range" min={min} max={max} step={step} value={hiN} aria-label="Ціна до" className={thumb}
+          <input type="range" min={min} max={max} step={step} value={hiN} aria-label={t(locale, 'catalog.priceTo')} className={thumb}
             onChange={(e) => { const v = Math.max(Number(e.target.value), loN + step); setHi(v >= max ? '' : String(v)); requestAnimationFrame(() => push(e.target.closest('fieldset')?.querySelector('input[name=priceMax]') ?? null)); }} />
         </div>
       )}
       <div className="flex gap-2">
-        <input name="priceMin" inputMode="numeric" value={lo} onChange={(e) => setLo(e.target.value.replace(/\D/g, ''))} placeholder={formatUah(min * 100, locale)} aria-label="Від" className={field} />
-        <input name="priceMax" inputMode="numeric" value={hi} onChange={(e) => setHi(e.target.value.replace(/\D/g, ''))} placeholder={formatUah(max * 100, locale)} aria-label="До" className={field} />
+        <input name="priceMin" inputMode="numeric" value={lo} onChange={(e) => setLo(e.target.value.replace(/\D/g, ''))} placeholder={formatUah(min * 100, locale)} aria-label={t(locale, 'catalog.from')} className={field} />
+        <input name="priceMax" inputMode="numeric" value={hi} onChange={(e) => setHi(e.target.value.replace(/\D/g, ''))} placeholder={formatUah(max * 100, locale)} aria-label={t(locale, 'catalog.to')} className={field} />
       </div>
     </fieldset>
   );

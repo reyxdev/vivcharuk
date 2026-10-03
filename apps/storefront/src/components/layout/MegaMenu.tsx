@@ -6,6 +6,7 @@ import { formatRange } from '@/lib/money';
 import { PARTNERS_NAME, PARTNERS_SLUG, path } from '@/lib/segments';
 import { categoryArt } from '@/features/home/categoryArt';
 import { useIdle } from '@/lib/motion';
+import { t } from '@/lib/i18n';
 
 /**
  * Round 10 part 1 #5–7: a mega menu with category illustrations, subcategories as text links (so their
@@ -48,7 +49,7 @@ export function MegaMenu({ locale, categories, partners, label, className, chevr
           {/* Round 18: eleven groups, so six compact columns with small illustrations instead of four wide ones. */}
           <div className="mx-auto grid max-w-(--container-wide) gap-8 px-12 py-7 xl:grid-cols-[1fr_17rem]">
             <ul className="vk-seq grid grid-cols-4 gap-x-5 gap-y-6 xl:grid-cols-6">
-              {[...categories, ...(partners ? [{ id: 'partners', key: 'partnerski-vyroby', slug: PARTNERS_SLUG, name: PARTNERS_NAME, children: [] }] : [])].map((c, i, all) => (
+              {[...categories, ...(partners ? [{ id: 'partners', key: 'partnerski-vyroby', slug: PARTNERS_SLUG, name: locale === 'en' ? t(locale, 'product.partner') : PARTNERS_NAME, children: [] }] : [])].map((c, i, all) => (
                 // With 7–11 groups the second row leaves its last slot empty: the sixth group (the longest
                 // list) runs down into it instead of pushing the second row lower.
                 <li key={c.id} className={`flex min-w-0 flex-col gap-1.5 ${i === 5 && all.length > 6 && all.length < 12 ? 'xl:row-span-2' : ''}`}>
@@ -73,13 +74,13 @@ export function MegaMenu({ locale, categories, partners, label, className, chevr
             <aside className="flex flex-col gap-3 border-l border-border-hairline pl-6 max-xl:hidden" aria-labelledby="mega-hits">
               <h2 id="mega-hits" className="flex items-center gap-2 text-body font-semibold text-text-primary">
                 <svg viewBox="0 0 24 24" className="size-5 text-accent" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" /></svg>
-                Хіти продажу
+                {locale === 'en' ? 'Bestsellers' : 'Хіти продажу'}
               </h2>
               {hits === null && <span className="text-body-sm text-text-muted">…</span>}
               {hits?.map((p) => (
                 <Link key={p.id} to={path.product(locale, p.slug)} onClick={close} className="flex items-center gap-3 rounded-md p-1 hover:bg-bg-alt">
                   {p.media
-                    ? <img src={mediaUrl(p.media.publicId, 480)} alt="" width={56} height={56} loading="lazy" decoding="async" className="size-14 shrink-0 rounded-sm bg-bg-alt object-cover" />
+                    ? <img src={mediaUrl(p.media.publicId, 160)} alt="" width={56} height={56} loading="lazy" decoding="async" className="size-14 shrink-0 rounded-sm bg-bg-alt object-cover" />
                     : <span className="size-14 shrink-0 rounded-sm bg-bg-alt" aria-hidden="true" />}
                   <span className="flex flex-col"><span className="text-body-sm font-semibold text-text-primary">{p.name}</span><span className="text-body-sm text-text-body">{formatRange(p.priceMinMinor, p.priceMaxMinor, locale)}</span></span>
                 </Link>

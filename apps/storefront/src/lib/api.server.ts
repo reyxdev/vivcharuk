@@ -47,3 +47,17 @@ export async function alternatesFor(kind: 'product' | 'category', slug: string, 
   const { data } = await apiGet<{ alternates: Partial<Record<Locale, string>> }>('/seo/alternates', locale, { kind, slug }).catch(() => ({ data: { alternates: {} } }));
   return data.alternates;
 }
+
+/**
+ * A private read on behalf of the visitor (the cart and its checkout quote, round 24 G018): their
+ * cookie is passed on, nothing is cached, and a response that would create a new cart (Set-Cookie)
+ * counts as «no cart» — the browser then asks for itself.
+ */
+export async function apiGetAsVisitor<T>(path: string, locale: Locale, cookie: string, params: Record<string, string | undefined> = {}): Promise<T | null> {
+  const url = new URL(BASE + path);
+  url.searchParams.set('locale', locale);
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') url.searchParams.set(k, v);
+  const res = await fetch(url, { headers: { cookie } }).catch(() => null);
+  if (!res?.ok || res.headers.get('set-cookie')) return null;
+  return (await res.json()) as T;
+}

@@ -1,60 +1,20 @@
+import { useParams } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
+import { isLocale } from './locale';
+import * as shell from './messages/shell';
+import * as commerce from './messages/commerce';
 
-// UI copy. `uk` is canonical; other locales fall back to it until translated (26 §26.6).
-const UK = {
-  'nav.catalog': 'Каталог',
-  'nav.allCategories': 'Усі категорії',
-  'nav.wholesale': 'Опт',
-  'nav.about': 'Про нас',
-  'nav.reviews': 'Відгуки',
-  'nav.contacts': 'Контакти',
-  'nav.menu': 'Меню',
-  'nav.close': 'Закрити',
-  'header.search': 'Пошук',
-  'header.call': 'Подзвонити',
-  'header.wishlist': 'Обране',
-  'header.cart': 'Кошик',
-  'header.language': 'Мова',
-  'catalog.showMore': 'Показати ще',
-  'catalog.filters': 'Фільтри',
-  'catalog.resetAll': 'Скинути все',
-  'catalog.empty': 'За цими фільтрами товарів немає.',
-  'catalog.inStockOnly': 'Лише в наявності',
-  'catalog.sort': 'Сортування',
-  'catalog.sort.popularity': 'Популярні',
-  'catalog.sort.newest': 'Новинки',
-  'catalog.sort.price_asc': 'Спершу дешевші',
-  'catalog.sort.price_desc': 'Спершу дорожчі',
-  'catalog.sort.name_asc': 'За назвою',
-  'catalog.sort.relevance': 'За збігом',
-  'catalog.sort.discount': 'Зі знижкою',
-  'catalog.count': '{n} {n|товар|товари|товарів}',
-  'catalog.show': 'Показати {n} {n|товар|товари|товарів}',
-  'product.own': 'Власне виробництво',
-  'product.partner': 'Від партнерів',
-  'product.outOfStock': 'Немає в наявності',
-  'product.fewLeft': 'Залишилось мало',
-  'product.madeToOrder': 'Виготовимо за {n} днів',
-  'product.addToCart': 'Додати в кошик',
-  'product.specs': 'Характеристики',
-  'product.composition': 'Склад',
-  'product.photoSoon': 'Фото незабаром',
-  'badge.NEW': 'Новинка',
-  'badge.SALE': 'Знижка',
-  'badge.HIT': 'Хіт',
-  'footer.info': 'Інформація',
-  'footer.catalog': 'Каталог',
-  'footer.contacts': 'Контакти',
-  'notFound.title': 'Сторінку не знайдено',
-  'notFound.home': 'На головну',
-} as const;
+// UI copy. `uk` is canonical; `en` is complete (round 24 G093); `pl` and `de` fall back to `uk` until
+// translated (26 §26.6). The dictionaries live in ./messages, one file per area of the site.
+const UK = { ...shell.uk, ...commerce.uk };
+const EN: Record<MessageKey, string> = { ...shell.en, ...commerce.en };
 
-export type MessageKey = keyof typeof UK;
-const CATALOGUES: Partial<Record<Locale, Partial<Record<MessageKey, string>>>> = { uk: UK };
+export type MessageKey = keyof typeof shell.uk | keyof typeof commerce.uk;
+const CATALOGUES: Partial<Record<Locale, Partial<Record<MessageKey, string>>>> = { uk: UK, en: EN };
 
 export function t(locale: Locale, key: MessageKey, vars: Record<string, string | number> = {}) {
   const raw = CATALOGUES[locale]?.[key] ?? UK[key];
-  // `{n|one|few|many}` picks the plural form by Intl rules for the locale.
+  // `{n|one|few|many}` picks the plural form by Intl rules for the locale (English: one / other → many).
   const rules = new Intl.PluralRules(locale);
   return raw
     .replace(/\{(\w+)\|([^|}]*)\|([^|}]*)\|([^|}]*)\}/g, (_, k: string, one: string, few: string, many: string) => {
@@ -63,3 +23,19 @@ export function t(locale: Locale, key: MessageKey, vars: Record<string, string |
     })
     .replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));
 }
+
+/** The page's locale from the URL (`/:locale/…`), `uk` outside it. For components without a `locale` prop. */
+export function useLocale(): Locale {
+  const { locale } = useParams();
+  return isLocale(locale) ? locale : 'uk';
+}
+
+/** `const tr = useT(); tr('nav.catalog')` — t() bound to the page's locale. */
+export function useT() {
+  const locale = useLocale();
+  return (key: MessageKey, vars?: Record<string, string | number>) => t(locale, key, vars);
+}
+
+// Partner regions are typed in the panel in Ukrainian; the ones in use get their English names (G093).
+const REGIONS_EN: Record<string, string> = { 'Косівщина': 'the Kosiv area', 'Закарпаття': 'Transcarpathia', 'Гуцульщина': 'the Hutsul region', 'Буковина': 'Bukovyna', 'Прикарпаття': 'Prykarpattia' };
+export const regionName = (region: string, locale: Locale) => (locale === 'en' ? REGIONS_EN[region.trim()] ?? region : region);

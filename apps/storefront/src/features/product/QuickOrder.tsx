@@ -45,7 +45,8 @@ export function QuickOrder({ variantId, label }: { variantId: string; label: str
         className="vk-dialog m-0 mt-auto w-full max-w-none rounded-t-xl bg-bg-page p-0 backdrop:bg-bg-inverted/50 sm:m-auto sm:max-w-md sm:rounded-xl">
         <form onSubmit={submit} className="flex flex-col gap-4 p-6">
           <div className="flex items-start justify-between gap-3">
-            <h2 id="qo-title" className="text-h3 text-text-primary">Купити в 1 клік</h2>
+            {/* Round 24 G087: the dialog's title, not a heading of the product page. */}
+            <p id="qo-title" className="text-h3 font-semibold text-text-primary">Купити в 1 клік</p>
             <button type="button" onClick={() => setOpen(false)} aria-label="Закрити" className="text-h3 leading-none text-text-muted">×</button>
           </div>
           {state === 'sent' ? (

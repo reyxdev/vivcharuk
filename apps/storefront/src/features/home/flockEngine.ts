@@ -1,16 +1,23 @@
 import { baa, thud } from './heroSound';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Hero flock and shepherd (36 §36.3.6–36.3.7). Plain DOM on the hero SVG; no framework, no library.
-export function startFlock(root: HTMLElement, layer: HTMLElement, groundHost: HTMLElement): () => void {
+// Round 24 G029: `asleep` sets the scene (fitted to the screen, everyone drawn in place) without running
+// it; wake() starts it. The hero is split into layers (art/split-hero.mjs): the sheep, the shepherd and the
+// path are in the front layer (`svg[data-land]`), the hut and its smoke in the hut layer, the firs in their
+// own layer, inline only on narrow screens (elsewhere the hut never moves in among them).
+export interface Flock { stop: () => void; wake: () => void }
+export function startFlock(root: HTMLElement, layer: HTMLElement, groundHost: HTMLElement, opts: { asleep?: boolean } = {}): Flock {
 const doc = root.ownerDocument, win = doc.defaultView as Window, NS = 'http://www.w3.org/2000/svg';
 const reduce = !!(win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches);
+// G093: the speech bubbles follow the page language.
+const say = (uk: string, en: string) => (doc.documentElement.lang === 'en' ? en : uk);
 const land0 = root.querySelector<SVGSVGElement>('svg[data-land]');
 const vb = land0?.viewBox.baseVal;
 const W = vb?.width || 1440, H = vb?.height || 620, TOP = 0;
 const BMIN = 544, BMAX = 610;
 let XMIN = 70, XMAX = W - 50;
 const sym = doc.getElementById('sheepd'), sb = doc.getElementById('shepbody'), ss = doc.getElementById('shepstaff');
-if (!sym || !sb || !ss) return () => {};
+if (!sym || !sb || !ss) return { stop: () => {}, wake: () => {} };
 const K: any[] = [...sym.children];
 // The shepherd is drawn in named parts (data-part), so the rig does not depend on how many details
 // the drawing has: legs, left arm, torso, head (+ face), hat; the staff symbol holds the staff and the right arm.
@@ -31,7 +38,7 @@ const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const uses: any[] = [...root.querySelectorAll('use')];
 const sheepUses = uses.filter((u: any) => u.getAttribute('href') === '#sheepd');
 const shepUse = uses.find((u: any) => u.getAttribute('href') === '#shepherd');
-if (!sheepUses.length || !shepUse) return () => {};
+if (!sheepUses.length || !shepUse) return { stop: () => {}, wake: () => {} };
 const land: any = sheepUses[0].ownerSVGElement;
 // Performance (client, 2026-09-30: «щоб сайт взагалі не лагав… на любому залізі»): the still picture has
 // thousands of shapes, and any change inside it makes the browser record all of them again. Everything that
@@ -277,7 +284,7 @@ function start(p: any) {
     sh.hat0 = shWorld(HAT_ANCHOR[0], HAT_ANCHOR[1]);
     sh.mode = 'react'; sh.t = 0; sh.px = p.x; sh.py = p.y; sh.vxs = 0; sh.hist = [[p.x, p.y, now()]]; sh.said = false; sh.onGround = true;
     shFace('oh'); airG.appendChild(shG); held = { kind: 'hat' }; cap.style.cursor = 'grabbing';
-    const hw = shWorld(150, 40); bubble(hw[0] + 10, hw[1] - 10, 'Ой!');
+    const hw = shWorld(150, 40); bubble(hw[0] + 10, hw[1] - 10, say('Ой!', 'Oops!'));
     if (!sh.staffOut) dropStaff();
     sh.lifts = sh.lifts.filter((t: any) => now() - t < 40000); sh.lifts.push(now());
   }
@@ -296,7 +303,7 @@ function endPress(e: any) {
   const tg = press.target;
   if (!press.started) {
     if (e && now() - press.t0 < 450) {
-      if (tg.kind === 'sheep' && tg.a.mode === 'ground') { const S = sS(tg.a); bubble(tg.a.x + 70 * S * tg.a.fd, tg.a.b - 110 * S, 'Бе-е!'); }
+      if (tg.kind === 'sheep' && tg.a.mode === 'ground') { const S = sS(tg.a); bubble(tg.a.x + 70 * S * tg.a.fd, tg.a.b - 110 * S, say('Бе-е!', 'Baa!')); }
       if (tg.kind === 'hat' && sh.mode === 'stand') { sh.mode = 'hold'; sh.t = 0; }
     }
     if (press.denied && sh.mode === 'stand') { sh.mode = 'hold'; sh.t = 0; }
@@ -384,7 +391,7 @@ function pickAct(a: any) {
   if (act === 'lie' && lying >= 2) act = 'graze';
   a.act = act; a.actT = 0; a.actDur = act === 'lie' ? rnd(6, 10) : act === 'shake' ? 0.7 : act === 'scratch' ? 1.2 : act === 'bleat' ? 1.5 : rnd(3, 8);
   if (act === 'steps') { a.goal = [clamp(a.x + rnd(20, 40) * (Math.random() < 0.5 ? -1 : 1), XMIN, XMAX), clamp(a.b + rnd(-8, 8), BMIN, BMAX)]; }
-  if (act === 'bleat') { const S = sS(a); bubble(a.x + 70 * S * a.fd, a.b - 110 * S, 'Бе-е'); }
+  if (act === 'bleat') { const S = sS(a); bubble(a.x + 70 * S * a.fd, a.b - 110 * S, say('Бе-е', 'Baa')); }
   if (act === 'look' && Math.random() < 0.5) a.fT = -Math.sign(a.f || 1);
 }
 
@@ -688,8 +695,8 @@ function step(tms: number) {
     sh.Rv += ((tR - sh.R) * 55 - sh.Rv * 4) * dt; sh.R += sh.Rv * dt;
     sh.anc = [150, 52]; sh.aw = [sh.px, sh.py];
     sh.aL = 184; sh.aR = -164; sh.lL = -sh.R * 0.5 + 18 * Math.sin(t * 7); sh.lR = -sh.R * 0.5 + 18 * Math.sin(t * 7 + Math.PI); sh.hR = -sh.R * 0.3;
-    if (!sh.said && t > 0.4) { sh.said = true; bubble(sh.px + 30, sh.py + 20, 'Віддай!'); }
-    if (Math.abs(sh.vxs) > 1400 && T > sh.ohT) { sh.ohT = T + 1500; bubble(sh.px + 30, sh.py + 40, 'Ой-ой!'); }
+    if (!sh.said && t > 0.4) { sh.said = true; bubble(sh.px + 30, sh.py + 20, say('Віддай!', 'Give it back!')); }
+    if (Math.abs(sh.vxs) > 1400 && T > sh.ohT) { sh.ohT = T + 1500; bubble(sh.px + 30, sh.py + 40, say('Ой-ой!', 'Oh no!')); }
   }
   else if (P === 'cling') {
     sh.Rsv += (-sh.Rs * 30 - sh.Rsv * 1.0) * dt; sh.Rs += sh.Rsv * dt; sh.R = sh.Rs;
@@ -784,7 +791,7 @@ function step(tms: number) {
   if (x1 - x0 > 1300) return;
   XMIN = x0 + 40; XMAX = x1 - 30;
   const moveHut = () => {
-    const hut = land.querySelector('[data-hut]');
+    const hut = root.querySelector('[data-hut]');
     // The hut stands on the hill just behind the shepherd (round 17 B6); keep that relation.
     if (!hut) return;
     const hx = Math.max(x0 - 10, HOME - 154);
@@ -805,7 +812,7 @@ function step(tms: number) {
     // standing on its spot step aside to either side, with their shadows, so the house is seen whole.
     if (hx > 70) {
       const base = 346 + dy + 100, cx = hx + 60, half = 66;
-      land.querySelectorAll('[data-firs] use, [data-bigfirs] use').forEach((u: Element) => {
+      root.querySelectorAll('[data-firs] use, [data-bigfirs] use').forEach((u: Element) => {
         const m = (u.getAttribute('transform') ?? '').match(/translate\(([-\d.]+) ([-\d.]+)\) scale\(([-\d.]+)(?: ([-\d.]+))?\)/);
         if (!m) return;
         const big = (u.getAttribute('href') ?? '').includes('bigfir');
@@ -837,7 +844,7 @@ function step(tms: number) {
 })();
 flock.forEach(drawSheep); drawShep(); drawShades();
 // The chimney smoke is the only thing that moved inside the still picture: it goes to the moving layer too.
-const smoke = land.querySelector('.vk-smoke'), hut = land.querySelector('[data-hut]');
+const smoke = root.querySelector('.vk-smoke'), hut = root.querySelector('[data-hut]');
 if (smoke && hut) { const g = el('g', { transform: hut.getAttribute('transform') || '' }); groundSvg.insertBefore(g, groundSvg.firstChild); g.appendChild(smoke); }
 // Development only: start the fall at once, to check the choreography without herding sheep.
 if (import.meta.env.DEV) {
@@ -847,9 +854,9 @@ if (import.meta.env.DEV) {
 }
 if (import.meta.env.DEV) (win as any).__vkFall = () => { sh.mode = 'fallen'; sh.t = 0; sh.R0 = sh.R; launchHat(1); if (!sh.staffOut) dropStaff(); };
 // Degradation ladder step 4 (36 §36.5): every loop pauses on a hidden tab or with the hero off-screen.
-let visible = true, onScreen = true;
+let visible = true, onScreen = true, awake = !opts.asleep;
 const run = () => {
-  const go = visible && onScreen;
+  const go = awake && visible && onScreen;
   if (go && !raf) { last = 0; raf = win.requestAnimationFrame(step); }
   if (!go && raf) { win.cancelAnimationFrame(raf); raf = 0; }
 };
@@ -858,10 +865,13 @@ doc.addEventListener('visibilitychange', onVis);
 const io = 'IntersectionObserver' in win ? new IntersectionObserver((e) => { onScreen = e[0]!.isIntersecting; run(); }) : null;
 io?.observe(root);
 raf = 0; run();
-return () => {
-  win.cancelAnimationFrame(raf);
-  doc.removeEventListener('visibilitychange', onVis); io?.disconnect();
-  root.removeEventListener('pointermove', onMove); root.removeEventListener('pointerleave', onLeave);
-  win.removeEventListener('wheel', onAbort); win.removeEventListener('blur', onAbort);
+return {
+  wake: () => { if (!awake) { awake = true; lastMove = stillSince = now(); run(); } },
+  stop: () => {
+    win.cancelAnimationFrame(raf);
+    doc.removeEventListener('visibilitychange', onVis); io?.disconnect();
+    root.removeEventListener('pointermove', onMove); root.removeEventListener('pointerleave', onLeave);
+    win.removeEventListener('wheel', onAbort); win.removeEventListener('blur', onAbort);
+  },
 };
 }

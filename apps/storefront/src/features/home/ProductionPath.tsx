@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
 import { path } from '@/lib/segments';
 import { Needle } from './Needle';
-import { mediaUrl } from '@/lib/media';
+import { ResponsiveImage } from '@/lib/ResponsiveImage';
+import { t } from '@/lib/i18n';
 
 export interface HomeStage { key: string; track: 'WOOL' | 'HIDE'; title: string; photo: { publicId: string; width: number; height: number } | null }
 
@@ -56,15 +57,14 @@ export function ProductionPath({ stages, locale }: { stages: HomeStage[]; locale
           <li key={s.key} className="flex flex-col items-center gap-3 text-center">
             <span className="grid size-12 place-items-center rounded-full border-2 border-text-primary bg-bg-surface text-h4 text-text-primary">{i + 1}</span>
             <span className="text-h4 text-text-primary">{s.title}</span>
-            {s.photo
-              ? <img src={mediaUrl(s.photo.publicId, 480)} alt={s.title} width={s.photo.width} height={s.photo.height} loading="lazy" className="aspect-square w-full rounded-lg object-cover lg:aspect-[4/5]" />
-              : <span className="grid aspect-square w-full place-items-center rounded-lg border-2 lg:aspect-[4/5] border-dashed border-border-control bg-bg-surface p-3 text-caption text-text-muted">фото / відео етапу</span>}
+            {/* G076: a stage without a photo shows no placeholder. */}
+            {s.photo && <ResponsiveImage publicId={s.photo.publicId} sizes="(min-width: 1024px) 180px, (min-width: 768px) 30vw, 45vw" fallback={480} alt={s.title} width={s.photo.width} height={s.photo.height} loading="lazy" decoding="async" className="aspect-square w-full rounded-lg object-cover lg:aspect-[4/5]" />}
           </li>
         ))}
       </ol>
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-        {hide.length > 0 && <p className="text-body-lg text-text-body">Окрема гілка для овчини: <strong className="text-text-primary">{hide.map((s) => s.title.toLowerCase()).join(', ')}</strong> — теж у нас.</p>}
-        <Link to={path.seg(locale, 'production')} className="text-body font-semibold text-text-primary underline">Як ми виробляємо <span className="vk-arrow" aria-hidden="true">→</span></Link>
+        {hide.length > 0 && <p className="text-body-lg text-text-body">{t(locale, 'path.hideBranch')} <strong className="text-text-primary">{hide.map((s) => s.title.toLowerCase()).join(', ')}</strong> {t(locale, 'path.hideBranchTail')}</p>}
+        <Link to={path.seg(locale, 'production')} className="text-body font-semibold text-text-primary underline">{t(locale, 'hero.howWeMake')} <span className="vk-arrow" aria-hidden="true">→</span></Link>
       </div>
     </div>
   );

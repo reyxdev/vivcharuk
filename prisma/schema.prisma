@@ -1881,3 +1881,17 @@ model CollectionProduct {
   @@id([collectionId, productId])
   @@index([productId])
 }
+
+// Round 24 G026: real-user speed samples from the site (LCP, INP, CLS, TTFB). No cookies, no IP, no
+// visitor id: the metric, its value, the page template and a device class. Purged after 90 days.
+model RumSample {
+  id        String   @id @default(cuid(2))
+  metric    String // LCP | INP | CLS | TTFB
+  value     Float // ms; CLS unitless
+  page      String // template: home, product, category, …
+  device    String // mobile | tablet | desktop
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@index([metric, page, createdAt])
+}

@@ -39,6 +39,7 @@ export type SegmentKey = keyof typeof SEGMENTS;
  */
 export const PARTNERS_SLUG = 'vid-partneriv';
 export const PARTNERS_NAME = 'Від партнерів';
+export const PARTNERS_NAME_EN = 'From our partners';
 
 export const path = {
   home: (l: Locale) => `/${l}/`,

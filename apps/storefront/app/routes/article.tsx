@@ -1,12 +1,14 @@
+import { regionName } from '@/lib/i18n';
 import { useEffect, useState } from 'react';
 import { Link, useLoaderData, useRouteLoaderData } from 'react-router';
 import type { Locale, PostBody } from '@vivcharyk/schemas';
-import { BUSINESS } from '@vivcharyk/schemas';
 import type { Route } from './+types/article';
 import { apiGet, ApiError, redirectOr404 } from '@/lib/api.server';
 import { formatRange } from '@/lib/money';
-import { mediaSrcSet, mediaUrl } from '@/lib/media';
+import { mediaUrl } from '@/lib/media';
+import { ResponsiveImage } from '@/lib/ResponsiveImage';
 import { path } from '@/lib/segments';
+import { brandOf, localeOf, originOf, pageMeta } from '@/lib/seo';
 import { Inline } from '@/features/blog/Inline';
 import type { loader as layoutLoader } from './locale-layout';
 
@@ -25,26 +27,44 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 }
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ data, matches }: Route.MetaArgs) {
   if (!data) return [];
-  return [{ title: data.a.metaTitle ?? `${data.a.title} — ${BUSINESS.brand}` }, { name: 'description', content: data.a.metaDescription ?? data.a.excerpt }, { property: 'og:type', content: 'article' }];
+  const cover = data.a.photos[0];
+  const locale = localeOf(matches);
+  return pageMeta({
+    title: data.a.metaTitle ?? `${data.a.title} — ${brandOf(locale)}`, description: data.a.metaDescription ?? data.a.excerpt, origin: originOf(matches), type: 'article', locale,
+    image: cover ? { url: mediaUrl(cover.publicId, 1200), alt: data.a.title } : null,
+  });
 }
+
+// G070, G136: articles are signed by the workshop, not by one person.
+const AUTHOR = 'Майстри Вівчарика';
+const AUTHOR_EN = 'The Vivcharyk makers';
+
+// Round 24 G093: the article's frame in English; the article text comes from the API.
+const COPY = {
+  uk: { own: 'Власне виробництво', picked: 'Відібрано Вівчариком', byCraftsman: 'Виготовлено карпатським майстром', byOther: 'Виготовлено іншим виробником', out: 'Немає в наявності', gone: 'Більше не продається', view: 'Подивитись',
+    share: 'Поділитися:', send: 'Надіслати…', copied: 'Скопійовано', copy: 'Копіювати посилання', home: 'Головна', journal: 'Журнал', brief: 'Коротко', products: 'Товари зі статті', read: (n: number) => `${n} хв читання` },
+  en: { own: 'Made in our workshop', picked: 'Selected by Vivcharyk', byCraftsman: 'Made by a Carpathian craftsman', byOther: 'Made by another maker', out: 'Out of stock', gone: 'No longer sold', view: 'View',
+    share: 'Share:', send: 'Send…', copied: 'Copied', copy: 'Copy link', home: 'Home', journal: 'Journal', brief: 'In brief', products: 'Products in this article', read: (n: number) => `${n} min read` },
+};
+const copyOf = (l: Locale) => COPY[l === 'en' ? 'en' : 'uk'];
 
 const CALLOUT: Record<string, string> = { note: 'border-info', warning: 'border-warning', tip: 'border-success' };
 
 /** 22 §22.8: live price and stock, the origin label on every embed, partnerName never. */
 function ProductEmbed({ p, locale }: { p: Embed | undefined; locale: Locale }) {
   if (!p) return null;
-  const origin = p.origin === 'OWN_MANUFACTURE' ? 'Власне виробництво' : `Відібрано Вівчариком · ${p.partnerRegion ? `Виготовлено карпатським майстром, ${p.partnerRegion}` : 'Виготовлено іншим виробником'}`;
+  const c = copyOf(locale);
+  const origin = p.origin === 'OWN_MANUFACTURE' ? c.own : `${c.picked} · ${p.partnerRegion ? `${c.byCraftsman}, ${regionName(p.partnerRegion, locale)}` : c.byOther}`;
   return (
     <aside className="not-prose my-2 flex items-center gap-4 rounded-xl border border-border-hairline bg-bg-surface p-4">
-      <span className="grid size-20 shrink-0 place-items-center rounded-md bg-bg-alt text-caption text-text-muted" aria-hidden="true">фото</span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="text-body font-semibold text-text-primary">{p.name}</span>
         <span className="text-caption text-text-muted">{origin}</span>
-        <span className="text-body text-text-primary">{p.live ? (p.inStock ? formatRange(p.priceMinMinor, p.priceMaxMinor, locale) : 'Немає в наявності') : 'Більше не продається'}</span>
+        <span className="text-body text-text-primary">{p.live ? (p.inStock ? formatRange(p.priceMinMinor, p.priceMaxMinor, locale) : c.out) : c.gone}</span>
       </span>
-      {p.live && <Link to={path.product(locale, p.slug)} className="shrink-0 rounded-lg border-2 border-text-primary px-4 py-2 text-body-sm font-semibold text-text-primary">Подивитись <span className="vk-arrow" aria-hidden="true">→</span></Link>}
+      {p.live && <Link to={path.product(locale, p.slug)} className="shrink-0 rounded-lg border-2 border-text-primary px-4 py-2 text-body-sm font-semibold text-text-primary">{c.view} <span className="vk-arrow" aria-hidden="true">→</span></Link>}
     </aside>
   );
 }
@@ -54,7 +74,7 @@ function Figure({ p, alt, caption }: { p: Photo | undefined; alt: string; captio
   if (!p) return null;
   return (
     <figure className="flex flex-col gap-2">
-      <img src={mediaUrl(p.publicId, 960)} srcSet={mediaSrcSet(p.publicId)} sizes="(min-width: 800px) 768px, 100vw" width={p.width} height={p.height}
+      <ResponsiveImage publicId={p.publicId} sizes="(min-width: 800px) 768px, 100vw" width={p.width} height={p.height}
         loading="lazy" decoding="async" alt={alt} className="h-auto w-full rounded-xl bg-bg-alt" />
       {caption && <figcaption className="text-body-sm text-text-muted">{caption}</figcaption>}
     </figure>
@@ -62,7 +82,8 @@ function Figure({ p, alt, caption }: { p: Photo | undefined; alt: string; captio
 }
 
 // Round 10 part 7 #15: under an article, only the products it mentions and sharing.
-function Share({ url, title }: { url: string; title: string }) {
+function Share({ url, title, locale }: { url: string; title: string; locale: Locale }) {
+  const c = copyOf(locale);
   const [copied, setCopied] = useState(false);
   const [native, setNative] = useState(false);
   useEffect(() => setNative(typeof navigator !== 'undefined' && !!navigator.share), []);
@@ -70,12 +91,12 @@ function Share({ url, title }: { url: string; title: string }) {
   const btn = 'rounded-lg border border-border-control px-4 py-2 text-body-sm font-semibold text-text-primary';
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-body-sm text-text-muted">Поділитися:</span>
-      {native && <button type="button" onClick={() => void navigator.share({ title, url }).catch(() => undefined)} className={btn}>Надіслати…</button>}
+      <span className="text-body-sm text-text-muted">{c.share}</span>
+      {native && <button type="button" onClick={() => void navigator.share({ title, url }).catch(() => undefined)} className={btn}>{c.send}</button>}
       <a href={`https://t.me/share/url?url=${u}&text=${t}`} target="_blank" rel="noopener noreferrer" className={btn}>Telegram</a>
       <a href={`viber://forward?text=${t}%20${u}`} className={btn}>Viber</a>
       <a href={`https://www.facebook.com/sharer/sharer.php?u=${u}`} target="_blank" rel="noopener noreferrer" className={btn}>Facebook</a>
-      <button type="button" onClick={() => void navigator.clipboard.writeText(url).then(() => setCopied(true))} className={btn}>{copied ? 'Скопійовано' : 'Копіювати посилання'}</button>
+      <button type="button" onClick={() => void navigator.clipboard.writeText(url).then(() => setCopied(true))} className={btn}>{copied ? c.copied : c.copy}</button>
     </div>
   );
 }
@@ -85,6 +106,8 @@ export default function ArticlePage() {
   const layout = useRouteLoaderData<typeof layoutLoader>('routes/locale-layout');
   const origin = layout?.origin ?? '';
   const l = locale as Locale;
+  const c = copyOf(l);
+  const author = l === 'en' ? AUTHOR_EN : AUTHOR;
   const url = `${origin}${path.seg(l, 'journal')}/${a.slug}`;
   const faq = a.body.blocks.flatMap((b) => (b.type === 'faq' ? b.items : []));
   const mentioned = a.body.blocks.flatMap((b) => (b.type === 'productEmbed' ? [b.productId] : []));
@@ -92,8 +115,8 @@ export default function ArticlePage() {
   const ld = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Article', '@id': `${url}#article`, headline: a.title, description: a.excerpt, datePublished: a.publishedAt, dateModified: a.updatedAt, inLanguage: l, mainEntityOfPage: url, ...(images.length ? { image: images } : {}), author: { '@type': 'Person', name: 'Іван' }, publisher: { '@id': `${origin}/#organization` } },
-      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Журнал', item: `${origin}${path.seg(l, 'journal')}` }, { '@type': 'ListItem', position: 2, name: a.title, item: url }] },
+      { '@type': 'Article', '@id': `${url}#article`, headline: a.title, description: a.excerpt, datePublished: a.publishedAt, dateModified: a.updatedAt, inLanguage: l, mainEntityOfPage: url, ...(images.length ? { image: images } : {}), author: { '@type': 'Organization', name: author, url: `${origin}/` }, publisher: { '@id': `${origin}/#organization` } },
+      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: c.home, item: `${origin}${path.home(l)}` }, { '@type': 'ListItem', position: 2, name: c.journal, item: `${origin}${path.seg(l, 'journal')}` }, { '@type': 'ListItem', position: 3, name: a.title, item: url }] },
       ...(faq.length ? [{ '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }] : []),
     ],
   };
@@ -101,14 +124,14 @@ export default function ArticlePage() {
   return (
     <article className="mx-auto flex max-w-[48rem] flex-col gap-5 px-4 py-(--section-y-sm)">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }} />
-      <nav aria-label="breadcrumb" className="text-body-sm text-text-muted"><Link to={path.seg(l, 'journal')} className="hover:underline">Журнал</Link>{a.tags[0] ? ` › ${a.tags[0]}` : ''}</nav>
+      <nav aria-label="breadcrumb" className="text-body-sm text-text-muted"><Link to={path.home(l)} className="hover:underline">{c.home}</Link> › <Link to={path.seg(l, 'journal')} className="hover:underline">{c.journal}</Link></nav>
       {a.tags[0] && <span className="text-overline uppercase text-text-muted">{a.tags[0]}</span>}
       <h1 className="text-display-md text-text-primary">{a.title}</h1>
-      <p className="text-caption text-text-muted">Іван · {new Date(a.publishedAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}{a.readMinutes ? ` · ${a.readMinutes} хв читання` : ''}</p>
+      <p className="text-caption text-text-muted">{author} · {new Date(a.publishedAt).toLocaleDateString(l === 'en' ? 'en-GB' : 'uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}{a.readMinutes ? ` · ${c.read(a.readMinutes)}` : ''}</p>
       <div className="flex flex-col gap-5 text-body-lg text-text-body">
         {a.body.blocks.map((b, i) => {
           switch (b.type) {
-            case 'keyFacts': return <section key={i} aria-label="Коротко" className="rounded-xl border border-border-hairline bg-bg-surface p-5"><p className="mb-2 text-overline uppercase text-text-muted">Коротко</p><ul className="flex list-disc flex-col gap-1.5 pl-5">{b.items.map((x, j) => <li key={j}><Inline text={x} /></li>)}</ul></section>;
+            case 'keyFacts': return <section key={i} aria-label={c.brief} className="rounded-xl border border-border-hairline bg-bg-surface p-5"><p className="mb-2 text-overline uppercase text-text-muted">{c.brief}</p><ul className="flex list-disc flex-col gap-1.5 pl-5">{b.items.map((x, j) => <li key={j}><Inline text={x} /></li>)}</ul></section>;
             case 'paragraph': return <p key={i}><Inline text={b.text} /></p>;
             case 'heading': return b.level === 2 ? <h2 key={i} className="mt-4 text-h2 text-text-primary">{b.text}</h2> : <h3 key={i} className="mt-2 text-h3 text-text-primary">{b.text}</h3>;
             case 'bulletList': return <ul key={i} className="flex list-disc flex-col gap-1.5 pl-6">{b.items.map((x, j) => <li key={j}><Inline text={x} /></li>)}</ul>;
@@ -126,11 +149,11 @@ export default function ArticlePage() {
       <div className="mt-6 flex flex-col gap-5 border-t border-border-hairline pt-6">
         {mentioned.length > 0 && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-h3 text-text-primary">Товари зі статті</h2>
+            <h2 className="text-h3 text-text-primary">{c.products}</h2>
             {[...new Set(mentioned)].map((id) => <ProductEmbed key={id} p={a.products.find((p) => p.id === id)} locale={l} />)}
           </section>
         )}
-        <Share url={url} title={a.title} />
+        <Share url={url} title={a.title} locale={l} />
       </div>
     </article>
   );

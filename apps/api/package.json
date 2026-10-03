@@ -27,7 +27,8 @@
     "otplib": "^12.0.1",
     "pg-boss": "^10.4.2",
     "qrcode": "^1.5.4",
-    "sanitize-html": "^2.18.0"
+    "sanitize-html": "^2.18.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/mailparser": "^3.9.0",

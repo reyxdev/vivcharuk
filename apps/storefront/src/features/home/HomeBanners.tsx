@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
-import { mediaSrcSet, mediaUrl } from '@/lib/media';
+import { ResponsiveImage } from '@/lib/ResponsiveImage';
+import { useLocale } from '@/lib/i18n';
 
 export interface HomeBanner { title: string; buttonLabel: string | null; linkUrl: string | null; image: { publicId: string; width: number; height: number } }
 
@@ -13,20 +14,21 @@ const SIZES = ['', '(min-width: 1280px) 1200px, 100vw', '(min-width: 768px) 50vw
  * The API sends only the ones switched on and inside their dates; none means nothing is drawn.
  */
 export function HomeBanners({ items }: { items: HomeBanner[] }) {
+  const locale = useLocale();
   const n = Math.min(items.length, 3);
   if (!n) return null;
   return (
-    <section aria-label="Пропозиції магазину" className="mx-auto mb-12 max-w-(--container-wide) lg:px-12">
+    <section aria-label={locale === 'en' ? 'Shop offers' : 'Пропозиції магазину'} className="mx-auto mb-12 max-w-(--container-wide) lg:px-12">
       <ul className={`flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 [scrollbar-width:none] md:grid md:gap-5 md:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden ${n === 2 ? 'md:grid-cols-2' : n === 3 ? 'md:grid-cols-3' : ''}`}>
         {items.slice(0, 3).map((b, i) => {
           const body = (
             <>
-              <img src={mediaUrl(b.image.publicId, 960)} srcSet={mediaSrcSet(b.image.publicId)} sizes={SIZES[n]} width={b.image.width} height={b.image.height}
+              <ResponsiveImage publicId={b.image.publicId} sizes={SIZES[n]!} width={b.image.width} height={b.image.height}
                 loading="lazy" decoding="async" alt="" className="absolute inset-0 size-full object-cover transition-transform duration-(--dur-base) group-hover:scale-[1.02] motion-reduce:transition-none" />
               <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" aria-hidden="true" />
               <span className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-3 p-5 md:p-6">
                 <span className="max-w-[28ch] text-h3 text-white [text-wrap:balance]">{b.title}</span>
-                {b.linkUrl && <span className="rounded-lg bg-white px-4 py-2 text-body-sm font-semibold text-[#1C1B18]">{b.buttonLabel ?? 'Переглянути'} <span className="vk-arrow" aria-hidden="true">→</span></span>}
+                {b.linkUrl && <span className="rounded-lg bg-white px-4 py-2 text-body-sm font-semibold text-[#1C1B18]">{b.buttonLabel ?? (locale === 'en' ? 'View' : 'Переглянути')} <span className="vk-arrow" aria-hidden="true">→</span></span>}
               </span>
             </>
           );
