@@ -13,6 +13,10 @@ import { useBump, useIdle, useScrolled, useSwipeClose } from '@/lib/motion';
 import { useCart } from '@/features/cart/api';
 import { useCartUiStore } from '@/stores/cartUiStore';
 
+// The language code stays `uk` in URLs and hreflang (ISO 639-1 for Ukrainian); people read «UK» as the
+// United Kingdom, so the switcher shows the country-style label instead (client, 2026-10-03).
+const SHORT_LABEL: Partial<Record<string, string>> = { uk: 'UA', en: 'EN', pl: 'PL', de: 'DE' };
+
 const icon = 'size-6';
 const IconSearch = () => <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>;
 const IconPhone = () => <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2" /></svg>;
@@ -96,7 +100,7 @@ export function SiteHeader({ locale, categories: all, partners }: { locale: Loca
               postponed until after launch); with Ukrainian alone there is nothing to switch to. */}
           {TRANSLATED_LOCALES.length > 1 && (
           <details className="relative max-md:hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-md border border-border-hairline px-2.5 py-1.5 text-body-sm uppercase" aria-label={t(locale, 'header.language')}>{locale}</summary>
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-md border border-border-hairline px-2.5 py-1.5 text-body-sm uppercase" aria-label={t(locale, 'header.language')}>{SHORT_LABEL[locale] ?? locale}</summary>
             <ul className="absolute right-0 top-full mt-1 rounded-md border border-border-hairline bg-bg-surface p-1 shadow-lg">
               {languages.map(({ l, to }) => <li key={l}><Link to={to} hrefLang={l} lang={l} aria-current={l === locale ? 'true' : undefined} className="block px-3 py-1.5 text-body-sm hover:bg-bg-alt">{LANGUAGE_NAMES[l]}</Link></li>)}
             </ul>
