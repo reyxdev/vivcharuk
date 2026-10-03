@@ -29,6 +29,7 @@ const DID: Record<string, string> = {
   'product.bulk.archive': 'прибрав в архів кілька товарів', 'product.bulk.restore': 'повернув з архіву кілька товарів', 'product.bulk.set_handmade': 'позначив «ручна робота» кільком товарам', 'product.bulk.revert': 'скасував масову зміну',
   'review.status_changed': 'перевірив відгук', 'review.replied': 'відповів на відгук', 'review.imported': 'переніс відгуки з Prom', 'review.templates_changed': 'змінив готові відповіді на відгуки',
   'setting.updated': 'змінив налаштування', 'announcement.updated': 'змінив повідомлення у стрічці сайту', 'banners.updated': 'змінив банери на головній',
+  'google_business.connected': 'підключив Google Карти', 'google_business.disconnected': 'від’єднав Google Карти', 'google_business.location_changed': 'обрав місце на Google Картах',
   'category.created': 'створив категорію', 'category.updated': 'змінив категорію', 'category.reordered': 'змінив порядок категорій', 'category.deleted': 'видалив категорію',
   'collection.updated': 'змінив колекцію', 'collection.reordered': 'змінив порядок товарів у колекції', 'collection.product_removed': 'прибрав товар з колекції',
   'library.value_created': 'додав колір чи розмір', 'library.value_updated': 'змінив колір чи розмір', 'library.value_deleted': 'видалив колір чи розмір',
@@ -52,6 +53,7 @@ const DID: Record<string, string> = {
 const HAPPENED: Record<string, string> = {
   'employee.auto_blocked': 'Вхід заблоковано автоматично після багатьох невдалих спроб', 'employee.2fa_challenge_failed': 'Невірний код з Authenticator',
   'employee.passkey_failed': 'Невдала спроба входу за обличчям чи відбитком', 'session.reuse_detected': 'Підозріла спроба входу — усі сесії завершено',
+  'google_business.synced': 'Графік роботи відправлено в Google Карти', 'google_business.sync_failed': 'Google не прийняв графік роботи',
 };
 // Unknown keys (a new action somewhere) still read as a sentence; the key itself is in the details.
 const FALLBACK: Record<string, string> = {
@@ -63,6 +65,7 @@ const FALLBACK: Record<string, string> = {
 const SETTING: Record<string, string> = {
   'payments.cod.max_minor': 'ліміт накладеного платежу', 'payments.prepayment.min_minor': 'найменша передоплата', 'payments.card_enabled': 'оплата карткою',
   'pricing.volume_tiers': 'оптові знижки', 'admin.announcement': 'оголошення для працівників',
+  'site.contact': 'години роботи й контакти',
 };
 const TYPE: Record<string, string> = {
   Product: 'Товари', Order: 'Замовлення', Review: 'Відгуки', Setting: 'Налаштування', Category: 'Категорії', Collection: 'Колекції', OptionValue: 'Кольори й розміри', Material: 'Матеріали',

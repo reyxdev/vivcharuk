@@ -40,6 +40,7 @@ import { newsletterRoutes } from './modules/newsletter/newsletter.routes';
 import { searchRoutes } from './modules/dashboard/search.routes';
 import { adminMediaRoutes } from './modules/content/media.routes';
 import { telegramRoutes } from './modules/notifications/telegram.routes';
+import { googleBusinessRoutes } from './modules/google-business/routes';
 import { ADMIN_ROOT, adminBase, adminStatic } from './plugins/adminStatic';
 import { mediaStatic } from './plugins/mediaStatic';
 
@@ -140,6 +141,7 @@ export async function buildApp() {
       await v1.register(searchRoutes);
       await v1.register(adminMediaRoutes);
       await v1.register(telegramRoutes);
+      await v1.register(googleBusinessRoutes);
       await v1.register(cartRoutes);
       await v1.register(checkoutRoutes);
       await v1.register(adminOrderRoutes);

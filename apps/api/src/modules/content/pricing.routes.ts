@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { DEFAULT_VOLUME_TIERS, type VolumeTier } from '@vivcharyk/schemas';
+import { DEFAULT_VOLUME_TIERS, upcomingSpecialDays, type VolumeTier } from '@vivcharyk/schemas';
 import { getSetting } from '../../lib/settings';
 import { cardEnabled } from '../checkout/checkout.service';
 import { prisma } from '../../lib/prisma';
@@ -25,7 +25,8 @@ export async function pricingRoutes(app: FastifyInstance) {
     reply.header('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
     const [b, ticker, card] = await Promise.all([getBusiness(), getTicker(), cardEnabled()]);
     return {
-      contact: { hours: b.hours, hoursText: b.hoursText, week: b.week, phone: b.messengerPhone, publicEmail: b.publicEmail },
+      // Special days from today on (the stored list keeps the past 30 days for the panel).
+      contact: { hours: b.hours, hoursText: b.hoursText, week: b.week, specialDays: upcomingSpecialDays(b.specialDays), phone: b.messengerPhone, publicEmail: b.publicEmail },
       ticker: ticker.filter((t) => t.isActive && (!t.cardOnly || card)).map((t) => ({ text: t.text, linkUrl: t.linkUrl })),
       // G093: English pages build their own strip and need to know whether the card-only phrase applies.
       cardPayments: card,

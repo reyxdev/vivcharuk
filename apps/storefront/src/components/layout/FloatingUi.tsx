@@ -6,6 +6,7 @@ import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
 import { useCart } from '@/features/cart/api';
 import { Messengers } from '@/components/contact/Messengers';
+import { SpecialDayNote } from '@/components/contact/SpecialDayNote';
 import { useCartUiStore } from '@/stores/cartUiStore';
 import { useUi } from '@/stores/uiStore';
 import { useWishlist } from '@/stores/wishlistStore';
@@ -67,7 +68,7 @@ function ContactSheet({ locale }: { locale: Locale }) {
         <div className="flex items-center justify-between"><h2 className="text-h3 text-text-primary">{t(locale, 'floating.contact')}</h2><button type="button" onClick={() => setContact(false)} aria-label={t(locale, 'nav.close')} className="-mr-3 grid size-11 place-items-center text-h3 text-text-muted">×</button></div>
         <People />
         <div className="text-text-primary"><Messengers /></div>
-        <p className="text-body-sm text-text-muted">{biz.hoursText} <Link to={path.seg(locale, 'contacts')} onClick={() => setContact(false)} className="underline">{t(locale, 'nav.contacts')}</Link></p>
+        <p className="text-body-sm text-text-muted">{biz.hoursText} <SpecialDayNote locale={locale} /> <Link to={path.seg(locale, 'contacts')} onClick={() => setContact(false)} className="underline">{t(locale, 'nav.contacts')}</Link></p>
       </div>
     </div>
   );

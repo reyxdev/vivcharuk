@@ -1,6 +1,6 @@
 import { useLocation, useMatches } from 'react-router';
 import type { Locale } from '@vivcharyk/schemas';
-import { BRAND_LATIN, BUSINESS, isPlaceholder, openingHoursSpecification, type LiveBusiness } from '@vivcharyk/schemas';
+import { BRAND_LATIN, BUSINESS, isPlaceholder, openingHoursSpecification, specialOpeningHoursSpecification, type LiveBusiness } from '@vivcharyk/schemas';
 import { path as paths, SEGMENTS, type SegmentKey } from '@/lib/segments';
 import { ENABLED_LOCALES } from '@/lib/locale';
 import { useBusiness } from '@/lib/business';
@@ -93,6 +93,7 @@ function siteGraph(origin: string, locale: Locale, biz: LiveBusiness, priceRange
   };
   const tel = isPlaceholder(phone) ? {} : { telephone: `+${phone.replace(/\D/g, '')}` };
   const sameAs = isPlaceholder(biz.googleProfileUrl) ? {} : { sameAs: [biz.googleProfileUrl] };
+  const special = specialOpeningHoursSpecification(biz.specialDays);
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -119,6 +120,8 @@ function siteGraph(origin: string, locale: Locale, biz: LiveBusiness, priceRange
         email: biz.publicEmail, currenciesAccepted: 'UAH', address, ...tel, ...(priceRange ? { priceRange } : {}),
         hasMap: isPlaceholder(biz.googleProfileUrl) ? undefined : biz.googleProfileUrl,
         openingHoursSpecification: openingHoursSpecification(biz.week),
+        // 2026-10-03: holidays and shorter days from the panel, today and later (closed = 00:00–00:00).
+        ...(special.length ? { specialOpeningHoursSpecification: special } : {}),
       },
       {
         '@type': 'WebSite', '@id': `${origin}/#website`, url: `${origin}/`, name: biz.brand, publisher: { '@id': `${origin}/#organization` },

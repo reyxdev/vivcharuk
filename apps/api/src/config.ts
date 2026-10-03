@@ -49,6 +49,10 @@ const serverEnvSchema = z.object({
   ADMIN_URL: z.string().url().default('http://127.0.0.1:3000/admin'),
   // Round 24 G022: IndexNow key (8–128 letters, digits or dashes); empty = off. Pings only in production.
   INDEXNOW_KEY: z.string().regex(/^[A-Za-z0-9-]{8,128}$/, '8–128 letters, digits or dashes').or(z.literal('')).optional().default(''),
+  // 2026-10-03: Google Business Profile hours sync — an OAuth client (Web) from the client's own Google
+  // Cloud project. Empty = the «Google Карти» card says the server is not set up.
+  GOOGLE_BP_CLIENT_ID: z.string().optional().default(''),
+  GOOGLE_BP_CLIENT_SECRET: z.string().optional().default(''),
   // The locales the site serves (the storefront reads the same variable at build time, D39): the
   // Merchant feeds and IndexNow follow it.
   VITE_ENABLED_LOCALES: z.string().optional().default('uk'),
@@ -75,6 +79,7 @@ export const config = {
   adminBasePath: env.ADMIN_BASE_PATH,
   siteUrl: env.SITE_URL,
   indexNowKey: env.INDEXNOW_KEY,
+  googleBusiness: { clientId: env.GOOGLE_BP_CLIENT_ID, clientSecret: env.GOOGLE_BP_CLIENT_SECRET },
   enabledLocales: [...new Set(['uk', ...env.VITE_ENABLED_LOCALES.split(',').map((x) => x.trim())])].filter((x): x is 'uk' | 'en' | 'pl' | 'de' => ['uk', 'en', 'pl', 'de'].includes(x)),
   shipping: { testRates: env.SHIPPING_TEST_RATES === '1' && env.NODE_ENV !== 'production', npApiKey: env.NOVA_POSHTA_API_KEY },
   telegram: { botToken: env.TELEGRAM_BOT_TOKEN },

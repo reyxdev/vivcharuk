@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { getSetting, invalidateSetting } from '../../lib/settings';
 import { requirePermission } from '../../plugins/staffAuth';
 import { audit } from '../audit/audit.service';
+import { queueHoursSync } from '../google-business/service';
 
 // Only these keys are editable from the panel; each has its schema, default and permission.
 const KEYS = {
@@ -53,6 +54,12 @@ export async function settingsRoutes(app: FastifyInstance) {
       await audit({ actorId: req.staff!.id, actorEmail: req.staff!.email, action: 'setting.updated', resourceType: 'Setting', resourceId: key, resourceLabel: key, before: (before?.value ?? null) as never, after: value as never }, tx);
     });
     invalidateSetting(key);
+    // 2026-10-03: changed hours go to Google Business Profile (no-op until it is connected).
+    if (key === SITE_CONTACT_KEY) {
+      const prev = before?.value as Partial<SiteContact> | undefined;
+      const next = value as SiteContact;
+      if (JSON.stringify([prev?.week, prev?.specialDays ?? []]) !== JSON.stringify([next.week, next.specialDays])) await queueHoursSync();
+    }
     return reply.status(204).send();
   });
 

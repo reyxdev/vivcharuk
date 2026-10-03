@@ -110,7 +110,10 @@ if [ ! -f .env ]; then
       "MAILBOX_ADDRESS=info@" + d, "MAILBOX_PASSWORD=",
       "# Round 24: security.txt contact (the developer, e.g. mailto:dev@example.com; empty = info@) and the",
       "# IndexNow key (8-128 letters, digits or dashes; empty = off). Restart both services after filling.",
-      "SECURITY_CONTACT=", "INDEXNOW_KEY=", "",
+      "SECURITY_CONTACT=", "INDEXNOW_KEY=",
+      "# Hours on Google Maps (2026-10-03): the OAuth client (Web) from the owner Google Cloud project;",
+      "# redirect URI https://" + d + "/api/v1/admin/google-business/oauth/callback. Restart vivcharyk-api after filling.",
+      "GOOGLE_BP_CLIENT_ID=", "GOOGLE_BP_CLIENT_SECRET=", "",
     ].join("\n"), { mode: 0o600 });' "$DOMAIN"
 fi
 # Round 24 G093: English is on at launch. A server .env written before that gets the line once; a value
@@ -120,6 +123,8 @@ grep -q '^VITE_ENABLED_LOCALES=' .env || printf '\n# Languages the site serves (
 grep -q '^INDEXNOW_KEY=.' .env || { sed -i '/^INDEXNOW_KEY=$/d' .env; printf '\n# IndexNow (round 24 G022): public key, served at /<key>.txt\nINDEXNOW_KEY=%s\n' "$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> .env; }
 # Round 24 G012: security.txt contact; empty = mailto:info@vivcharuk.com. Set it by hand to change it.
 grep -q '^SECURITY_CONTACT=' .env || printf '\n# security.txt contact (round 24 G012); empty falls back to info@vivcharuk.com\nSECURITY_CONTACT=\n' >> .env
+# 2026-10-03: hours sync with Google Business Profile; empty = the panel card says «not set up». Filled by hand.
+grep -q '^GOOGLE_BP_CLIENT_ID=' .env || printf '\n# Hours on Google Maps (2026-10-03): OAuth client (Web) from the owner Google Cloud project; restart vivcharyk-api after filling\nGOOGLE_BP_CLIENT_ID=\nGOOGLE_BP_CLIENT_SECRET=\n' >> .env
 chown vivcharyk:vivcharyk .env; chmod 600 .env
 DB_URL="$(grep -E '^DATABASE_URL=' .env | cut -d= -f2-)"
 read -r DB_USER DB_PASS DB_NAME < <(node -e 'const u=new URL(process.argv[1]);console.log(decodeURIComponent(u.username),decodeURIComponent(u.password),u.pathname.slice(1))' "$DB_URL")

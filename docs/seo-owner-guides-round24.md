@@ -137,3 +137,36 @@ Written in Ukrainian for Іван; the notes for the developer are marked «Ро
 10. Вівчарик Яворів відгуки
 
 Короткий підсумок — у місячний звіт Іванові (G176).
+
+---
+
+## 8. Синхронізація графіка з Google (2026-10-03)
+
+Графік роботи тепер змінюється в одному місці — у панелі: «Налаштування → Магазин» (тиждень і
+«Особливі дні»: свята, скорочені дні). Сайт показує його одразу, а Google Карти отримують його самі,
+щойно Google дозволить доступ. Те, що змінили в Google вручну, панель не підтягує: головне — панель.
+Рішення: [00-client-decisions-24.md](00-client-decisions-24.md#hours-sync-with-google-2026-10-03).
+
+Що зробити один раз (під тим Google-акаунтом, що керує профілем «Вівчарик»):
+
+1. Зайдіть на console.cloud.google.com і створіть проєкт, наприклад «Вівчарик».
+2. «APIs & Services → Library»: увімкніть **My Business Account Management API** і **My Business
+   Business Information API**.
+3. «OAuth consent screen»: тип **External**, стан **Testing**; у «Test users» додайте свій Google-акаунт.
+4. «Credentials → Create credentials → OAuth client ID», тип **Web application**. У «Authorized
+   redirect URIs» вставте адресу з картки «Налаштування → Google Карти» в панелі
+   (`https://vivcharuk.com/api/v1/admin/google-business/oauth/callback`).
+5. Client ID і Client secret передайте розробникові (не пересилайте їх нікому іншому).
+6. Подайте заявку на доступ до API: developers.google.com/my-business/content/prereqs — форма
+   «GBP API contact form», з номером проєкту (Project number). Умови Google: профіль підтверджений і
+   активний **понад 60 днів**, і в ньому вказано сайт. Розгляд — від кількох днів до кількох тижнів.
+7. У панелі: «Налаштування → Google Карти → Підключити Google», увійдіть, дозвольте доступ, оберіть
+   «Вівчарик» у списку місць.
+
+Поки Google не схвалив заявку, картка пише «Чекає доступу до API Google» — це нормально; панель щодня
+пробує знову. Після схвалення графік піде сам, і рядок стане зеленим: «Синхронізовано о …». Якщо колись
+з'явиться «У Google інший графік» — натисніть «Відправити графік у Google».
+
+Розробнику: значення — у `GOOGLE_BP_CLIENT_ID` і `GOOGLE_BP_CLIENT_SECRET` у серверному `.env`
+(`install.sh` додає порожні рядки), потім `systemctl restart vivcharyk-api`. Код:
+`apps/api/src/modules/google-business/`.

@@ -3,6 +3,7 @@ import type { CategoryNode, Locale } from '@vivcharyk/schemas';
 import { contactLinks } from '@vivcharyk/schemas';
 import { useBusiness } from '@/lib/business';
 import { Messengers } from '@/components/contact/Messengers';
+import { SpecialDayNote } from '@/components/contact/SpecialDayNote';
 import { PaymentMarks } from './PaymentMarks';
 import evening from './art/footer-evening.svg?url';
 import { t, type MessageKey } from '@/lib/i18n';
@@ -57,6 +58,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             })}
             <a href={`mailto:${biz.publicEmail}`} className={link}>{biz.publicEmail}</a>
             <Link to={path.seg(locale, 'contacts')} className="text-text-muted hover:underline">{biz.factoryAddress}</Link>
+            {/* Only on a special day and the day before (the footer shows no regular hours). */}
+            <SpecialDayNote locale={locale} />
             <div className="text-text-primary"><Messengers compact tone="inverted" /></div>
           </div>
         </div>

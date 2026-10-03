@@ -182,3 +182,26 @@ by the developer), with a «Коротко в датах» list. Facts it establ
   not a date.
 - Open question for Іван (checklist): which of the claimed in-house stages (вичинка шкур, валяння,
   в'язання) are still done by Вівчарик after some lines went to the children.
+
+## Hours sync with Google (2026-10-03)
+
+Client request: the owner changes the opening hours in the panel and they stay the same on the site and on
+Google Maps (Google Business Profile). Client-side steps: [seo-owner-guides-round24.md §8](seo-owner-guides-round24.md#8-синхронізація-графіка-з-google-2026-10-03).
+
+- **The panel is the source of truth.** «Налаштування → Магазин» holds the week and the new
+  **special days** (`site.contact.specialDays`: date, closed or hours, note; max 60; days more than 30 days
+  past are dropped on save). The site shows today's/tomorrow's special day beside the hours (contacts,
+  contact sheet, footer) and in JSON-LD `specialOpeningHoursSpecification` on the Store (closed = 00:00–00:00).
+- **Google gets `regularHours` + `specialHours`** of the one location the owner picks, via
+  `locations.patch?updateMask=regularHours,specialHours` (Business Information API v1), about a minute
+  after a save (debounced pg-boss job `google.syncHours`; one edit per sync, Google allows 10 per minute
+  per profile). Closed days have no period; special days only from today on.
+- **Daily check** (`google.checkHours`, 07:40 Kyiv): unsent changes are sent again; otherwise Google's
+  hours are read and compared. A difference is shown in the panel («У Google інший графік» with a button
+  to send ours) — **never pulled automatically**.
+- OAuth 2.0 with the owner's own Google Cloud project (`GOOGLE_BP_CLIENT_ID`, `GOOGLE_BP_CLIENT_SECRET`,
+  scope `business.manage`, offline access); the refresh token is sealed like TOTP secrets and never leaves
+  the server; «Від'єднати» revokes it at Google. Owner and Administrator (`settings.update`) only; connect,
+  disconnect, location change and sync results go to the audit log.
+- Until Google approves API access (profile verified and active 60+ days, with a website; base quota is
+  0) every call fails with 429 and the card says «Чекає доступу до API Google»; the daily job retries.

@@ -2,7 +2,7 @@ import { TelegramLink } from '@/features/account/TelegramLink';
 import { useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, ExternalLink, Globe, Mail, Package, Plus, Store, Trash2, Truck, Wallet, type LucideIcon } from 'lucide-react';
+import { Bell, ExternalLink, Globe, Mail, MapPin, Package, Plus, Store, Trash2, Truck, Wallet, type LucideIcon } from 'lucide-react';
 import { api, post } from '@/lib/api';
 import { uah } from '@/lib/format';
 import { useMe } from '@/features/auth/useSession';
@@ -10,6 +10,7 @@ import { chime, setSoundOn, soundOn } from '@/lib/newOrderSound';
 import { GhostButton, Hint, IconCircle, PageHeader, PrimaryButton, SkeletonRows, useToast, useUnsavedGuard } from '@/components/ui';
 import { BannersEditor } from './BannersEditor';
 import { ShopForm, TickerEditor } from './SiteContent';
+import { GoogleBusinessCard } from './GoogleBusiness';
 import { hoursShort, type SiteContact, type TickerItem } from '@vivcharyk/schemas';
 import { errorText, inputCls, labelCls, Panel, Row, Switch, toLocal, fromLocal } from './parts';
 
@@ -23,7 +24,7 @@ interface Settings {
   business: { address: string; legalEntityName: string };
 }
 type Key = keyof Settings['values'];
-type TileKey = 'shop' | 'delivery' | 'payment' | 'wholesale' | 'mail' | 'notify' | 'site';
+type TileKey = 'shop' | 'delivery' | 'payment' | 'wholesale' | 'mail' | 'notify' | 'site' | 'google';
 
 const ERR = { SITE_PATH: 'Посилання — адреса сторінки нашого сайту, наприклад /uk/pro-nas.', BEFORE_START: 'Кінець має бути пізніше за початок.' };
 
@@ -56,6 +57,8 @@ export function SettingsPage() {
     { key: 'mail', title: 'Пошта', icon: Mail, color: '#5A8AAF', sum: 'Шаблони, мітки, автовідповідь', hidden: !can('mail.read') },
     { key: 'notify', title: 'Сповіщення', icon: Bell, color: '#E0B33A', sum: `Telegram особисто кожному · звук ${soundOn() ? 'увімкнений' : 'вимкнений'}` },
     { key: 'site', title: 'Сайт', icon: Globe, color: '#8E76A8', sum: 'Стрічка вгорі й банери на головній', hidden: !can('promotions.read') },
+    // 2026-10-03: the hours on Google Maps — Owner and Administrator only.
+    { key: 'google', title: 'Google Карти', icon: MapPin, color: '#4F7FC2', sum: 'Години роботи в профілі компанії Google', hidden: !can('settings.update') },
   ];
   const tile = tiles.find((t) => t.key === open && !t.hidden && t.key !== 'mail');
 
@@ -68,6 +71,7 @@ export function SettingsPage() {
       {open === 'wholesale' && <WholesaleForm s={s} canEdit={can('settings.update')} />}
       {open === 'notify' && <NotifyForm s={s} canEdit={can('settings.manage_integrations')} canAnnounce={can('settings.update')} />}
       {open === 'site' && <SiteForm canEdit={can('promotions.manage_banners')} ticker={v['site.ticker']} />}
+      {open === 'google' && <GoogleBusinessCard />}
     </div>
   );
 

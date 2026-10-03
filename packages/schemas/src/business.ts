@@ -1,5 +1,5 @@
 // Round 24 (G039): no zod here, so the site's pages do not ship it; the schemas are in businessSchemas.ts.
-import type { DayHours, SiteContact, TickerItem } from './businessSchemas';
+import type { DayHours, SiteContact, SpecialDay, TickerItem } from './businessSchemas';
 
 // Business facts shown on the site. Values marked PLACEHOLDER are unresolved client facts
 // ({{TOKEN}} in the blueprint). They are filled in at the end of the build — never invent them.
@@ -87,7 +87,31 @@ export const DEFAULT_SITE_CONTACT: SiteContact = {
   week: [open('11:00', '19:00'), open('11:00', '19:00'), open('11:00', '19:00'), open('11:00', '19:00'), open('11:00', '19:00'), closed, closed],
   phone: BUSINESS.messengerPhone,
   publicEmail: BUSINESS.publicEmail,
+  specialDays: [],
 };
+
+/** Today's date in the shop's time zone, «2026-12-25». */
+export const kyivDate = (at: Date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
+/** «2026-12-25» plus n calendar days. */
+export const addDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
+/** Special days from today on (a stored list keeps the past 30 days; nobody else needs them). */
+export const upcomingSpecialDays = (days: readonly SpecialDay[] | undefined, today = kyivDate()) => (days ?? []).filter((d) => d.date >= today);
+
+/** Today's or tomorrow's special day, for the line beside the hours on the site. */
+export function nearSpecialDay(days: readonly SpecialDay[] | undefined, today = kyivDate()): { when: 'today' | 'tomorrow'; day: SpecialDay } | null {
+  const tomorrow = addDays(today, 1);
+  const d = (days ?? []).find((x) => x.date === today) ?? (days ?? []).find((x) => x.date === tomorrow);
+  return d ? { when: d.date === today ? 'today' : 'tomorrow', day: d } : null;
+}
+
+/** schema.org specialOpeningHoursSpecification: a closed day is opens = closes = 00:00 (Google's local-business guide). */
+export function specialOpeningHoursSpecification(days: readonly SpecialDay[] | undefined, today = kyivDate()) {
+  return upcomingSpecialDays(days, today).map((d) => ({
+    '@type': 'OpeningHoursSpecification', validFrom: d.date, validThrough: d.date,
+    opens: d.closed ? '00:00' : d.opens, closes: d.closed ? '00:00' : d.closes,
+  }));
+}
 
 function openRuns(week: DayHours[]) {
   const runs: Array<{ from: number; to: number; d: DayHours }> = [];
@@ -135,6 +159,8 @@ export function liveBusiness(c: SiteContact, locale: 'uk' | 'en' | 'pl' | 'de' =
     hours: en ? hoursShort(c.week, WEEK_DAYS_EN) : hoursShort(c.week),
     hoursText: en ? hoursTextEn(c.week) : c.hoursText,
     week: c.week,
+    // Older cached answers of /site/settings had no list.
+    specialDays: c.specialDays ?? [],
     phones: [c.phone] as const,
     messengerPhone: c.phone,
     contactPeople: [{ name: en ? 'Ivan' : BUSINESS.contactPeople[0].name as string, phone: c.phone }] as const,

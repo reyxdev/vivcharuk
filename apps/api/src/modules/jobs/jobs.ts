@@ -15,6 +15,7 @@ import { purgeThreads } from '../mail/mail.routes';
 import { newsletterMail } from '../newsletter/newsletter.service';
 import { dueReviewRequests, requestReview } from '../notifications/reviewRequest';
 import { sendIndexNow } from '../seo/indexnow';
+import { checkHours, syncHours } from '../google-business/service';
 
 // Telegram notices: composed and fanned out in ../notifications/notices.ts (docs/00-client-decisions-21.md).
 export type { Notify } from '../notifications/notices';
@@ -104,6 +105,12 @@ const HANDLERS: Partial<Record<JobName, (jobs: PgBoss.Job<never>[]) => Promise<v
   // Round 24 G022: changed URLs to IndexNow (queued only in production with INDEXNOW_KEY set).
   'seo.indexnow': (jobs) => each(jobs as PgBoss.Job<{ paths: string[] }>[], async (j) => { await sendIndexNow(j.paths); }),
 
+  // 2026-10-03: the hours to Google Business Profile after a save (debounced, service.ts queueHoursSync);
+  // a transient failure throws and pg-boss retries with backoff.
+  'google.syncHours': async () => { await syncHours(); },
+  // Daily: unsent hours are sent again (also while Google has not approved API access), else compared.
+  'google.checkHours': async () => { await checkHours(); },
+
   // T31, T33: the week in counts, Monday 08:00.
   'reports.weekly': async () => { await dispatch({ kind: 'weekly' }); },
 
@@ -123,6 +130,7 @@ const SCHEDULE: Array<[JobName, string]> = [
   ['telegram.daily', '0 19 * * 1-5'],
   ['telegram.lowStock', '0 9 * * *'],
   ['orders.unconfirmedReminder', '*/15 * * * *'],
+  ['google.checkHours', '40 7 * * *'],
 ];
 
 /** Workers run in the API process (26 §26.17); `ROLE=api` skips them, `ROLE=worker` runs only them. */

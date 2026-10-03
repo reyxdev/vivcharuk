@@ -4,6 +4,7 @@ import { BUSINESS, BUSINESS_EN, contactLinks, isPlaceholder } from '@vivcharyk/s
 import { useBusiness } from '@/lib/business';
 import { path } from '@/lib/segments';
 import { Messengers } from '@/components/contact/Messengers';
+import { SpecialDayNote } from '@/components/contact/SpecialDayNote';
 import mapPreview from '@/features/home/art/map-preview.svg?url';
 import mapPreviewEn from '@/features/home/art/map-preview-en.svg?url';
 import type { Route } from './+types/contacts';
@@ -49,7 +50,7 @@ export default function Contacts() {
     <div className="mx-auto flex max-w-(--container-wide) flex-col gap-8 px-4 py-(--section-y-sm) lg:px-12">
       <header className="flex flex-col gap-3">
         <h1 className="text-h1 text-text-primary">{en ? 'Contacts' : 'Контакти'}</h1>
-        <p className="max-w-[60ch] text-body-lg text-text-body">{en ? `The shop and the workshop are in one place, in ${biz.locality}.` : `Магазин і виробництво в одному місці — у ${biz.locality}.`} {biz.hoursText}</p>
+        <p className="max-w-[60ch] text-body-lg text-text-body">{en ? `The shop and the workshop are in one place, in ${biz.locality}.` : `Магазин і виробництво в одному місці — у ${biz.locality}.`} {biz.hoursText} <SpecialDayNote locale={l} /></p>
       </header>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">

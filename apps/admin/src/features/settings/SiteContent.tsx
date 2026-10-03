@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
-import { hoursShort, siteContactSchema, tickerSchema, type DayHours, type SiteContact, type TickerItem } from '@vivcharyk/schemas';
+import { addDays, hoursShort, kyivDate, siteContactSchema, SPECIAL_DAYS_MAX, tickerSchema, type DayHours, type SiteContact, type SpecialDay, type TickerItem } from '@vivcharyk/schemas';
 import { api } from '@/lib/api';
 import { GhostButton, PrimaryButton, useConfirm, useToast, useUnsavedGuard } from '@/components/ui';
 import { errorText, inputCls, labelCls, Panel, Row, Switch, useDragOrder } from './parts';
@@ -25,7 +25,7 @@ function useSaveSetting() {
 /** The first message of each field from a failed check, keyed by the field's top-level name. */
 function fieldErrors(issues: Array<{ path: Array<string | number>; message: string }>) {
   const out: Record<string, string> = {};
-  for (const i of issues) { const k = i.path.length > 1 && i.path[0] === 'week' ? `week.${i.path[1]}` : String(i.path[0] ?? ''); out[k] ??= i.message; }
+  for (const i of issues) { const k = i.path.length > 1 && (i.path[0] === 'week' || i.path[0] === 'specialDays') ? `${i.path[0]}.${i.path[1]}` : String(i.path[0] ?? ''); out[k] ??= i.message; }
   return out;
 }
 
@@ -38,10 +38,11 @@ export function ShopForm({ contact, business, canEdit }: { contact: SiteContact;
   const save = useSaveSetting();
   const [f, setF] = useState<SiteContact | null>(null);
   const [errs, setErrs] = useState<Record<string, string>>({});
-  const cur = f ?? contact;
+  const cur = f ?? { ...contact, specialDays: contact.specialDays ?? [] };
   useUnsavedGuard(!!f);
   const set = (patch: Partial<SiteContact>) => { setF({ ...cur, ...patch }); setErrs({}); };
   const setDay = (i: number, patch: Partial<DayHours>) => set({ week: cur.week.map((d, n) => (n === i ? { ...d, ...patch } : d)) });
+  const setSpecial = (i: number, patch: Partial<SpecialDay>) => set({ specialDays: cur.specialDays.map((d, n) => (n === i ? { ...d, ...patch } : d)) });
   // The sentence is free text: a time from the schedule it does not mention is pointed out, not blocked.
   const times = [...new Set(cur.week.filter((d) => d.open).flatMap((d) => [d.opens, d.closes]))];
   const unmentioned = times.filter((t) => !cur.hoursText.replace(/(\d{1,2})[.:](\d\d)/g, (_, h: string, m: string) => `${h.padStart(2, '0')}:${m}`).includes(t));
@@ -79,6 +80,10 @@ export function ShopForm({ contact, business, canEdit }: { contact: SiteContact;
         {err('hoursText')}
         {unmentioned.length > 0 && !errs.hoursText && <p className="text-body-sm text-warning">У реченні немає {unmentioned.join(', ')} — перевірте, чи воно збігається з розкладом.</p>}
       </Panel>
+      <SpecialDays days={cur.specialDays} canEdit={canEdit} err={err}
+        onChange={(i, patch) => setSpecial(i, patch)}
+        onAdd={() => set({ specialDays: [...cur.specialDays, { date: addDays(kyivDate(), 1), closed: true, opens: '11:00', closes: '15:00' }] })}
+        onRemove={(i) => set({ specialDays: cur.specialDays.filter((_, n) => n !== i) })} />
       <Panel title="Телефон і пошта">
         <label className={labelCls}>Телефон магазину — дзвінки, Viber, Telegram, WhatsApp
           <input value={cur.phone} inputMode="tel" autoComplete="off" disabled={!canEdit} onChange={(e) => set({ phone: e.target.value })} className={`${inputCls} max-w-64 tabular`} />
@@ -96,6 +101,48 @@ export function ShopForm({ contact, business, canEdit }: { contact: SiteContact;
         <p className="mt-2 text-body-sm text-text-muted">Адресу й дані продавця змінює розробник.</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * 2026-10-03: «Особливі дні» — a holiday closed or shorter hours. Shown on the site on the day and the day
+ * before, in the structured data, and sent to Google Maps with the week. Days more than 30 days past are
+ * dropped on save.
+ */
+function SpecialDays({ days, canEdit, err, onChange, onAdd, onRemove }: {
+  days: SpecialDay[]; canEdit: boolean; err: (k: string) => ReactNode;
+  onChange: (i: number, patch: Partial<SpecialDay>) => void; onAdd: () => void; onRemove: (i: number) => void;
+}) {
+  const today = kyivDate();
+  return (
+    <Panel title="Особливі дні" sub="Свята й дні з іншим графіком. Покупці побачать їх на сайті напередодні й у сам день; Google Карти — одразу.">
+      {days.length > 0 && (
+        <ul className="flex flex-col divide-y divide-border-hairline">
+          {days.map((d, i) => (
+            <li key={i} className={`flex flex-wrap items-center gap-x-3 gap-y-2 py-2 ${d.date < today ? 'opacity-60' : ''}`}>
+              <input type="date" value={d.date} disabled={!canEdit} aria-label="Дата" onChange={(e) => onChange(i, { date: e.target.value })} className={`${inputCls} w-40 tabular`} />
+              <Switch on={d.closed} disabled={!canEdit} label="Зачинено" onChange={(closed) => onChange(i, { closed, opens: d.opens ?? '11:00', closes: d.closes ?? '15:00' })} />
+              {!d.closed && (
+                <span className="flex items-center gap-1.5 text-body text-text-muted">
+                  <input type="time" value={d.opens ?? ''} disabled={!canEdit} aria-label="Початок" onChange={(e) => onChange(i, { opens: e.target.value })} className={`${inputCls} w-28 tabular`} />
+                  –
+                  <input type="time" value={d.closes ?? ''} disabled={!canEdit} aria-label="Кінець" onChange={(e) => onChange(i, { closes: e.target.value })} className={`${inputCls} w-28 tabular`} />
+                </span>
+              )}
+              <input value={d.note ?? ''} maxLength={60} disabled={!canEdit} aria-label="Примітка" placeholder="Примітка, напр. Різдво" onChange={(e) => onChange(i, { note: e.target.value })} className={`${inputCls} min-w-0 flex-[1_1_10rem]`} />
+              {canEdit && (
+                <button type="button" aria-label="Прибрати день" onClick={() => onRemove(i)} className="rounded-full p-2 text-text-muted hover:bg-bg-alt hover:text-danger"><Trash2 size={16} /></button>
+              )}
+              {d.date < today && <span className="basis-full text-caption text-text-muted">Минув — зникне сам через 30 днів.</span>}
+              {err(`specialDays.${i}`)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {!days.length && <p className="text-body-sm text-text-muted">Немає. Додайте, наприклад, Різдво чи день, коли магазин працює коротше.</p>}
+      {err('specialDays')}
+      {canEdit && days.length < SPECIAL_DAYS_MAX && <GhostButton icon={Plus} onClick={onAdd} className="self-start">Особливий день</GhostButton>}
+    </Panel>
   );
 }
 

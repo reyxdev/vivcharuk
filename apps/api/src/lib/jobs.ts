@@ -12,7 +12,8 @@ export type JobName =
   | 'notify.telegram' | 'orders.autoCancelUnpaid' | 'orders.unconfirmedReminder' | 'orders.productionDueSoon'
   | 'cart.expire' | 'quickOrders.purge' | 'reports.weekly' | 'posts.publishScheduled' | 'mail.send'
   | 'mail.autoReply' | 'mail.purge' | 'newsletter.mail' | 'reviews.requestAfterDelivery'
-  | 'telegram.send' | 'telegram.edit' | 'telegram.daily' | 'telegram.lowStock' | 'seo.indexnow';
+  | 'telegram.send' | 'telegram.edit' | 'telegram.daily' | 'telegram.lowStock' | 'seo.indexnow'
+  | 'google.syncHours' | 'google.checkHours';
 
 export async function enqueue(name: JobName, data: object, tx?: Prisma.TransactionClient, opts: { retryLimit?: number; retryDelay?: number } = {}) {
   await bossReady();
