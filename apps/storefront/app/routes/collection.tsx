@@ -1,7 +1,7 @@
 import { Link, useLoaderData, useRouteLoaderData } from 'react-router';
 import type { Locale, ProductListResponse } from '@vivcharyk/schemas';
 import type { Route } from './+types/collection';
-import { apiGet, ApiError, redirectOr404 } from '@/lib/api.server';
+import { alternatesFor, apiGet, ApiError, redirectOr404 } from '@/lib/api.server';
 import { t } from '@/lib/i18n';
 import { path } from '@/lib/segments';
 import { Listing } from '@/features/catalog/components/Listing';
@@ -21,9 +21,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
   for (const k of ['priceMin', 'priceMax']) if (query[k]) query[k] = String(Math.round(Number(query[k].replace(',', '.')) * 100) || '');
   try {
-    const { data } = await apiGet<ProductListResponse>('/products', locale, { ...query, collection: params.slug });
+    const [{ data }, alternates] = await Promise.all([
+      apiGet<ProductListResponse>('/products', locale, { ...query, collection: params.slug }),
+      alternatesFor('collection', params.slug, locale),
+    ]);
     const noindex = data.items.length === 0 || data.appliedFilters.length > 0 || !!query.origin || !!query.inStock || !!query.priceMin || !!query.priceMax;
-    return { data, slug: params.slug, seo: noindex ? { robots: 'noindex,follow' } : {} };
+    return { data, slug: params.slug, seo: noindex ? { robots: 'noindex,follow' } : { alternates } };
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) await redirectOr404(request);
     throw e;

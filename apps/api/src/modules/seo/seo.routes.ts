@@ -13,7 +13,7 @@ import { COLLECTIONS_SEG, JOURNAL_SEG, LOCALES, PRODUCT_SEG } from './segments';
  */
 export async function seoRoutes(app: FastifyInstance) {
   app.get('/seo/alternates', async (req, reply) => {
-    const q = z.object({ kind: z.enum(['product', 'category']), slug: z.string().max(160), locale: locale.default('uk') }).parse(req.query);
+    const q = z.object({ kind: z.enum(['product', 'category', 'collection']), slug: z.string().max(160), locale: locale.default('uk') }).parse(req.query);
     const out: Partial<Record<Locale, string>> = {};
     if (q.kind === 'product') {
       const t = await prisma.productTranslation.findFirst({ where: { slug: q.slug, locale: { in: [q.locale, 'uk'] } }, select: { productId: true } });
@@ -24,6 +24,11 @@ export async function seoRoutes(app: FastifyInstance) {
           out[r.locale] = `/${r.locale}/${PRODUCT_SEG[r.locale]}/${r.slug}`;
         }
       }
+    } else if (q.kind === 'collection') {
+      // Same rule as the sitemap: an active collection with a public product, in each locale it is translated to.
+      const t = await prisma.collectionTranslation.findFirst({ where: { slug: q.slug, locale: { in: [q.locale, 'uk'] } }, select: { collectionId: true } });
+      const c = t && (await prisma.collection.findFirst({ where: { id: t.collectionId, isActive: true, products: { some: { product: PUBLIC_PRODUCT } } }, include: { translations: { select: { locale: true, slug: true } } } }));
+      if (c) for (const r of c.translations) if ((LOCALES as readonly string[]).includes(r.locale)) out[r.locale as Locale] = `/${r.locale}/${COLLECTIONS_SEG[r.locale as Locale]}/${r.slug}`;
     } else {
       const t = await prisma.categoryTranslation.findFirst({ where: { slug: q.slug, locale: { in: [q.locale, 'uk'] } }, select: { categoryId: true } });
       const c = t && (await prisma.category.findUnique({ where: { id: t.categoryId }, include: { translations: true, parent: { include: { translations: true } } } }));

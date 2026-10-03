@@ -103,7 +103,9 @@ export function productJsonLd(p: ProductDetail, origin: string, locale: Locale, 
   return {
     '@context': 'https://schema.org',
     '@graph': [
-      node,
+      // Google requires an image for product results: a product without photos gets no product markup at all,
+      // so Search Console never reports it as invalid (publishing already requires a photo).
+      ...(images.length ? [node] : []),
       {
         '@type': 'MerchantReturnPolicy', '@id': `${origin}/#returns`, applicableCountry: 'UA',
         returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow', merchantReturnDays: 14,

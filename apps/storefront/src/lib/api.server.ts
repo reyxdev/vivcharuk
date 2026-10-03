@@ -43,7 +43,7 @@ export async function redirectOr404(request: Request): Promise<never> {
 }
 
 /** Per-locale URLs of a product or category that really exist in translation (29 §29.3). */
-export async function alternatesFor(kind: 'product' | 'category', slug: string, locale: Locale): Promise<Partial<Record<Locale, string>>> {
+export async function alternatesFor(kind: 'product' | 'category' | 'collection', slug: string, locale: Locale): Promise<Partial<Record<Locale, string>>> {
   const { data } = await apiGet<{ alternates: Partial<Record<Locale, string>> }>('/seo/alternates', locale, { kind, slug }).catch(() => ({ data: { alternates: {} } }));
   return data.alternates;
 }
