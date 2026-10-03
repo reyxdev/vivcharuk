@@ -116,6 +116,10 @@ fi
 # Round 24 G093: English is on at launch. A server .env written before that gets the line once; a value
 # already there (the owner's choice) is kept. The site build reads it from this file (vite envDir).
 grep -q '^VITE_ENABLED_LOCALES=' .env || printf '\n# Languages the site serves (round 24 G093); read by the site build and the API.\nVITE_ENABLED_LOCALES=uk,en\n' >> .env
+# Round 24 G022: the IndexNow key is public by design (served as /<key>.txt); made once per server.
+grep -q '^INDEXNOW_KEY=.' .env || { sed -i '/^INDEXNOW_KEY=$/d' .env; printf '\n# IndexNow (round 24 G022): public key, served at /<key>.txt\nINDEXNOW_KEY=%s\n' "$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> .env; }
+# Round 24 G012: security.txt contact; empty = mailto:info@vivcharuk.com. Set it by hand to change it.
+grep -q '^SECURITY_CONTACT=' .env || printf '\n# security.txt contact (round 24 G012); empty falls back to info@vivcharuk.com\nSECURITY_CONTACT=\n' >> .env
 chown vivcharyk:vivcharyk .env; chmod 600 .env
 DB_URL="$(grep -E '^DATABASE_URL=' .env | cut -d= -f2-)"
 read -r DB_USER DB_PASS DB_NAME < <(node -e 'const u=new URL(process.argv[1]);console.log(decodeURIComponent(u.username),decodeURIComponent(u.password),u.pathname.slice(1))' "$DB_URL")
